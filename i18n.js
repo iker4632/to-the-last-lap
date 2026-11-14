@@ -176,6 +176,7 @@ window.I18N_EN = {
 
   // Etiquetas de accesibilidad (aria-label)
   'Secciones': 'Sections',
+  'Menú de secciones': 'Sections menu',
   'Animación del Sol con la Tierra, la Luna y Marte girando en sus órbitas': 'Animation of the Sun with the Earth, the Moon and Mars moving along their orbits',
   'Esquema: el Sol, la Tierra y Marte alineados durante la oposición': 'Diagram: the Sun, the Earth and Mars lined up during opposition',
   'Animación: una nave pasa por detrás de la Luna en movimiento y sale con más velocidad': 'Animation: a spacecraft passes behind the moving Moon and leaves with more speed',
