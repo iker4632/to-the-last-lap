@@ -2436,6 +2436,21 @@
     onLang.push(() => render(false));
   })();
 
+  /* ---------- Apartado del juego: con #juego solo se muestra el juego ---------- */
+  (function gameRoute() {
+    const btn = $('.game-btn');
+    function route(scroll) {
+      const on = location.hash === '#juego';
+      document.body.classList.toggle('game-mode', on);
+      if (btn) btn.classList.toggle('on', on);
+      if (!scroll) return;
+      if (on) window.scrollTo(0, 0);
+      else if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+    }
+    window.addEventListener('hashchange', () => route(true));
+    route(true);
+  })();
+
   /* ---------- Cambio de idioma (botón con bandera) ---------- */
   (function i18n() {
     const EN = window.I18N_EN || {};

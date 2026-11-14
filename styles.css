@@ -609,3 +609,16 @@ html[lang="en"] .flag-uk, html[lang="en"] .lang-code-en, html:not([lang="en"]) .
 .adv-log summary { cursor: pointer; font-weight: 600; color: var(--text); }
 .adv-log ol { margin: 10px 0 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
 .adv-log-day { display: inline-block; min-width: 64px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+/* Botón del juego en la cabecera y apartado propio */
+.game-btn { flex: none; text-decoration: none; font-weight: 600; font-size: .9rem; white-space: nowrap; padding: 7px 14px; border-radius: 999px;
+  background: linear-gradient(135deg, #ff8a4c, #e5482a); color: #fff; box-shadow: 0 6px 20px -8px rgba(255,106,61,.8); transition: box-shadow .2s, transform .15s; }
+.game-btn:hover { box-shadow: 0 8px 26px -6px rgba(255,106,61,.95); }
+.game-btn:active { transform: translateY(1px); }
+.game-btn.on { background: var(--sun); color: #1a0b05; }
+.nav-inner { gap: 12px; }
+@media (max-width: 420px) { .game-btn { padding: 7px 10px; font-size: .85rem; } }
+.game-back { display: none; margin-bottom: 20px; }
+body.game-mode main > :not(#juego) { display: none; }
+body.game-mode #juego { padding-top: 32px; min-height: calc(100vh - 58px); }
+body.game-mode .game-back { display: inline-flex; }
