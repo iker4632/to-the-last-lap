@@ -2045,11 +2045,11 @@
 
     // --- Recursos ---
     const RES = [
-      { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), fmt: (v) => `${num(v)} M€`, max: BUDGET0 },
-      { k: 'fuel', icon: '⛽', name: B('Combustible', 'Fuel'), fmt: (v) => `${num(v)} %`, max: 100 },
-      { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), fmt: (v) => (v === 1 ? L('1 día', '1 day') : L(`${num(v)} días`, `${num(v)} days`)), max: 300 },
-      { k: 'health', icon: '❤️', name: B('Salud del equipo', 'Crew health'), fmt: (v) => `${num(v)} %`, max: 100 },
-      { k: 'hull', icon: '🛰️', name: B('Estado de la nave', 'Ship condition'), fmt: (v) => `${num(v)} %`, max: 100 },
+      { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), short: B('Dinero', 'Money'), fmt: (v) => `${num(v)} M€`, max: BUDGET0 },
+      { k: 'fuel', icon: '⛽', name: B('Combustible', 'Fuel'), short: B('Combustible', 'Fuel'), fmt: (v) => `${num(v)} %`, max: 100 },
+      { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), short: B('Comida', 'Supplies'), fmt: (v) => (v === 1 ? L('1 día', '1 day') : L(`${num(v)} días`, `${num(v)} days`)), max: 300 },
+      { k: 'health', icon: '❤️', name: B('Salud del equipo', 'Crew health'), short: B('Salud', 'Health'), fmt: (v) => `${num(v)} %`, max: 100 },
+      { k: 'hull', icon: '🛰️', name: B('Estado de la nave', 'Ship condition'), short: B('Nave', 'Ship'), fmt: (v) => `${num(v)} %`, max: 100 },
     ];
 
     // --- Capítulos del viaje ---
@@ -2184,7 +2184,7 @@
     const STARS = (() => {
       let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       let out = '';
-      for (let i = 0; i < 70; i++) out += `<circle cx="${(rnd() * 640).toFixed(1)}" cy="${(rnd() * 280).toFixed(1)}" r="${(rnd() * 1.1 + 0.3).toFixed(2)}" opacity="${(rnd() * 0.7 + 0.2).toFixed(2)}"/>`;
+      for (let i = 0; i < 70; i++) out += `<circle ${i % 4 === 0 ? `class="tw" style="animation-delay:${(i % 7) * 0.4}s"` : ''} cx="${(rnd() * 640).toFixed(1)}" cy="${(rnd() * 280).toFixed(1)}" r="${(rnd() * 1.1 + 0.3).toFixed(2)}" opacity="${(rnd() * 0.7 + 0.2).toFixed(2)}"/>`;
       return `<g class="sc-stars" fill="#fff">${out}</g>`;
     })();
     const DEFS = (p) => `<defs>
@@ -2194,6 +2194,8 @@
       <linearGradient id="${p}-flameh" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffa03c"/><stop offset="1" stop-color="#ff4a1c" stop-opacity="0"/></linearGradient>
       <radialGradient id="${p}-sun"><stop offset="0" stop-color="#fff6d8"/><stop offset=".35" stop-color="#ffc857"/><stop offset="1" stop-color="#ff8a3c" stop-opacity="0"/></radialGradient>
       <radialGradient id="${p}-glow"><stop offset="0" stop-color="#ff9a5a" stop-opacity=".9"/><stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${p}-vign" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+      <linearGradient id="${p}-plume" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dce6" stop-opacity="0"/><stop offset=".7" stop-color="#d9dce6" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".8"/></linearGradient>
       <linearGradient id="${p}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#3a2f4a"/></linearGradient>
     </defs>`;
     function planet(p, body, cx, cy, r, extra = '') {
@@ -2253,7 +2255,7 @@
         <circle cx="24" cy="21" r="14.5" fill="none" stroke="#cfe5ff" stroke-opacity=".55" stroke-width="2"/></svg>`;
     }
     const svgWrap = (key, state, fx, inner, label) => `<svg class="adv-scene" data-scene="${key}" data-state="${state}" data-fx="${fx || ''}" viewBox="0 0 640 280" role="img" aria-label="${label}">
-      ${DEFS('sc')}<rect width="640" height="280" fill="#070a16"/>${STARS}${inner}</svg>`;
+      ${DEFS('sc')}<rect width="640" height="280" fill="#070a16"/>${STARS}<g class="cam">${inner}</g><rect class="vign" width="640" height="280" fill="url(#sc-vign)" pointer-events="none"/></svg>`;
     const move = (pathId, dur, delay = 0) => `data-move="${pathId}" data-dur="${dur}" data-delay="${delay}"`;
 
     function prepScene() {
@@ -2318,7 +2320,9 @@
             <rect y="246" width="640" height="34" fill="#121828"/>
             <g class="tower"><rect x="372" y="${246 - h - 10}" width="12" height="${h + 10}" fill="#4a5470"/><path d="M372 ${246 - h} h-26" stroke="#4a5470" stroke-width="4"/></g>
             <g class="smoke"><circle cx="300" cy="246" r="20"/><circle cx="340" cy="250" r="24"/><circle cx="260" cy="250" r="18"/><circle cx="380" cy="248" r="16"/></g>
+            <rect class="plume" x="302" y="-120" width="36" height="366" fill="url(#${p}-plume)"/>
             <g class="${bad.trim()}">${rocket(p, 320, 246, h, s.rocket.id)}</g>
+            ${state === 'out' ? `<g class="countdown">${['3', '2', '1'].map((n, i) => `<text x="160" y="160" class="cd" style="animation-delay:${i * 0.6}s">${n}</text>`).join('')}<text x="160" y="160" class="cd go" style="animation-delay:1.8s">${L('¡Despegue!', 'Liftoff!')}</text></g>` : ''}
             <rect class="flash" width="640" height="280" fill="#fff"/>`, lbl);
         }
         case 'orbit':
@@ -2336,12 +2340,12 @@
             <text x="600" y="28" text-anchor="end" class="sc-label">${L('hacia Marte →', 'to Mars →')}</text>
             <path d="${P1}" class="pred" />
             <path id="mv-path" d="${path}" class="trail ${fx === 'direct' ? 'warn' : ''}" pathLength="1"/>
-            <g ${move('mv-path', 3200, 200)} class="mover"><g transform="scale(.6)">${ship(p, state === 'out' && fx === 'direct' ? 'burn' : '')}</g></g>
+            <g ${move('mv-path', 3200, 200)} class="mover"><g transform="scale(.6)">${ship(p, state === 'out' ? 'burn' : '')}</g></g>
             ${state === 'out' && fx !== 'direct' && !bad ? `<text x="470" y="96" class="sc-boost">${L('¡Impulso!', 'Boost!')}</text>` : ''}`, lbl);
         }
         case 'storm': {
-          const pts = Array.from({ length: 16 }, (_, i) => `<line class="pt" x1="40" y1="${40 + (i * 37) % 200}" x2="70" y2="${40 + (i * 37) % 200}" style="animation-delay:${(i * 0.23) % 1.6}s"/>`).join('');
-          return svgWrap('storm', state, fx, `<circle cx="-30" cy="140" r="170" fill="url(#${p}-sun)"/>${pts}
+          const pts = Array.from({ length: 26 }, (_, i) => `<line class="pt" x1="40" y1="${30 + (i * 37) % 220}" x2="${62 + (i % 3) * 8}" y2="${30 + (i * 37) % 220}" style="animation-delay:${((i * 0.23) % 1.6).toFixed(2)}s;animation-duration:${(1.3 + (i % 4) * 0.2).toFixed(1)}s"/>`).join('');
+          return svgWrap('storm', state, fx, `<circle class="sunpulse" cx="-30" cy="140" r="170" fill="url(#${p}-sun)"/>${pts}
             <g transform="translate(470 140) scale(1.2)">${ship(p, `${fx === 'ignore' ? ' hurt' : ''}`)}</g>
             <circle class="shield" cx="470" cy="140" r="86"/>
             ${fx === 'shelter' ? `<g class="shelter"><rect x="440" y="215" width="64" height="26" rx="6"/><text x="472" y="233" text-anchor="middle" font-size="14">💧🥫</text></g>` : ''}
@@ -2354,6 +2358,7 @@
               <g class="leak"><circle cx="54" cy="-14" r="2"/><circle cx="60" cy="-22" r="1.6"/><circle cx="50" cy="-26" r="1.3"/></g>
               <rect class="patch" x="42" y="-10" width="12" height="12" rx="2" fill="${fx === 'print' ? '#6be3b5' : '#ffc857'}"/>
               ${fx === 'seal' ? `<path d="M26 -10 L62 10 M62 -10 L26 10" stroke="#ff6a3d" stroke-width="3"/>` : ''}</g></g>
+            <g transform="translate(372 134)"><g class="burst">${Array.from({ length: 8 }, (_, i) => `<line x1="0" y1="0" x2="${(Math.cos(i * 0.785) * 22).toFixed(1)}" y2="${(Math.sin(i * 0.785) * 22).toFixed(1)}"/>`).join('')}<circle r="10"/></g></g>
             <g class="rock"><line x1="0" y1="0" x2="40" y2="-30" stroke="#ffb48f" stroke-width="2" opacity=".6"/><circle r="4" fill="#d9c2a6"/></g>
             ${fx === 'print' ? `<text x="140" y="70" font-size="34" class="pop">🖨️</text>` : fx === 'kit' ? `<text x="140" y="70" font-size="34" class="pop">🧰</text>` : fx === 'eng' ? `<text x="140" y="70" font-size="34" class="pop">🔧</text>` : ''}`, lbl);
         case 'sick': {
@@ -2389,24 +2394,24 @@
     }
 
     // Mapa del viaje: la nave avanza de la Tierra a Marte
-    const MAP_PATH = 'M48 52 Q 82 18 112 30 Q 140 42 190 56 Q 390 104 584 48';
+    const MAP_PATH = 'M38 30 Q 66 8 92 15 Q 118 22 170 32 Q 390 64 598 27';
     function mapView() {
       const cur = s.phase === 'trip' ? s.ev + 1 : s.phase === 'end' ? STAGES.length - 1 : 0;
       const f = cur / (STAGES.length - 1);
       const from = s.mapFrom == null ? f : s.mapFrom;
       s.mapFrom = f;
-      const stageName = s.phase === 'end' ? T(STAGES[STAGES.length - 1]) : T(STAGES[cur]);
-      return `<div class="adv-map"><svg viewBox="0 0 640 96" role="img" aria-label="${L('Mapa del viaje', 'Journey map')}: ${stageName}">
-        ${DEFS('mp')}${planet('mp', 'earth', 30, 54, 24)}${planet('mp', 'moon', 112, 30, 9)}${planet('mp', 'mars', 606, 46, 26)}
+      const stageName = T(STAGES[cur]);
+      return `<div class="adv-top"><p class="adv-stage-lbl"><span>${L('Etapa', 'Stage')} ${cur + 1}/${STAGES.length}</span><b>${stageName}</b></p>
+        <svg class="adv-map" viewBox="0 0 640 56" role="img" aria-label="${L('Mapa del viaje', 'Journey map')}: ${stageName}">
+        ${DEFS('mp')}${planet('mp', 'earth', 22, 30, 17)}${planet('mp', 'moon', 92, 15, 7)}${planet('mp', 'mars', 616, 27, 19)}
         <path d="${MAP_PATH}" fill="none" stroke="rgba(170,185,225,.35)" stroke-dasharray="3 6" stroke-width="2"/>
         <path id="map-path" d="${MAP_PATH}" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round" pathLength="1"
-          stroke-dasharray="1 1" stroke-dashoffset="${1 - from}" data-to="${1 - f}" class="map-done"/>
-        <g data-map="${from}" data-map-to="${f}"><g transform="scale(.42)">${ship('mp')}</g></g></svg>
-        <p class="adv-map-cap"><span>${L('Etapa', 'Stage')} ${cur + 1}/${STAGES.length}</span> <b>${stageName}</b></p></div>`;
+          stroke-dasharray="1 1" stroke-dashoffset="${1 - from}"/>
+        <g data-map="${from}" data-map-to="${f}"><g transform="scale(.32)">${ship('mp')}</g></g></svg></div>`;
     }
 
     // Animaciones con JavaScript: movimiento a lo largo de un camino
-    function placeOn(path, el, t, scaleFix) {
+    function placeOn(path, el, t) {
       const len = path.getTotalLength();
       const a = path.getPointAtLength(clamp(t, 0, 1) * len);
       const b = path.getPointAtLength(clamp(t + 0.01, 0, 1) * len);
@@ -2414,44 +2419,49 @@
       el.setAttribute('transform', `translate(${a.x} ${a.y}) rotate(${t >= 0.995 ? el.dataset.ang || ang : ang})`);
       el.dataset.ang = ang;
     }
+    function tween(dur, fn, delay = 0) {
+      if (reduceMotion) { fn(1); return; }
+      const t0 = performance.now() + delay;
+      fn(0);
+      const tick = (now) => {
+        const t = clamp((now - t0) / dur, 0, 1);
+        if (fn(t) === false) return;
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
     function animate() {
       root.querySelectorAll('[data-move]').forEach((el) => {
         const path = root.querySelector('#' + el.dataset.move);
-        const svg = el.closest('svg');
-        const out = svg.dataset.state === 'out';
         if (!path) return;
-        if (!out) { placeOn(path, el, 0); return; }
-        const dur = +el.dataset.dur, delay = +el.dataset.delay;
-        if (reduceMotion) { placeOn(path, el, 1); return; }
-        const t0 = performance.now() + delay;
-        placeOn(path, el, 0);
-        const tick = (now) => {
-          if (!el.isConnected) return;
-          const t = clamp((now - t0) / dur, 0, 1);
-          placeOn(path, el, smooth(t) * 0.5 + t * 0.5);
-          if (t < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
+        if (el.closest('svg').dataset.state !== 'out') { placeOn(path, el, 0); return; }
+        const loop = el.dataset.loop === '1';
+        const run = () => tween(+el.dataset.dur, (t) => {
+          if (!el.isConnected) return false;
+          placeOn(path, el, loop ? t : smooth(t) * 0.5 + t * 0.5);
+          if (t === 1 && loop) run();
+        }, +el.dataset.delay);
+        run();
       });
       const mp = root.querySelector('#map-path'), mk = root.querySelector('[data-map]');
       if (mp && mk) {
         const from = +mk.dataset.map, to = +mk.dataset.mapTo;
-        placeOn(mp, mk, from);
-        if (from !== to && !reduceMotion) {
-          const t0 = performance.now();
-          const tick = (now) => {
-            if (!mk.isConnected) return;
-            const t = clamp((now - t0) / 1400, 0, 1), v = lerp(from, to, smooth(t));
-            placeOn(mp, mk, v); mp.setAttribute('stroke-dashoffset', 1 - v);
-            if (t < 1) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-        } else { placeOn(mp, mk, to); mp.setAttribute('stroke-dashoffset', 1 - to); }
+        tween(from === to ? 1 : 1400, (t) => {
+          if (!mk.isConnected) return false;
+          const v = lerp(from, to, smooth(t));
+          placeOn(mp, mk, v); mp.setAttribute('stroke-dashoffset', 1 - v);
+        });
       }
-      // Barras de recursos: de su valor anterior al nuevo
+      // Barras: la de «fantasma» marca lo que se ha perdido o ganado
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        root.querySelectorAll('.adv-m-bar[data-w]').forEach((b) => { b.style.width = b.dataset.w + '%'; });
+        root.querySelectorAll('.g-track [data-w]').forEach((b) => { b.style.width = b.dataset.w + '%'; });
       }));
+      // Los números cuentan hasta su nuevo valor
+      root.querySelectorAll('.g-val[data-from]').forEach((el) => {
+        const r = RES.find((x) => x.k === el.dataset.k);
+        const a = +el.dataset.from, b = +el.dataset.to;
+        tween(1000, (t) => { if (!el.isConnected) return false; el.textContent = r.fmt(Math.round(lerp(a, b, smooth(t)))); }, 250);
+      });
     }
 
     // Efecto visual de cada opción (mismo orden que en EVENTS)
@@ -2485,6 +2495,15 @@
       const sign = v > 0 ? '+' : '−';
       return `<span class="adv-delta ${v > 0 ? 'up' : 'down'}">${r.icon} ${sign}${r.fmt(Math.abs(v))}</span>`;
     };
+    // Nivel de cada recurso: ok, aviso o peligro
+    function level(k, v, prep) {
+      if (k === 'budget') return v < 0 ? 'danger' : v < 60 ? 'warn' : 'ok';
+      if (k === 'food') {
+        const need = prep ? TRIP : TRIP - EVENTS[Math.min(s.ev + (s.outcome ? 1 : 0), EVENTS.length - 1)].day;
+        return v < need ? 'danger' : v < need + 20 ? 'warn' : 'ok';
+      }
+      return v < 30 ? 'danger' : v < 60 ? 'warn' : 'ok';
+    }
     function hud() {
       const prep = s.phase !== 'trip' && s.phase !== 'end';
       const vals = prep
@@ -2492,40 +2511,63 @@
           food: s.supplies ? s.supplies.days : 0, health: 100, hull: s.rocket ? s.rocket.hull : 0 }
         : s;
       const prev = s.prev;
-      const meters = RES.map((r) => {
+      return `<div class="adv-hud">${RES.map((r) => {
         const v = vals[r.k];
+        const pv = prev ? prev[r.k] : v;
         const pct = clamp(v / r.max, 0, 1) * 100;
-        const pPct = prev ? clamp(prev[r.k] / r.max, 0, 1) * 100 : pct;
-        const dv = prev ? v - prev[r.k] : 0;
-        const low = r.k === 'food' ? v < (prep ? TRIP : TRIP - (EVENTS[Math.min(s.ev, EVENTS.length - 1)].day)) : (r.k !== 'budget' && pct < 30);
-        return `<div class="adv-meter${low && v > 0 ? ' low' : ''}${v < 0 ? ' neg' : ''}${dv < 0 ? ' hit' : dv > 0 ? ' gain' : ''}">
-          <span class="adv-m-head" title="${T(r.name)}"><span>${r.icon} <span class="adv-m-name">${T(r.name)}</span></span><b>${r.fmt(v)}</b></span>
-          <span class="adv-m-track"><span class="adv-m-bar ${r.k}" style="width:${pPct}%" ${prev ? `data-w="${pct}"` : ''}></span></span>
+        const pPct = clamp(pv / r.max, 0, 1) * 100;
+        const dv = v - pv;
+        const lv = (prep && !v && r.k !== 'budget') ? 'empty' : level(r.k, v, prep);
+        return `<div class="gauge g-${r.k} lv-${lv}${dv < 0 ? ' hit' : dv > 0 ? ' gain' : ''}" title="${T(r.name)}">
+          <div class="g-head"><span class="g-ic" aria-hidden="true">${r.icon}</span>
+            <b class="g-val" ${dv ? `data-from="${pv}" data-to="${v}" data-k="${r.k}"` : ''}>${r.fmt(pv)}</b></div>
+          <div class="g-track"><i class="g-ghost" style="width:${pPct}%" data-w="${pct}"></i><i class="g-fill" style="width:${pPct}%" data-w="${pct}"></i></div><span class="g-name">${T(r.short)}</span>
           ${dv ? `<span class="adv-float ${dv > 0 ? 'up' : 'down'}">${dv > 0 ? '+' : '−'}${r.fmt(Math.abs(dv))}</span>` : ''}</div>`;
-      }).join('');
-      const chips = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="adv-chip">${avatar(c, 22)} ${T(c.name).split(' · ')[0]}</span>`; })
-        .concat(s.tools.map((id) => { const t = byId(TOOLS, id); return `<span class="adv-chip tool">${t.icon} ${T(t.name)}</span>`; })).join('');
-      return `${mapView()}
-        <div class="adv-hud">${meters}</div>${chips ? `<div class="adv-chips">${chips}</div>` : ''}`;
+      }).join('')}</div>`;
+    }
+    // Tripulación y herramientas encima de la ilustración
+    function crewOverlay() {
+      if (!s.crew.length && !s.tools.length) return '';
+      const crew = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="ov-ava" title="${T(c.name)}">${avatar(c, 28)}</span>`; }).join('');
+      const tools = s.tools.map((id) => { const t = byId(TOOLS, id); return `<span class="ov-tool" title="${T(t.name)}">${t.icon}</span>`; }).join('');
+      return `<div class="adv-ov">${crew ? `<div class="ov-crew">${crew}</div>` : ''}${tools ? `<div class="ov-tools">${tools}</div>` : ''}</div>`;
+    }
+    function banner() {
+      const o = s.outcome;
+      if (s.phase !== 'trip' || !o) return '';
+      const hurt = Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0);
+      const tone = o.bad || hurt <= -20 ? 'bad' : hurt < 0 ? 'mid' : 'ok';
+      const txt = { ok: L('✅ ¡Bien hecho!', '✅ Well done!'), mid: L('🩹 Superado, con daños', '🩹 Made it, with damage'), bad: L('⚠️ ¡Problemas!', '⚠️ Trouble!') }[tone];
+      return `<div class="adv-banner ${tone}" role="status">${txt}</div>`;
+    }
+    function lostScene() {
+      return svgWrap('lost', 'out', 'lost', `${planet('sc', 'mars', 560, 70, 34)}
+        <g class="drifter"><g transform="translate(250 160)"><g class="tumble"><g transform="scale(1.3)">${ship('sc', 'hurt')}</g></g></g></g>
+        <g class="smoke-trail"><circle cx="210" cy="175" r="10"/><circle cx="180" cy="185" r="14"/><circle cx="145" cy="196" r="18"/></g>`, L('La nave, dañada, va a la deriva', 'The damaged ship drifting'));
+    }
+    function winScene() {
+      const sparks = Array.from({ length: 14 }, (_, i) => `<circle class="spark" cx="${320 + Math.cos(i) * 170}" cy="${140 + Math.sin(i * 1.7) * 110}" r="${2 + (i % 3)}" style="animation-delay:${(i * 0.21).toFixed(2)}s"/>`).join('');
+      return svgWrap('win', 'out', 'win', `${planet('sc', 'mars', 320, 140, 96)}<ellipse class="orbit-line" cx="320" cy="140" rx="160" ry="66" pathLength="1"/>${sparks}
+        <path id="mv-path" d="M480 140 A160 66 0 1 1 479.9 139.9" fill="none"/><g data-move="mv-path" data-dur="9000" data-delay="0" data-loop="1" class="mover"><g transform="scale(.5)">${ship('sc')}</g></g>`, L('La nave en órbita de Marte', 'The ship in orbit around Mars'));
     }
 
-    function optCard(o, { on, disabled, reason, cost, group, value, multi }) {
-      return `<button type="button" class="adv-opt${on ? ' on' : ''}" data-${group}="${value}" ${multi ? `aria-pressed="${!!on}"` : `aria-pressed="${!!on}"`} ${disabled ? 'disabled' : ''}>
+    function optCard(o, { on, disabled, reason, cost, group, value }) {
+      return `<button type="button" class="adv-opt${on ? ' on' : ''}" data-${group}="${value}" aria-pressed="${!!on}" ${disabled ? 'disabled' : ''}>
         <span class="adv-opt-head"><span class="adv-opt-icon" aria-hidden="true">${o.icon || ''}</span><span class="adv-opt-name">${T(o.name)}</span>${cost != null ? `<span class="adv-cost">${num(cost)} M€</span>` : ''}</span>
-        <span class="adv-opt-desc">${T(o.desc)}</span>${reason ? `<span class="adv-why">${reason}</span>` : ''}</button>`;
+        <span class="adv-opt-desc">${T(o.desc)}</span>${o.stats ? `<span class="adv-opt-stats">${o.stats}</span>` : ''}${reason ? `<span class="adv-why">${reason}</span>` : ''}</button>`;
     }
 
     function prepView() {
       const left = BUDGET0 - spentPrep();
       const steps = ['rocket', 'crew', 'supplies', 'tools'];
       const n = steps.indexOf(s.phase) + 1;
-      const head = (k, title, lead) => `<p class="kicker">${L('Preparación', 'Preparation')} · ${n}/4</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>${prepScene()}`;
-      let body = '', next = '', ok = false;
+      const head = (title, lead) => `<p class="kicker">${L('Preparación', 'Preparation')} · ${n}/4</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>`;
+      let body = '', ok = false;
       if (s.phase === 'rocket') {
-        body = ROCKETS.map((r) => optCard(Object.assign({}, r, { desc: B(`${r.desc.es} Combustible ${r.fuel} %, nave ${r.hull} %, riesgo en despegue ${Math.round(r.risk * 100)} %.`,
-          `${r.desc.en} Fuel ${r.fuel}%, ship ${r.hull}%, launch risk ${Math.round(r.risk * 100)}%.`) }), { on: s.rocket === r, cost: r.cost, group: 'rocket', value: r.id })).join('');
+        body = ROCKETS.map((r) => optCard(Object.assign({}, r, { stats: `<span title="${L('Combustible', 'Fuel')}">⛽ ${r.fuel} %</span><span title="${L('Nave', 'Ship')}">🛰️ ${r.hull} %</span><span title="${L('Riesgo en el despegue', 'Launch risk')}">⚠️ ${Math.round(r.risk * 100)} %</span>` }),
+          { on: s.rocket === r, cost: r.cost, group: 'rocket', value: r.id })).join('');
         ok = !!s.rocket;
-        return head('rocket', L('Elige el cohete', 'Choose the rocket'), L('Es la decisión más cara. Un cohete mejor lleva más combustible y es más resistente, pero deja menos dinero para lo demás.', 'This is the most expensive decision. A better rocket carries more fuel and is tougher, but leaves less money for everything else.'))
+        return head(L('Elige el cohete', 'Choose the rocket'), L('Un cohete mejor lleva más combustible y aguanta más, pero deja menos dinero para lo demás.', 'A better rocket carries more fuel and is tougher, but leaves less money for everything else.'))
           + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: el equipo ▶', 'Next: the crew ▶'), false);
       }
       if (s.phase === 'crew') {
@@ -2533,10 +2575,10 @@
           const on = s.crew.includes(c.id);
           const full = !on && s.crew.length >= 4;
           const poor = !on && c.cost > left;
-          return optCard(Object.assign({}, c, { icon: avatar(c, 40) }), { on, cost: c.cost, group: 'crew', value: c.id, multi: true, disabled: full || poor, reason: full ? L('Máximo 4 personas', 'Maximum 4 people') : poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+          return optCard(Object.assign({}, c, { icon: avatar(c, 34) }), { on, cost: c.cost, group: 'crew', value: c.id, disabled: full || poor, reason: full ? L('Máximo 4 personas', 'Maximum 4 people') : poor ? L('No hay presupuesto', 'Not enough budget') : '' });
         }).join('');
         ok = s.crew.length >= 2;
-        return head('crew', L('Forma el equipo (de 2 a 4 personas)', 'Pick the crew (2 to 4 people)'), L('Cada especialista cobra su sueldo y sabe resolver problemas distintos. Más personas también significa más comida, agua y oxígeno.', 'Each specialist has a salary and can solve different problems. More people also means more food, water and oxygen.'))
+        return head(L('Forma el equipo (2 a 4)', 'Pick the crew (2 to 4)'), L('Cada especialista cobra un sueldo y resuelve problemas distintos. Más gente = más comida y oxígeno.', 'Each specialist has a salary and solves different problems. More people = more food and oxygen.'))
           + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: provisiones ▶', 'Next: supplies ▶'), true);
       }
       if (s.phase === 'supplies') {
@@ -2546,23 +2588,22 @@
           return optCard(Object.assign({ icon: '🥫' }, o), { on: s.supplies === o, cost: c, group: 'sup', value: o.id, disabled: poor, reason: poor ? L('No hay presupuesto', 'Not enough budget') : '' });
         }).join('');
         ok = !!s.supplies;
-        return head('supplies', L('Comida, agua y oxígeno', 'Food, water and oxygen'), L(`El viaje dura unos ${TRIP} días (7 meses). El precio depende de cuántas personas viajan: ${s.crew.length}.`, `The journey takes about ${TRIP} days (7 months). The price depends on how many people travel: ${s.crew.length}.`))
+        return head(L('Comida, agua y oxígeno', 'Food, water and oxygen'), L(`El viaje dura unos ${TRIP} días. El precio depende de cuántas personas viajan (${s.crew.length}).`, `The journey takes about ${TRIP} days. The price depends on how many people travel (${s.crew.length}).`))
           + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: herramientas ▶', 'Next: tools ▶'), true);
       }
       body = TOOLS.map((t) => {
         const on = s.tools.includes(t.id);
         const poor = !on && t.cost > left;
-        return optCard(t, { on, cost: t.cost, group: 'tool', value: t.id, multi: true, disabled: poor, reason: poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+        return optCard(t, { on, cost: t.cost, group: 'tool', value: t.id, disabled: poor, reason: poor ? L('No hay presupuesto', 'Not enough budget') : '' });
       }).join('');
-      return head('tools', L('Herramientas y equipamiento', 'Tools and equipment'), L('Opcionales. Lo que no gastes queda como fondo de emergencia para pagar ayuda desde la Tierra durante el viaje.', 'Optional. Whatever you do not spend stays as an emergency fund to pay for help from Earth during the trip.'))
+      return head(L('Herramientas', 'Tools'), L('Opcionales. Lo que no gastes queda como fondo de emergencia para el viaje.', 'Optional. Whatever you do not spend stays as an emergency fund for the trip.'))
         + `<div class="adv-opts">${body}</div>` + nav(true, L('🚀 ¡Al despegue!', '🚀 Go for launch!'), true);
     }
     const nav = (ok, label, back) => `<div class="controls adv-nav">${back ? `<button type="button" class="btn small ghost" data-act="back">◀ ${L('Atrás', 'Back')}</button>` : ''}<button type="button" class="btn small primary" data-act="next" ${ok ? '' : 'disabled'}>${label}</button></div>`;
 
     function tripView() {
       const e = EVENTS[s.ev];
-      const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>
-        <p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p>${tripScene(e, s.outcome)}`;
+      const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>`;
       if (s.outcome) {
         const o = s.outcome;
         const ds = Object.entries(o.d).filter(([, v]) => v).map(([k, v]) => fmtDelta(k, v)).join('') || `<span class="adv-delta">${L('Sin cambios', 'No change')}</span>`;
@@ -2575,25 +2616,23 @@
         const why = check(c.req);
         const hint = typeof c.hint === 'function' ? c.hint(s) : c.hint;
         return `<button type="button" class="adv-opt choice" data-choice="${i}" ${why ? 'disabled' : ''}>
-          <span class="adv-opt-name">${T(c.title)}</span><span class="adv-opt-desc">${T(hint)}</span>${why ? `<span class="adv-why">🔒 ${why}</span>` : ''}</button>`;
+          <span class="adv-opt-name"><span class="adv-key" aria-hidden="true">${'ABCD'[i]}</span>${T(c.title)}</span><span class="adv-opt-desc">${why ? `🔒 ${why}` : T(hint)}</span></button>`;
       }).join('');
-      return head + `<div class="adv-opts choices">${opts}</div>`;
+      return head + `<p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p><div class="adv-opts choices">${opts}</div>`;
     }
 
     function endView() {
       const e = s.end;
       if (!e.win) {
         return `<div class="adv-end fail"><p class="kicker">${L('Fin de la misión', 'Mission over')}</p><h3 class="adv-title">${e.icon} ${T(e.title)}</h3><p class="adv-text">${T(e.text)}</p>
-          <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué habrías cambiado en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
+          <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué cambiarías en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
           <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button></div></div>`;
       }
       const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>+${num(p[1])}</b></li>`).join('');
       let best = 0;
       try { best = +localStorage.getItem('advBest') || 0; if (e.score > best) localStorage.setItem('advBest', e.score); } catch (err) { /* sin almacenamiento */ }
       return `<div class="adv-end win"><p class="kicker">${L('¡Misión cumplida!', 'Mission accomplished!')}</p><h3 class="adv-title">🔴 ${L('Estáis en órbita de Marte', 'You are in orbit around Mars')}</h3>
-        ${svgWrap('win', 'out', 'win', `${planet('sc', 'mars', 320, 150, 100)}<ellipse class="orbit-line" cx="320" cy="150" rx="150" ry="70" pathLength="1"/>
-          <path id="mv-path" d="M470 150 A150 70 0 1 1 469.9 149" fill="none"/><g data-move="mv-path" data-dur="9000" data-delay="0" class="mover"><g transform="scale(.5)">${ship('sc')}</g></g>`, L('La nave en órbita de Marte', 'The ship in orbit around Mars'))}
-        <p class="adv-stars" aria-label="${e.stars} / 3">${'⭐'.repeat(e.stars)}${'<span class="off">⭐</span>'.repeat(3 - e.stars)}</p>
+        <p class="adv-stars" aria-label="${e.stars} / 3">${[0, 1, 2].map((i) => `<span class="${i < e.stars ? 'on' : 'off'}" style="animation-delay:${0.3 + i * 0.35}s">⭐</span>`).join('')}</p>
         <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
         ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
         <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button></div></div>`;
@@ -2606,11 +2645,25 @@
     }
 
     function render(focus) {
-      const main = s.phase === 'end' ? endView() : s.phase === 'trip' ? tripView() : prepView();
-      root.innerHTML = `${hud()}<div class="adv-stage">${main}</div>${logView()}`;
+      const trip = s.phase === 'trip';
+      const panel = s.phase === 'end' ? endView() : trip ? tripView() : prepView();
+      const scene = s.phase === 'end' ? (s.end.win ? winScene() : lostScene()) : trip ? tripScene(EVENTS[s.ev], s.outcome) : prepScene();
+      const o = trip && s.outcome;
+      const shake = o && (o.bad || Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0) <= -20);
+      const key = `${s.phase}-${s.ev}-${s.outcome ? 1 : 0}`;
+      const enter = key !== s.sceneKey;
+      s.sceneKey = key;
+      root.innerHTML = `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
+          <div class="adv-screen${shake ? ' shake' : ''}">${scene}${crewOverlay()}${banner()}</div>${hud()}</div>
+        <div class="adv-panel">${panel}</div></div>${logView()}`;
       s.prev = null;
       animate();
-      if (focus) { const h = root.querySelector('.adv-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+      if (focus) {
+        const h = root.querySelector('.adv-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+        const top = root.getBoundingClientRect().top;
+        if (top < 0 || top > window.innerHeight * 0.5) root.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+        const p = root.querySelector('.adv-panel'); if (p) p.scrollTop = 0;
+      }
     }
 
     // --- Lógica ---
@@ -2716,6 +2769,22 @@
       // Volver a ajustar si el presupuesto queda negativo (p. ej., al cambiar de cohete)
       if (s.phase === 'rocket') { s.crew.length && BUDGET0 - spentPrep() < 0 && (s.crew = [], s.supplies = null, s.tools = []); }
       render(false);
+    });
+
+    // Atajos de teclado: A–D para elegir, Intro para continuar
+    document.addEventListener('keydown', (ev) => {
+      if (ev.altKey || ev.ctrlKey || ev.metaKey || !root.offsetParent) return;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test((ev.target.tagName || '').toUpperCase())) return;
+      const r = root.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+      const i = 'abcd'.indexOf(ev.key.toLowerCase());
+      if (s.phase === 'trip' && !s.outcome && i >= 0) {
+        const b = root.querySelector(`[data-choice="${i}"]:not([disabled])`);
+        if (b) { ev.preventDefault(); b.click(); }
+      } else if (ev.key === 'Enter' && s.phase === 'trip' && s.outcome && !(ev.target.closest && ev.target.closest('button'))) {
+        const b = root.querySelector('[data-act="continue"]');
+        if (b) { ev.preventDefault(); b.click(); }
+      }
     });
 
     reset();
