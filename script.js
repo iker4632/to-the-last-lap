@@ -1999,9 +1999,16 @@
 
     const B = (es, en) => ({ es, en });
     const T = (o) => (typeof o === 'string' ? o : L(o.es, o.en));
-    const BUDGET0 = 1000;          // millones de euros
+    // Dificultad: cambia el presupuesto, el riesgo, los daños, el tiempo de los minijuegos y la puntuación
+    const LEVELS = {
+      easy: { budget: 1200, risk: 0.6, dmg: 0.75, time: 1.3, score: 0.8, icon: '🟢', name: B('Fácil', 'Easy'), desc: B('1.200 M€ · menos riesgo · más tiempo', '€1,200M · less risk · more time') },
+      normal: { budget: 1000, risk: 1, dmg: 1, time: 1, score: 1, icon: '🟡', name: B('Normal', 'Normal'), desc: B('1.000 M€ · la misión tal cual', '€1,000M · the mission as it is') },
+      hard: { budget: 850, risk: 1.4, dmg: 1.25, time: 0.75, score: 1.3, icon: '🔴', name: B('Difícil', 'Hard'), desc: B('850 M€ · más riesgo y daños · ×1,3 puntos', '€850M · more risk and damage · ×1.3 points') },
+    };
+    let LV = LEVELS.normal;
+    let BUDGET0 = LV.budget;       // millones de euros
     const TRIP = 210;              // días de viaje hasta Marte
-    const roll = (p) => Math.random() < p;
+    const roll = (p) => Math.random() < Math.min(0.95, p * LV.risk);
 
     // --- Catálogo de la fase de preparación ---
     const ROCKETS = [
@@ -2045,7 +2052,7 @@
 
     // --- Recursos ---
     const RES = [
-      { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), short: B('Dinero', 'Money'), fmt: (v) => `${num(v)} M€`, max: BUDGET0 },
+      { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), short: B('Dinero', 'Money'), fmt: (v) => `${num(v)} M€`, get max() { return BUDGET0; } },
       { k: 'fuel', icon: '⛽', name: B('Combustible', 'Fuel'), short: B('Combustible', 'Fuel'), fmt: (v) => `${num(v)} %`, max: 100 },
       { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), short: B('Comida', 'Supplies'), fmt: (v) => (v === 1 ? L('1 día', '1 day') : L(`${num(v)} días`, `${num(v)} days`)), max: 300 },
       { k: 'health', icon: '❤️', name: B('Salud del equipo', 'Crew health'), short: B('Salud', 'Health'), fmt: (v) => `${num(v)} %`, max: 100 },
@@ -2093,6 +2100,7 @@
           'You are approaching the Moon. If you pass right behind it, its gravity will give you a free push towards Mars. But the engine must fire at exactly the right moment.'),
         fact: B('En el efecto honda la nave «roba» un poquito de la velocidad de la Luna. La Luna ni se entera, pero la nave gana mucha velocidad.', 'In a slingshot the spacecraft “steals” a tiny bit of the Moon’s speed. The Moon does not notice, but the spacecraft gains a lot of speed.'),
         choices: [
+          { fx: 'manual', mini: 'sling', title: B('Encender el motor tú (minijuego)', 'Fire the engine yourself (mini-game)'), hint: B('Pulsa en el momento justo: menos combustible si aciertas', 'Press at the right moment: less fuel if you nail it') },
           { title: B('Maniobra manual', 'Manual manoeuvre'), hint: B('−5 % combustible · riesgo 10 %', '−5% fuel · 10% risk'), req: { crew: 'pilot' },
             run: () => (roll(0.1)
               ? { bad: true, text: B('Valeria enciende el motor un segundo tarde. Hay que corregir y se gasta más.', 'Valeria fires the engine a second late. A correction is needed, using more fuel.'), d: { fuel: -15 } }
@@ -2167,6 +2175,7 @@
           'Mars looks huge through the window. You are going too fast: if you do not brake, you will fly past and carry on into deep space.'),
         fact: B('El aerofrenado usa el roce con la atmósfera de Marte para frenar sin gastar combustible. Es barato, pero calienta y sacude la nave.', 'Aerobraking uses friction with the Martian atmosphere to slow down without fuel. It is cheap, but it heats and shakes the ship.'),
         choices: [
+          { fx: 'aero', mini: 'aero', title: B('Pilotar tú el aerofrenado (minijuego)', 'Fly the aerobraking yourself (mini-game)'), hint: B('Mantén la nave en la franja de la atmósfera', 'Keep the ship in the atmosphere band'), req: { fuel: 6 } },
           { title: B('Frenar solo con el motor', 'Brake with the engine only'), hint: (s) => B(`−${s.crew.includes('pilot') ? 30 : 35} % combustible · sin riesgo`, `−${s.crew.includes('pilot') ? 30 : 35}% fuel · no risk`), req: (s) => ({ fuel: s.crew.includes('pilot') ? 30 : 35 }),
             run: (s) => ({ text: B('El motor ruge durante 20 minutos. Entráis en órbita de Marte con suavidad.', 'The engine roars for 20 minutes. You slip gently into orbit around Mars.'), d: { fuel: s.crew.includes('pilot') ? -30 : -35 } }) },
           { title: B('Combinar motor y aerofrenado', 'Combine engine and aerobraking'), hint: B('−18 % combustible · −12 % nave', '−18% fuel · −12% ship'), req: { fuel: 18 },
@@ -2175,6 +2184,26 @@
             run: (s) => (roll(s.crew.includes('pilot') ? 0.1 : 0.3)
               ? { bad: true, text: B('Entráis demasiado bajo. El escudo térmico brilla al rojo y algo se rompe.', 'You go in too low. The heat shield glows red-hot and something breaks.'), d: { fuel: -6, hull: -45 } }
               : { text: B('La atmósfera de Marte os frena como un paracaídas gigante. ¡Qué ahorro!', 'The Martian atmosphere slows you like a giant parachute. What a saving!'), d: { fuel: -6, hull: -25 } }) },
+        ] },
+      { id: 'land', day: TRIP + 5, icon: '🛬', place: B('Aterrizaje', 'Landing'),
+        title: B('¿Dónde aterrizáis?', 'Where do you land?'),
+        text: B('Ya estáis en órbita. Es la última decisión: elegir dónde baja el módulo de aterrizaje. Cuanto más interesante es el sitio para la ciencia, más difícil es llegar.',
+          'You are in orbit now. This is the last decision: choosing where the lander goes down. The more interesting the place is for science, the harder it is to reach.'),
+        fact: B('Aterrizar en Marte es dificilísimo: la atmósfera es muy fina para frenar solo con paracaídas, pero lo bastante densa para calentar la nave. Por eso se combinan escudo térmico, paracaídas y retrocohetes.',
+          'Landing on Mars is extremely hard: the atmosphere is too thin to slow down with parachutes alone, but thick enough to heat the ship. That is why a heat shield, parachutes and retro-rockets are combined.'),
+        choices: [
+          { fx: 'utopia', title: B('Llanura de Utopía: lisa y segura', 'Utopia Planitia: flat and safe'), hint: B('−5 % combustible · −5 % nave · ciencia +60', '−5% fuel · −5% ship · science +60'), req: { fuel: 5 },
+            run: () => ({ science: 60, landed: true, text: B('Un aterrizaje de manual en una llanura enorme. ¡Estáis en Marte!', 'A textbook landing on a huge plain. You are on Mars!'), d: { fuel: -5, hull: -5 } }) },
+          { fx: 'jezero', title: B('Cráter Jezero, un antiguo lago', 'Jezero Crater, an ancient lake'), hint: (s) => B(`−6 % combustible · riesgo ${s.crew.includes('pilot') ? 8 : 20} % · ciencia +130`, `−6% fuel · ${s.crew.includes('pilot') ? 8 : 20}% risk · science +130`), req: { fuel: 6 },
+            run: (s) => (roll(s.crew.includes('pilot') ? 0.08 : 0.2)
+              ? { bad: true, science: 130, landed: true, text: B('Bajáis junto a un antiguo delta de río, pero una roca rompe una pata del módulo.', 'You land next to an ancient river delta, but a rock breaks one of the lander’s legs.'), d: { fuel: -6, hull: -25 } }
+              : { science: 130, landed: true, text: B('¡Aterrizaje junto al antiguo delta del río! Aquí trabaja el rover Perseverance buscando rastros de vida.', 'Landing next to the ancient river delta! This is where the Perseverance rover searches for signs of life.'), d: { fuel: -6 } }) },
+          { fx: 'pole', title: B('Polo norte, con hielo de agua', 'North pole, with water ice'), hint: B('−8 % combustible · riesgo 35 % · ciencia +180', '−8% fuel · 35% risk · science +180'), req: { fuel: 8 },
+            run: () => (roll(0.35)
+              ? { bad: true, science: 180, landed: true, text: B('El hielo resbala y el módulo vuelca un poco. Pero habéis encontrado agua.', 'The ice is slippery and the lander tips over a little. But you have found water.'), d: { fuel: -8, hull: -30 } }
+              : { science: 180, landed: true, text: B('¡Hielo de agua bajo vuestros pies! Un tesoro para futuras bases en Marte.', 'Water ice under your feet! A treasure for future bases on Mars.'), d: { fuel: -8 } }) },
+          { fx: 'stay', title: B('Quedarse en órbita y estudiar desde arriba', 'Stay in orbit and study from above'), hint: B('Sin riesgo · ciencia +30', 'No risk · science +30'),
+            run: () => ({ science: 30, text: B('Desde la órbita fotografiáis todo el planeta. Sin riesgos, aunque sin pisar Marte.', 'From orbit you photograph the whole planet. No risks, but no footsteps on Mars.'), d: {} }) },
         ] },
     ];
     // Situaciones extra: en cada partida salen al azar (el cortocircuito con el minijuego siempre aparece)
@@ -2191,6 +2220,18 @@
             run: () => ({ text: B('El sistema de reserva funciona, pero gasta combustible y deja parte de la nave sin protección.', 'The backup works, but it burns fuel and leaves part of the ship unprotected.'), d: { fuel: -8, hull: -10 } }) },
           { fx: 'remote', title: B('Que la Tierra lo arregle a distancia', 'Let Earth fix it remotely'), hint: B('−60 M€', '−€60M'), req: { budget: 60 },
             run: () => ({ text: B('Los ingenieros de la Tierra reprograman el panel durante horas. Caro, pero sin riesgos.', 'Engineers on Earth reprogram the panel for hours. Expensive, but safe.'), d: { budget: -60 } }) },
+        ] },
+      { id: 'signal', icon: '📡', title: B('Se pierde el contacto con la Tierra', 'Contact with Earth is lost'),
+        text: B('La nave ha girado sin querer y la antena ya no apunta a la Tierra. Sin contacto, no llegan los datos ni las instrucciones.',
+          'The ship has turned by accident and the antenna no longer points at Earth. Without contact, no data or instructions get through.'),
+        fact: B('Las antenas de las naves son muy direccionales: tienen que apuntar a la Tierra con una precisión de décimas de grado. Allí las escuchan las enormes antenas de la Red de Espacio Profundo.',
+          'Spacecraft antennas are very directional: they must point at Earth to within tenths of a degree. There, the huge antennas of the Deep Space Network listen to them.'),
+        choices: [
+          { fx: 'aim', mini: 'antenna', title: B('Apuntar la antena tú (minijuego)', 'Point the antenna yourself (mini-game)'), hint: B('Gira la nave hasta encontrar la señal', 'Turn the ship until you find the signal') },
+          { fx: 'com', title: B('Amara recalcula el apuntado', 'Amara recalculates the pointing'), hint: B('Sin daños', 'No harm'), req: { crew: 'com' },
+            run: () => ({ text: B('Amara calcula dónde está la Tierra con las estrellas y reorienta la antena. ¡Contacto!', 'Amara works out where Earth is from the stars and re-aims the antenna. Contact!'), d: {} }) },
+          { fx: 'wait', title: B('Esperar al modo seguro automático', 'Wait for automatic safe mode'), hint: B('−12 días de provisiones · −5 % salud', '−12 days of supplies · −5% health'),
+            run: () => ({ text: B('Tras días de silencio, el ordenador encuentra la Tierra solo. Han sido días largos.', 'After days of silence, the computer finds Earth on its own. They were long days.'), d: { food: -12, health: -5 } }) },
         ] },
       { id: 'oxygen', icon: '🫁', title: B('Falla el filtro de CO₂', 'The CO₂ filter fails'),
         text: B('El aparato que limpia el dióxido de carbono del aire se ha atascado. Sin él, el aire se irá volviendo irrespirable poco a poco.',
@@ -2280,7 +2321,7 @@
             run: () => ({ text: B('La misión es lo primero. Seguís con lo vuestro.', 'The mission comes first. You carry on.'), d: {} }) },
         ] },
     ];
-    const FIXED_IDS = ['launch', 'orbit', 'moon', 'arrive'];
+    const FIXED_IDS = ['launch', 'orbit', 'moon', 'arrive', 'land'];
     const MID_DAYS = [30, 65, 100, 140, 175];
     function buildTrip() {
       const pool = EVENTS.filter((e) => !FIXED_IDS.includes(e.id)).concat(NEW_EVENTS.filter((e) => e.id !== 'cables'));
@@ -2289,9 +2330,9 @@
       const month = (d) => Math.max(1, Math.ceil(d / 30));
       return [byId(EVENTS, 'launch'), byId(EVENTS, 'orbit'), byId(EVENTS, 'moon')]
         .concat(mid.map((e, i) => Object.assign({}, e, { day: MID_DAYS[i], place: B(`Crucero · mes ${month(MID_DAYS[i])}`, `Cruise · month ${month(MID_DAYS[i])}`) })))
-        .concat(byId(EVENTS, 'arrive'));
+        .concat(byId(EVENTS, 'arrive'), byId(EVENTS, 'land'));
     }
-    const stages = () => [B('Preparación', 'Preparation')].concat(s.events ? s.events.map((e) => e.place) : Array.from({ length: 9 }, () => B('…', '…')));
+    const stages = () => [B('Preparación', 'Preparation')].concat(s.events ? s.events.map((e) => e.place) : Array.from({ length: 10 }, () => B('…', '…')));
 
 
     // ---------- Ilustraciones (SVG con las fotos reales de la Tierra, la Luna y Marte) ----------
@@ -2504,6 +2545,19 @@
             <path id="mv-path" d="${path}" class="pred"/>
             <g ${move('mv-path', 2600, 200)} class="mover" transform="translate(20 60)"><g transform="scale(.75)">${ship(p, state === 'out' ? `${fx === 'engine' || fx === 'combo' ? 'retro' : ''}${fx === 'aero' || fx === 'combo' ? ' plasma' : ''}${bad}` : '')}</g></g>`, lbl);
         }
+        case 'land': {
+          if (fx === 'stay' && state === 'out') return winScene();
+          return svgWrap('land', state, fx, `${marsGround(p)}
+            <g transform="translate(320 0)"><g class="descent${state === 'out' ? ' down' : ''}${bad}">${lander(p, true)}</g></g>
+            ${state === 'out' ? `<g class="dust"><circle cx="300" cy="212" r="14"/><circle cx="340" cy="214" r="18"/><circle cx="320" cy="210" r="10"/></g>` : ''}
+            ${state === 'idle' ? ['utopia', 'jezero', 'pole'].map((k, i) => `<g transform="translate(${110 + i * 210} 236)"><circle r="5" fill="#ffe08a"/><text y="22" text-anchor="middle" class="sc-label sm">${{ utopia: 'Utopía', jezero: 'Jezero', pole: L('Polo', 'Pole') }[k]}</text></g>`).join('') : ''}`, lbl);
+        }
+        case 'signal': {
+          const ok = state === 'out' && !o.bad;
+          return svgWrap('signal', state, fx, `${planet(p, 'earth', 80, 70, 26)}
+            <g transform="translate(400 150)"><g class="${ok ? 'reaim' : 'lost'}"><path class="beam${ok ? ' ok' : ''}" d="M0 -20 L-14 -150 L14 -150Z"/>${ship(p)}</g></g>
+            ${ok ? `<g class="signal"><path d="M120 90 q30 30 0 60"/><path d="M140 75 q45 45 0 90"/></g>` : `<text x="560" y="60" font-size="34" class="warn-ic">📵</text>`}`, lbl);
+        }
         case 'cables': {
           const cols = ['#ff5a5a', '#4ea3ff', '#ffc857', '#6be3b5'];
           const ok = state === 'out' && fx === 'puzzle' && !o.bad;
@@ -2582,7 +2636,11 @@
         <path id="map-path" d="${MAP_PATH}" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round" pathLength="1"
           stroke-dasharray="1 1" stroke-dashoffset="${1 - from}"/>
         <g data-map="${from}" data-map-to="${f}"><g transform="scale(.32)">${ship('mp')}</g></g></svg>
-        ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}</div>`;
+        <div class="adv-tools">
+        ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}
+        <button type="button" class="adv-icon-btn" data-act="ach" aria-label="${L('Ver las medallas', 'See the medals')}" title="${L('Medallas', 'Medals')}">🏅<small>${store.get('advAch', []).length}/${ACH.length}</small></button>
+        <button type="button" class="adv-icon-btn" data-act="sound" aria-pressed="${SND.on}" aria-label="${SND.on ? L('Silenciar', 'Mute') : L('Activar el sonido', 'Turn sound on')}" title="${L('Sonido', 'Sound')}">${SND.on ? '🔊' : '🔇'}</button>
+        ${s.phase !== 'rocket' ? `<button type="button" class="adv-icon-btn" data-act="newgame" aria-label="${L('Empezar una partida nueva', 'Start a new game')}" title="${L('Nueva partida', 'New game')}">↺</button>` : ''}</div></div>`;
     }
 
     // Animaciones con JavaScript: movimiento a lo largo de un camino
@@ -2640,14 +2698,15 @@
     }
 
     // Efecto visual de cada opción (mismo orden que en EVENTS)
-    const FX = { launch: ['wait', 'now'], orbit: ['panels', 'eva', 'patch', 'one'], moon: ['manual', 'auto', 'direct'],
+    const FX = { launch: ['wait', 'now'], orbit: ['panels', 'eva', 'patch', 'one'], moon: ['manual', 'manual', 'auto', 'direct'],
       storm: ['shield', 'shelter', 'ignore'], meteor: ['kit', 'print', 'eng', 'seal'], sick: ['medkit', 'med', 'kit', 'earth'],
-      nav: ['pilot', 'antenna', 'auto'], arrive: ['engine', 'combo', 'aero'] };
+      nav: ['pilot', 'antenna', 'auto'], arrive: ['aero', 'engine', 'combo', 'aero'] };
 
     let s;
     function reset() {
       s = { phase: 'rocket', rocket: null, crew: [], supplies: null, tools: [], ev: 0, outcome: null, lowPower: false,
-        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null, prev: null, mapFrom: null, events: null, puzzle: null, diary: false };
+        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null, prev: null, mapFrom: null, events: null, puzzle: null, mini: null, diary: false, level: s && s.level || 'normal', science: 0, landed: null, bonus: 0, quiz: null, quizUsed: [], quizOk: 0, quizAsked: [], newAch: [], achOpen: false };
+      LV = LEVELS[s.level]; BUDGET0 = LV.budget; s.budget = BUDGET0;
     }
     const crewCost = () => s.crew.reduce((a, id) => a + byId(CREW, id).cost, 0);
     const supCost = (opt) => Math.round(opt.days * Math.max(s.crew.length, 1) * SUP_COST);
@@ -2711,7 +2770,7 @@
       const o = s.outcome;
       if (s.phase !== 'trip' || !o) return '';
       const tone = toneOf(o);
-      const txt = { ok: L('✅ ¡Bien hecho!', '✅ Well done!'), mid: L('🩹 Superado, con daños', '🩹 Made it, with damage'), bad: L('⚠️ ¡Problemas!', '⚠️ Trouble!') }[tone];
+      const txt = { ok: L('✅ ¡Bien hecho!', '✅ Well done!'), mid: L('🩹 Superado, con pérdidas', '🩹 Made it, with losses'), bad: L('⚠️ ¡Problemas!', '⚠️ Trouble!') }[tone];
       return `<div class="adv-banner ${tone}" role="status">${txt}</div>`;
     }
     function lostScene() {
@@ -2719,7 +2778,29 @@
         <g class="drifter"><g transform="translate(250 160)"><g class="tumble"><g transform="scale(1.3)">${ship('sc', 'hurt')}</g></g></g></g>
         <g class="smoke-trail"><circle cx="210" cy="175" r="10"/><circle cx="180" cy="185" r="14"/><circle cx="145" cy="196" r="18"/></g>`, L('La nave, dañada, va a la deriva', 'The damaged ship drifting'));
     }
+    // Módulo de aterrizaje con paracaídas
+    function lander(p, chute) {
+      return `<g class="lander">${chute ? `<g class="chute"><path d="M-34 -70 Q0 -110 34 -70 Z" fill="#ff7a45" stroke="#fff" stroke-width="1.5"/><path d="M-34 -70 L-8 -18 M34 -70 L8 -18 M0 -98 L0 -18" stroke="#cfd6e4" stroke-width="1"/></g>` : ''}
+        <path d="M-18 0 L-26 14 M18 0 L26 14" stroke="#aab3c8" stroke-width="3"/><path d="M-30 14 h8 M22 14 h8" stroke="#aab3c8" stroke-width="3"/>
+        <path d="M-20 0 L-14 -18 L14 -18 L20 0Z" fill="url(#${p}-body)"/><rect x="-22" y="-2" width="44" height="6" rx="2" fill="#c9a24a"/>
+        <circle cx="0" cy="-10" r="4" fill="#4ea3ff" stroke="#2a3550"/><g class="retro"><path d="M-8 4 Q0 26 8 4Z" fill="url(#${p}-flame)"/></g></g>`;
+    }
+    function marsGround(p) {
+      return `<defs><linearGradient id="${p}-msky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a2a"/><stop offset="1" stop-color="#c9805a"/></linearGradient>
+        <linearGradient id="${p}-mgr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b85a32"/><stop offset="1" stop-color="#6a2a14"/></linearGradient></defs>
+        <rect width="640" height="280" fill="url(#${p}-msky)"/><path d="M0 200 Q120 186 230 196 T470 190 T640 198 V280 H0Z" fill="url(#${p}-mgr)"/>
+        <path d="M60 206 l30 -14 l26 14Z M500 200 l40 -26 l44 26Z" fill="#8a3a1c"/><circle cx="560" cy="60" r="14" fill="#f6e3c0" opacity=".6"/>`;
+    }
     function winScene() {
+      if (s.landed) {
+        const site = { utopia: B('Utopía', 'Utopia'), jezero: B('Jezero', 'Jezero'), pole: B('Polo norte', 'North pole') }[s.landed];
+        return svgWrap('win', 'out', 'landed', `${marsGround('sc')}
+          <g transform="translate(300 200)">${lander('sc', false)}</g>
+          <g transform="translate(370 210)"><g class="flagup"><path d="M0 0 V-46" stroke="#e9edf7" stroke-width="2.5"/><path d="M0 -46 h30 v18 h-30Z" fill="#ff7a45"/><text x="15" y="-33" text-anchor="middle" font-size="10" fill="#fff">TLL</text></g></g>
+          <g transform="translate(250 206)"><g class="astro"><circle r="7" fill="#fff"/><rect x="-6" y="6" width="12" height="14" rx="4" fill="#e9edf7"/><circle r="4" cy="-1" fill="#ffb84d" opacity=".8"/></g></g>
+          ${s.landed === 'pole' ? `<path d="M420 214 q30 -10 60 0 q-30 8 -60 0Z" fill="#e8f4ff" opacity=".85"/>` : ''}
+          <text x="24" y="36" class="sc-label">📍 ${T(site)}</text>`, L('El módulo de aterrizaje en la superficie de Marte', 'The lander on the surface of Mars'));
+      }
       const sparks = Array.from({ length: 14 }, (_, i) => `<circle class="spark" cx="${320 + Math.cos(i) * 170}" cy="${140 + Math.sin(i * 1.7) * 110}" r="${2 + (i % 3)}" style="animation-delay:${(i * 0.21).toFixed(2)}s"/>`).join('');
       return svgWrap('win', 'out', 'win', `${planet('sc', 'mars', 320, 140, 96)}<ellipse class="orbit-line" cx="320" cy="140" rx="160" ry="66" pathLength="1"/>${sparks}
         <path id="mv-path" d="M480 140 A160 66 0 1 1 479.9 139.9" fill="none"/><g data-move="mv-path" data-dur="9000" data-delay="0" data-loop="1" class="mover"><g transform="scale(.5)">${ship('sc')}</g></g>`, L('La nave en órbita de Marte', 'The ship in orbit around Mars'));
@@ -2741,7 +2822,8 @@
         body = ROCKETS.map((r) => optCard(Object.assign({}, r, { stats: `<span title="${L('Combustible', 'Fuel')}">⛽ ${r.fuel} %</span><span title="${L('Nave', 'Ship')}">🛰️ ${r.hull} %</span><span title="${L('Riesgo en el despegue', 'Launch risk')}">⚠️ ${Math.round(r.risk * 100)} %</span>` }),
           { on: s.rocket === r, cost: r.cost, group: 'rocket', value: r.id })).join('');
         ok = !!s.rocket;
-        return head(L('Elige el cohete', 'Choose the rocket'), L('Un cohete mejor lleva más combustible y aguanta más, pero deja menos dinero para lo demás.', 'A better rocket carries more fuel and is tougher, but leaves less money for everything else.'))
+        const lv = `<div class="adv-level" role="radiogroup" aria-label="${L('Dificultad', 'Difficulty')}">${Object.entries(LEVELS).map(([k, v]) => `<button type="button" role="radio" aria-checked="${s.level === k}" data-level="${k}" class="${s.level === k ? 'on' : ''}"><b>${v.icon} ${T(v.name)}</b><small>${T(v.desc)}</small></button>`).join('')}</div>`;
+        return lv + head(L('Elige el cohete', 'Choose the rocket'), L('Un cohete mejor lleva más combustible y aguanta más, pero deja menos dinero para lo demás.', 'A better rocket carries more fuel and is tougher, but leaves less money for everything else.'))
           + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: el equipo ▶', 'Next: the crew ▶'), false);
       }
       if (s.phase === 'crew') {
@@ -2777,14 +2859,16 @@
 
     function tripView() {
       const e = s.events[s.ev];
+      if (s.quiz) return quizPanel();
       if (s.puzzle) return puzzlePanel(e);
+      if (s.mini) return miniPanel(e);
       const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>`;
       if (s.outcome) {
         const o = s.outcome;
         const ds = Object.entries(o.d).filter(([, v]) => v).map(([k, v]) => fmtDelta(k, v)).join('') || `<span class="adv-delta">${L('Sin cambios', 'No change')}</span>`;
         return head + `<div class="adv-outcome" aria-live="polite"><p class="adv-chosen">${L('Has elegido', 'You chose')}: <strong>${T(o.choice)}</strong></p><p>${T(o.text)}</p>
           <div class="adv-deltas">${ds}</div>${o.extra ? `<p class="adv-extra">${T(o.extra)}</p>` : ''}</div>
-          <aside class="adv-fact"><span aria-hidden="true">💡</span><p>${T(e.fact)}</p></aside>
+          <aside class="adv-fact"><span aria-hidden="true">💡</span><p>${T(e.fact)}${learnMore(e.id) ? `<br>${learnMore(e.id)}` : ''}</p></aside>
           <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="continue">${s.end ? L('Ver el final ▶', 'See the ending ▶') : L('Continuar ▶', 'Continue ▶')}</button></div>`;
       }
       const opts = e.choices.map((c, i) => {
@@ -2796,21 +2880,25 @@
       return head + `<p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p><div class="adv-opts choices">${opts}</div>`;
     }
 
+    function newAchView() {
+      if (!s.newAch || !s.newAch.length) return '';
+      return `<div class="adv-newach"><p>${L('Medallas nuevas', 'New medals')}</p>${s.newAch.map((id) => { const a = byId(ACH, id); return `<span title="${T(a.desc)}">${a.icon} ${T(a.name)}</span>`; }).join('')}</div>`;
+    }
     function endView() {
       const e = s.end;
       if (!e.win) {
         return `<div class="adv-end fail"><p class="kicker">${L('Fin de la misión', 'Mission over')}</p><h3 class="adv-title">${e.icon} ${T(e.title)}</h3><p class="adv-text">${T(e.text)}</p>
           <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué cambiarías en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
-          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button></div></div>`;
+          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button></div>${newAchView()}</div>`;
       }
-      const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>+${num(p[1])}</b></li>`).join('');
+      const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>${p[1] < 0 ? '−' : '+'}${num(Math.abs(p[1]))}</b></li>`).join('');
       let best = 0;
       try { best = +localStorage.getItem('advBest') || 0; if (e.score > best) localStorage.setItem('advBest', e.score); } catch (err) { /* sin almacenamiento */ }
-      return `<div class="adv-end win"><p class="kicker">${L('¡Misión cumplida!', 'Mission accomplished!')}</p><h3 class="adv-title">🔴 ${L('Estáis en órbita de Marte', 'You are in orbit around Mars')}</h3>
+      return `<div class="adv-end win"><p class="kicker">${L('¡Misión cumplida!', 'Mission accomplished!')}</p><h3 class="adv-title">${s.landed ? `🚩 ${L('¡Habéis aterrizado en Marte!', 'You have landed on Mars!')}` : `🔴 ${L('Estáis en órbita de Marte', 'You are in orbit around Mars')}`}</h3>
         <p class="adv-stars" aria-label="${e.stars} / 3">${[0, 1, 2].map((i) => `<span class="${i < e.stars ? 'on' : 'off'}" style="animation-delay:${0.3 + i * 0.35}s">⭐</span>`).join('')}</p>
         <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
         ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
-        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button></div></div>`;
+        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button></div>${newAchView()}</div>`;
     }
 
     function logView() {
@@ -2821,7 +2909,7 @@
     function render(focus) {
       const trip = s.phase === 'trip';
       const panel = s.phase === 'end' ? endView() : trip ? tripView() : prepView();
-      const scene = s.phase === 'end' ? (s.end.win ? winScene() : lostScene()) : trip ? (s.puzzle ? puzzleScene() : tripScene(s.events[s.ev], s.outcome)) : prepScene();
+      const scene = s.phase === 'end' ? (s.end.win ? winScene() : lostScene()) : trip ? (s.quiz ? quizScene() : s.puzzle ? puzzleScene() : s.mini ? miniScene(s.events[s.ev]) : tripScene(s.events[s.ev], s.outcome)) : prepScene();
       const o = trip && s.outcome;
       const shake = o && (o.bad || Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0) <= -20);
       const key = `${s.phase}-${s.ev}-${s.outcome ? 1 : 0}`;
@@ -2830,8 +2918,10 @@
       root.innerHTML = `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
           <div class="adv-screen${shake ? ' shake' : ''}">${scene}${crewOverlay()}${banner()}</div>${hud()}</div>
         <div class="adv-panel">${panel}</div></div>`;
-      diaryHost.innerHTML = s.diary ? diaryView() : '';
-      document.documentElement.classList.toggle('dia-open', !!s.diary);
+      diaryHost.innerHTML = s.diary ? diaryView() : s.achOpen ? achView() : '';
+      document.documentElement.classList.toggle('dia-open', !!(s.diary || s.achOpen));
+      if (trip && !s.outcome && !s.quiz) markSeen(s.events[s.ev].id);
+      saveGame();
       s.prev = null;
       animate();
       if (focus) {
@@ -2847,9 +2937,12 @@
     const diaryHost = document.createElement('div');
     diaryHost.className = 'adv-diary-host';
     document.body.appendChild(diaryHost);
+    // Tono de un resultado: mira salud y nave, pero también combustible y provisiones gastados en la decisión
     const toneOf = (o) => {
-      const hurt = Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0);
-      return o.bad || hurt <= -20 ? 'bad' : hurt < 0 ? 'mid' : 'ok';
+      const d = o.cd || o.d;
+      const hurt = Math.min(d.health || 0, 0) + Math.min(d.hull || 0, 0);
+      const fuel = Math.min(d.fuel || 0, 0), food = Math.min(d.food || 0, 0);
+      return o.bad || hurt <= -20 || fuel <= -30 ? 'bad' : (hurt < 0 || fuel <= -12 || food <= -20) ? 'mid' : 'ok';
     };
     function diaryView() {
       const items = s.log.map((l, k) => {
@@ -2857,7 +2950,7 @@
         return `<li class="dia-entry t-${l.tone || 'info'}" style="animation-delay:${Math.min(k, 10) * 0.05}s">
           <div class="dia-day"><span>${L('Día', 'Day')}</span><b>${l.day}</b></div>
           <div class="dia-dot" aria-hidden="true">${l.icon || '📌'}</div>
-          <div class="dia-body"><p class="dia-place">${T(l.place)}${l.tone && l.tone !== 'info' ? ` <span class="dia-tag">${{ ok: L('Bien', 'Good'), mid: L('Con daños', 'Damaged'), bad: L('Problema', 'Trouble') }[l.tone]}</span>` : ''}</p>
+          <div class="dia-body"><p class="dia-place">${T(l.place)}${l.tone && l.tone !== 'info' ? ` <span class="dia-tag">${{ ok: L('Bien', 'Good'), mid: L('Con pérdidas', 'Losses'), bad: L('Problema', 'Trouble') }[l.tone]}</span>` : ''}</p>
             <h4>${T(l.choice)}</h4>${l.text ? `<p>${T(l.text)}</p>` : ''}${ds ? `<div class="adv-deltas">${ds}</div>` : ''}</div></li>`;
       }).join('');
       const crew = s.crew.map((id) => `<span title="${T(byId(CREW, id).name)}">${avatar(byId(CREW, id), 30)}</span>`).join('');
@@ -2877,7 +2970,7 @@
       const n = eng ? 4 : 5;
       let right;
       do { right = Array.from({ length: n }, (_, k) => k).sort(() => Math.random() - 0.5); } while (right.some((w, k) => w === k) && Math.random() < 0.85);
-      s.puzzle = { choice: i, n, right, links: [], mistakes: 0, sel: null, wrong: null, t0: performance.now(), dur: (eng ? 22 : 16) * 1000 };
+      s.puzzle = { choice: i, n, right, links: [], mistakes: 0, sel: null, wrong: null, t0: performance.now(), dur: Math.round((eng ? 22 : 16) * 1000 * LV.time) };
       render(true);
       puzzleTimer();
     }
@@ -2897,8 +2990,8 @@
     function connect(i, j) {
       const p = s.puzzle;
       if (!p || p.links.includes(i)) return;
-      if (p.right[j] === i) { p.links.push(i); p.wrong = null; }
-      else { p.mistakes++; p.wrong = j; p.t0 -= 1500; } // un chispazo resta 1,5 s
+      if (p.right[j] === i) { p.links.push(i); p.wrong = null; sfx('plink'); }
+      else { p.mistakes++; p.wrong = j; p.t0 -= 1500; sfx('spark'); } // un chispazo resta 1,5 s
       p.sel = null;
       if (p.links.length === p.n) return finishPuzzle(true);
       render(false);
@@ -2911,7 +3004,7 @@
       const secs = Math.max(0, Math.round((performance.now() - p.t0) / 1000));
       const r = ok
         ? (p.mistakes === 0
-          ? { text: B(`¡Perfecto! Todos los cables conectados a la primera en ${secs} segundos. Vuelven las luces.`, `Perfect! All cables connected first time in ${secs} seconds. The lights come back on.`), d: {} }
+          ? { mini: 'wires-perfect', text: B(`¡Perfecto! Todos los cables conectados a la primera en ${secs} segundos. Vuelven las luces.`, `Perfect! All cables connected first time in ${secs} seconds. The lights come back on.`), d: {} }
           : { text: B(`¡Conseguido! Las luces vuelven, aunque ha habido ${p.mistakes} chispazo${p.mistakes > 1 ? 's' : ''} por el camino.`, `Done! The lights come back on, although there ${p.mistakes > 1 ? `were ${p.mistakes} sparks` : 'was 1 spark'} along the way.`), d: { hull: -4 * Math.min(p.mistakes, 4) } })
         : { bad: true, text: B(`Se acaba el tiempo con ${p.links.length} de ${p.n} cables conectados. El panel se recalienta y la cabina se llena de humo.`, `Time runs out with ${p.links.length} of ${p.n} cables connected. The panel overheats and the cabin fills with smoke.`),
           d: { hull: -12 - 4 * (p.n - p.links.length), health: -8 } };
@@ -2971,6 +3064,432 @@
       if (r) { suppressClick = true; connect(d0.i, +r.dataset.pr); }
     });
     let suppressClick = false;
+    // ---------- Minijuegos de habilidad: honda, aerofrenado y antena ----------
+    function startMini(type, i) {
+      const pilot = s.crew.includes('pilot');
+      const m = { type, choice: i, t0: performance.now(), done: false };
+      if (type === 'sling') Object.assign(m, { c: 0.62, w: Math.min(0.34, (pilot ? 0.24 : 0.17) * LV.time), speed: 0.9 / LV.time, x: 0, dur: 10000 });
+      if (type === 'aero') Object.assign(m, { y: 120, vy: 0, hold: false, inT: 0, lowT: 0, highT: 0, band: Math.round((pilot ? 66 : 54) * LV.time), dur: 8000, delay: 1200, trail: [] });
+      if (type === 'antenna') Object.assign(m, { a: 0, va: 0, dir: 0, aim: null, e: (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 70), lock: 0, tol: 7 * LV.time, dur: Math.round(14000 * LV.time) });
+      s.mini = m;
+      render(true);
+      requestAnimationFrame(miniLoop);
+    }
+    let lastT = 0;
+    function miniLoop(now) {
+      const m = s.mini;
+      if (!m || m.done) return;
+      const dt = Math.min(0.05, lastT ? (now - lastT) / 1000 : 0.016);
+      lastT = now;
+      const t = now - m.t0;
+      const $id = (id) => root.querySelector('#' + id);
+      const timer = root.querySelector('.pz-timer-fill');
+      if (timer) { timer.style.width = clamp(1 - t / (m.dur + (m.delay || 0)), 0, 1) * 100 + '%'; timer.classList.toggle('hurry', m.dur + (m.delay || 0) - t < 3000); }
+      if (m.type === 'sling') {
+        m.x = 1 - Math.abs(((t / 1000 * m.speed) % 2) - 1); // va y viene a velocidad constante
+        const mk = $id('mn-marker'); if (mk) mk.setAttribute('transform', `translate(${100 + 440 * m.x} 0)`);
+        if (t > m.dur) return finishMini('miss');
+      }
+      if (m.type === 'aero') {
+        const band = 150 + Math.sin(t / 900) * 28;
+        const top = band - m.band / 2, bot = band + m.band / 2;
+        if (t > m.delay) {
+          m.vy += (m.hold ? -620 : 300) * dt;
+          m.vy = clamp(m.vy, -150, 150);
+          m.y = clamp(m.y + m.vy * dt, 20, 262);
+          if (m.y < top) m.highT += dt; else if (m.y > bot) m.lowT += dt; else m.inT += dt;
+        }
+        const x = 40 + 560 * clamp((t - m.delay) / m.dur, 0, 1);
+        const bd = $id('mn-band'); if (bd) { bd.setAttribute('y', top); bd.setAttribute('height', m.band); }
+        const lo = $id('mn-low'); if (lo) lo.setAttribute('y', bot);
+        const sh = $id('mn-ship'); if (sh) { sh.setAttribute('transform', `translate(${x} ${m.y}) rotate(${m.vy / 6})`); sh.classList.toggle('plasma', m.y >= top && m.y <= bot); sh.classList.toggle('hot', m.y > bot); }
+        if (t > m.delay && (!m.trail.length || x - m.trail[m.trail.length - 1][0] > 6)) { m.trail.push([x, m.y]); const tr = $id('mn-trail'); if (tr) tr.setAttribute('points', m.trail.map((q) => q.join(',')).join(' ')); }
+        const st = $id('mn-status'); const tot = m.inT + m.lowT + m.highT;
+        if (st) st.textContent = `${Math.round(tot ? (m.inT / tot) * 100 : 0)} %`;
+        const go = $id('mn-go'); if (go) go.style.opacity = t < m.delay ? 1 : 0;
+        if (t > m.delay + m.dur) return finishMini('aero');
+      }
+      if (m.type === 'antenna') {
+        if (m.aim != null) { const diff = ((m.aim - m.a + 540) % 360) - 180; m.va += clamp(diff * 6, -400, 400) * dt; }
+        m.va += m.dir * 260 * dt;
+        m.va *= Math.pow(0.12, dt);
+        m.a += m.va * dt;
+        m.e += Math.sin(t / 1300) * 14 * dt;
+        const diff = Math.abs(((m.a - m.e + 540) % 360) - 180);
+        const ok = diff < m.tol;
+        m.lock = clamp(m.lock + (ok ? dt / 2 : -dt / 1.5), 0, 1);
+        const sh = $id('mn-ship'); if (sh) sh.setAttribute('transform', `translate(320 140) rotate(${m.a})`);
+        const ea = $id('mn-earth'); if (ea) { const r = (m.e - 90) * Math.PI / 180; ea.setAttribute('transform', `translate(${320 + Math.cos(r) * 118} ${140 + Math.sin(r) * 118})`); }
+        const bm = $id('mn-beam'); if (bm) bm.classList.toggle('ok', ok);
+        const lk = $id('mn-lock'); if (lk) lk.setAttribute('width', 200 * m.lock);
+        const st = $id('mn-status'); if (st) st.textContent = ok ? L('📶 ¡Señal!', '📶 Signal!') : diff < 30 ? L('📶 Débil', '📶 Weak') : L('📵 Sin señal', '📵 No signal');
+        if (m.lock >= 1) return finishMini('locked');
+        if (t > m.dur) return finishMini('lost');
+      }
+      requestAnimationFrame(miniLoop);
+    }
+    function miniPress() {
+      const m = s.mini;
+      if (!m || m.done || m.type !== 'sling') return;
+      const dist = Math.abs(m.x - m.c);
+      finishMini(dist < m.w * 0.15 ? 'perfect' : dist < m.w / 2 ? 'good' : 'miss');
+    }
+    function finishMini(res) {
+      const m = s.mini;
+      if (!m || m.done) return;
+      m.done = true; lastT = 0;
+      const e = s.events[s.ev], c = e.choices[m.choice];
+      let r;
+      if (m.type === 'sling') {
+        r = res === 'perfect' ? { mini: 'sling-perfect', text: B('¡PERFECTO! Encendido en el instante exacto: la Luna os lanza hacia Marte casi gratis.', 'PERFECT! Ignition at the exact moment: the Moon flings you towards Mars almost for free.'), d: { fuel: -3 } }
+          : res === 'good' ? { text: B('¡Bien! Un encendido casi perfecto. La honda funciona.', 'Good! An almost perfect burn. The slingshot works.'), d: { fuel: -7 } }
+            : { bad: true, text: B('Demasiado pronto o demasiado tarde… Hay que corregir y se gasta mucho combustible.', 'Too early or too late… A correction is needed and lots of fuel is used.'), d: { fuel: -16 } };
+      }
+      if (m.type === 'aero') {
+        const tot = m.inT + m.lowT + m.highT || 1, fin = m.inT / tot;
+        const pct = Math.round(fin * 100);
+        if (fin >= 0.75) r = { mini: 'aero-pro', text: B(`¡Aerofrenado de maestro! ${pct} % del tiempo dentro de la franja buena.`, `Master aerobraking! ${pct}% of the time inside the good band.`), d: { fuel: -6, hull: -8 } };
+        else if (fin >= 0.5) r = { text: B(`Aerofrenado aceptable: ${pct} % dentro de la franja. La nave se calienta un poco más.`, `Acceptable aerobraking: ${pct}% inside the band. The ship heats up a bit more.`), d: { fuel: -8, hull: -15 } };
+        else if (m.lowT >= m.highT) r = { bad: true, text: B(`Demasiado bajo (${pct} % en la franja): el escudo térmico se pone al rojo y se daña.`, `Too low (${pct}% in the band): the heat shield glows red and gets damaged.`), d: { fuel: -6, hull: -35 } };
+        else r = s.fuel >= 24 ? { bad: true, text: B(`Demasiado alto (${pct} % en la franja): casi no frenáis y hay que terminar con el motor.`, `Too high (${pct}% in the band): you barely slow down and must finish with the engine.`), d: { fuel: -24, hull: -5 } }
+          : { bad: true, text: B('Demasiado alto y sin combustible para corregir: la nave repite pasadas bruscas por la atmósfera.', 'Too high and no fuel to correct: the ship makes rough repeat passes through the atmosphere.'), d: { fuel: -s.fuel, hull: -30 } };
+      }
+      if (m.type === 'antenna') {
+        const secs = Math.round((performance.now() - m.t0) / 1000);
+        r = res === 'locked'
+          ? { mini: secs <= 6 ? 'antenna-fast' : 'antenna', text: B(`¡Contacto recuperado en ${secs} segundos! Llegan de golpe todos los mensajes de la Tierra.`, `Contact restored in ${secs} seconds! All the messages from Earth arrive at once.`), d: {} }
+          : { bad: true, text: B('No conseguís fijar la señal. La Tierra tiene que buscaros con todas sus antenas, y eso cuesta dinero y nervios.', 'You cannot lock the signal. Earth has to search for you with all its antennas, which costs money and nerves.'), d: { budget: -30, health: -5 } };
+      }
+      s.mini = null;
+      resolve(e, c, m.choice, r);
+    }
+    function miniScene(e) {
+      const m = s.mini, p = 'sc';
+      if (m.type === 'sling') {
+        return svgWrap('mini-sling', 'idle', '', `${planet(p, 'earth', 70, 120, 34)}${planet(p, 'moon', 360, 110, 44)}
+          <path d="M90 110 C 210 160, 320 155, 380 115 S 460 40, 640 10" class="pred"/>
+          <g transform="translate(330 155) rotate(-20) scale(.6)">${ship(p)}</g>
+          <text x="320" y="222" text-anchor="middle" class="sc-label">${L('¡Enciende cuando la aguja esté en verde!', 'Fire when the needle is in the green!')}</text>
+          <rect x="100" y="234" width="440" height="22" rx="11" fill="#0a0f1d" stroke="#3a4566" stroke-width="2"/>
+          <rect x="${100 + 440 * (m.c - m.w / 2)}" y="236" width="${440 * m.w}" height="18" rx="9" fill="#2fae7f" opacity=".7"/>
+          <rect x="${100 + 440 * (m.c - m.w * 0.15)}" y="236" width="${440 * m.w * 0.3}" height="18" rx="5" fill="#8ff0c8"/>
+          <g id="mn-marker"><path d="M0 228 L-7 220 H7Z M0 228 V262" stroke="#fff" stroke-width="3" fill="#fff"/></g>`, L('Minijuego: encendido en el momento justo', 'Mini-game: fire at the right moment'));
+      }
+      if (m.type === 'aero') {
+        return svgWrap('mini-aero', 'idle', '', `${planet(p, 'mars', 320, 900, 680)}
+          <rect id="mn-low" x="0" y="190" width="640" height="200" fill="rgba(255,60,30,.22)"/>
+          <rect id="mn-band" x="0" y="130" width="640" height="46" fill="rgba(255,170,90,.28)" stroke="#ffb36b" stroke-dasharray="6 6"/>
+          <text x="630" y="20" text-anchor="end" class="sc-label sm">${L('Arriba: no frena', 'Up high: no braking')}</text>
+          <text x="630" y="272" text-anchor="end" class="sc-label sm warn">${L('Abajo: ¡quema!', 'Down low: it burns!')}</text>
+          <polyline id="mn-trail" points="" fill="none" stroke="#ffb36b" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+          <g id="mn-ship" transform="translate(40 120)"><g transform="scale(.55)">${ship(p)}</g></g>
+          <text id="mn-go" x="320" y="110" text-anchor="middle" class="cd go" style="opacity:1;animation:none">${L('¡Prepárate!', 'Get ready!')}</text>`, L('Minijuego: mantén la nave en la franja de la atmósfera', 'Mini-game: keep the ship in the atmosphere band'));
+      }
+      return svgWrap('mini-antenna', 'idle', '', `<circle cx="320" cy="140" r="118" fill="none" stroke="rgba(170,185,225,.18)" stroke-dasharray="3 7"/>
+        <g id="mn-earth" transform="translate(320 22)">${planet(p, 'earth', 0, 0, 20)}</g>
+        <g id="mn-ship" transform="translate(320 140)"><path id="mn-beam" class="beam" d="M0 -20 L-14 -150 L14 -150Z"/><g transform="rotate(0)">${ship(p)}</g></g>
+        <rect x="220" y="252" width="200" height="12" rx="6" fill="#0a0f1d" stroke="#3a4566"/><rect id="mn-lock" x="220" y="252" width="0" height="12" rx="6" fill="#6be3b5"/>
+        <text x="320" y="244" text-anchor="middle" class="sc-label sm">${L('Fija la señal 2 segundos', 'Hold the signal for 2 seconds')}</text>`, L('Minijuego: apunta la antena a la Tierra', 'Mini-game: point the antenna at Earth'));
+    }
+    function miniPanel(e) {
+      const m = s.mini;
+      const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)} · ${L('Minijuego', 'Mini-game')}</p>`;
+      const bar = `<div class="pz-hud"><div class="pz-timer"><i class="pz-timer-fill"></i></div><span class="pz-secs" id="mn-status"></span></div>`;
+      if (m.type === 'sling') return head + `<h3 class="adv-title">🌙 ${L('Enciende el motor detrás de la Luna', 'Fire the engine behind the Moon')}</h3>
+        <p class="adv-text">${L('La aguja va y viene. Pulsa <strong>¡Encender!</strong> (o la barra espaciadora) cuando esté en la zona verde. En la verde clara, ¡encendido perfecto!', 'The needle swings back and forth. Press <strong>Fire!</strong> (or the space bar) when it is in the green zone. In the light green, a perfect burn!')}${s.crew.includes('pilot') ? ` ${L('Valeria agranda la zona verde.', 'Valeria makes the green zone bigger.')}` : ''}</p>
+        ${bar}<div class="controls adv-nav"><button type="button" class="btn primary mini-big" data-mini="press">🔥 ${L('¡Encender!', 'Fire!')}</button></div>`;
+      if (m.type === 'aero') return head + `<h3 class="adv-title">🔥 ${L('Pilota el aerofrenado', 'Fly the aerobraking')}</h3>
+        <p class="adv-text">${L('<strong>Mantén pulsado</strong> el botón (o la barra espaciadora, o la pantalla) para subir y suéltalo para bajar. Quédate dentro de la franja naranja: más abajo te quemas; más arriba no frenas.', '<strong>Hold</strong> the button (or the space bar, or the screen) to climb and let go to drop. Stay inside the orange band: lower and you burn; higher and you do not brake.')}</p>
+        ${bar}<div class="controls adv-nav"><button type="button" class="btn primary mini-big" data-mini="hold">⬆️ ${L('Mantener para subir', 'Hold to climb')}</button></div>`;
+      return head + `<h3 class="adv-title">📡 ${L('Apunta la antena a la Tierra', 'Point the antenna at Earth')}</h3>
+        <p class="adv-text">${L('Gira la nave con <strong>◀ ▶</strong> (o las flechas del teclado, o tocando hacia dónde quieres apuntar) hasta que el haz toque la Tierra. Mantén la señal 2 segundos.', 'Turn the ship with <strong>◀ ▶</strong> (or the arrow keys, or by tapping where you want to point) until the beam touches Earth. Hold the signal for 2 seconds.')}</p>
+        ${bar}<div class="controls adv-nav mini-pad"><button type="button" class="btn mini-big" data-mini="left" aria-label="${L('Girar a la izquierda', 'Turn left')}">◀</button><button type="button" class="btn mini-big" data-mini="right" aria-label="${L('Girar a la derecha', 'Turn right')}">▶</button></div>`;
+    }
+    // Controles de los minijuegos (ratón, táctil y teclado)
+    const miniDown = (ev) => {
+      const m = s.mini;
+      if (!m) return;
+      const b = ev.target.closest && ev.target.closest('[data-mini]');
+      const onScene = ev.target.closest && ev.target.closest('.adv-screen');
+      if (!b && !onScene) return;
+      const k = b ? b.dataset.mini : null;
+      if (m.type === 'sling' && (k === 'press' || onScene)) { ev.preventDefault(); miniPress(); }
+      if (m.type === 'aero' && (k === 'hold' || onScene)) { ev.preventDefault(); m.hold = true; }
+      if (m.type === 'antenna') {
+        if (k === 'left' || k === 'right') { ev.preventDefault(); m.dir = k === 'left' ? -1 : 1; m.aim = null; }
+        else if (onScene) { ev.preventDefault(); m.aiming = true; aimAt(ev); }
+      }
+    };
+    const aimAt = (ev) => {
+      const svg = root.querySelector('.adv-scene'); if (!svg || !s.mini) return;
+      const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      s.mini.aim = Math.atan2(q.y - 140, q.x - 320) * 180 / Math.PI + 90;
+    };
+    root.addEventListener('pointerdown', miniDown);
+    window.addEventListener('pointermove', (ev) => { if (s.mini && s.mini.aiming) aimAt(ev); });
+    window.addEventListener('pointerup', () => { if (s.mini) { s.mini.hold = false; s.mini.dir = 0; s.mini.aiming = false; } });
+    document.addEventListener('keydown', (ev) => {
+      const m = s.mini; if (!m || ev.repeat && m.type === 'sling') return;
+      if (ev.key === ' ' || ev.key === 'ArrowUp') { if (m.type === 'sling') { ev.preventDefault(); miniPress(); } if (m.type === 'aero') { ev.preventDefault(); m.hold = true; } }
+      if (m.type === 'antenna' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) { ev.preventDefault(); m.dir = ev.key === 'ArrowLeft' ? -1 : 1; m.aim = null; }
+    });
+    document.addEventListener('keyup', (ev) => {
+      const m = s.mini; if (!m) return;
+      if (ev.key === ' ' || ev.key === 'ArrowUp') m.hold = false;
+      if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') m.dir = 0;
+    });
+
+    // ---------- «Saber más»: cada dato enlaza con su apartado de la web ----------
+    const LINKS = { launch: ['#oposicion', B('La oposición de Marte', 'The opposition of Mars')], orbit: ['#orientacion', B('La nave gira sobre sí misma', 'The spacecraft turns on itself')],
+      moon: ['#honda', B('El efecto honda', 'The slingshot effect')], storm: ['#magnetismo', B('¿Marte tiene campo magnético?', 'Does Mars have a magnetic field?')],
+      sick: ['#distancias', B('Comparador de distancias', 'Distance comparison')], nav: ['#mision', B('La misión paso a paso', 'The mission step by step')],
+      arrive: ['#mision', B('El aerofrenado (paso 5)', 'Aerobraking (step 5)')], signal: ['#orientacion', B('Apuntar la antena', 'Pointing the antenna')],
+      land: ['#gravedad', B('Simulador de gravedad', 'Gravity simulator')], meteor: ['#mision', B('La misión paso a paso', 'The mission step by step')] };
+    const learnMore = (id) => (LINKS[id] ? `<a class="adv-more" href="${LINKS[id][0]}">📖 ${L('Saber más', 'Learn more')}: ${T(LINKS[id][1])} →</a>` : '');
+
+    // ---------- Preguntas rápidas entre capítulos ----------
+    const QUIZ = [
+      { q: B('¿Por qué no se viaja a Marte en línea recta?', 'Why don’t we fly to Mars in a straight line?'), link: '#mision',
+        o: [B('Porque todo se mueve: la nave sigue una órbita curva alrededor del Sol', 'Because everything moves: the ship follows a curved orbit around the Sun'), B('Para esquivar los asteroides', 'To dodge the asteroids'), B('Porque la Luna está en medio', 'Because the Moon is in the way')],
+        x: B('La nave «persigue» a Marte por una órbita curva y apunta a donde estará, no a donde está.', 'The ship “chases” Mars along a curved orbit and aims at where it will be, not where it is.') },
+      { q: B('¿Cada cuánto se repite la oposición de Marte?', 'How often does the opposition of Mars happen?'), link: '#oposicion',
+        o: [B('Unos 26 meses', 'About 26 months'), B('Cada año', 'Every year'), B('Cada 10 años', 'Every 10 years')],
+        x: B('La Tierra adelanta a Marte cada ~26 meses: por eso las ventanas de lanzamiento llegan con ese ritmo.', 'Earth overtakes Mars every ~26 months: that is why launch windows come at that pace.') },
+      { q: B('¿Qué consigue el efecto honda?', 'What does the slingshot effect do?'), link: '#honda',
+        o: [B('Ganar velocidad usando la gravedad de un astro que se mueve', 'Gain speed using the gravity of a moving body'), B('Frenar sin gastar combustible', 'Brake without using fuel'), B('Protegerse de la radiación', 'Shield against radiation')],
+        x: B('La nave «roba» un poco del movimiento del astro y sale más rápido, sin gastar combustible.', 'The ship “steals” a little of the body’s motion and leaves faster, without using fuel.') },
+      { q: B('¿Cuánto tarda un mensaje de radio de la Tierra a Marte?', 'How long does a radio message take from Earth to Mars?'), link: '#distancias',
+        o: [B('Entre 3 y 22 minutos', 'Between 3 and 22 minutes'), B('Menos de 1 segundo', 'Under 1 second'), B('Unos 3 días', 'About 3 days')],
+        x: B('Viaja a la velocidad de la luz, pero Marte está tan lejos que tarda minutos. ¡No se puede hablar en directo!', 'It travels at the speed of light, but Mars is so far away it takes minutes. You cannot talk live!') },
+      { q: B('¿Por qué Marte perdió gran parte de su atmósfera?', 'Why did Mars lose much of its atmosphere?'), link: '#magnetismo',
+        o: [B('Perdió su campo magnético y el viento solar se la fue arrancando', 'It lost its magnetic field and the solar wind stripped it away'), B('Se la llevó la Luna', 'The Moon took it'), B('Se congeló y cayó al suelo', 'It froze and fell to the ground')],
+        x: B('Sin escudo magnético, el viento solar arrancó poco a poco su atmósfera. Lo midió la sonda MAVEN.', 'Without a magnetic shield, the solar wind slowly stripped its atmosphere. The MAVEN probe measured it.') },
+      { q: B('¿Qué es el aerofrenado?', 'What is aerobraking?'), link: '#mision',
+        o: [B('Frenar rozando la parte alta de la atmósfera', 'Slowing down by skimming the upper atmosphere'), B('Frenar con el viento solar', 'Slowing down with the solar wind'), B('Usar alas para planear', 'Using wings to glide')],
+        x: B('En cada vuelta la nave roza la atmósfera y pierde algo de velocidad, sin gastar combustible.', 'On each lap the ship skims the atmosphere and loses some speed, without using fuel.') },
+      { q: B('¿Cuánta gravedad tiene Marte comparada con la Tierra?', 'How strong is Mars’ gravity compared with Earth’s?'), link: '#gravedad',
+        o: [B('Un 38 %', 'About 38%'), B('El doble', 'Twice as much'), B('La misma', 'The same')],
+        x: B('En Marte pesarías algo más de un tercio de lo que pesas aquí.', 'On Mars you would weigh just over a third of what you weigh here.') },
+      { q: B('¿A qué distancia está la Luna de la Tierra?', 'How far is the Moon from Earth?'), link: '#distancias',
+        o: [B('Unos 384.000 km', 'About 384,000 km'), B('Unos 38.000 km', 'About 38,000 km'), B('Unos 55 millones de km', 'About 55 million km')],
+        x: B('384.000 km: lejísimos… pero Marte está unas 150 veces más lejos incluso en sus mejores oposiciones.', '384,000 km: very far… but Mars is about 150 times farther even at its best oppositions.') },
+      { q: B('¿Cómo gira una nave en el espacio sin rozar con nada?', 'How does a spacecraft turn in space without anything to push on?'), link: '#orientacion',
+        o: [B('Con ruedas de reacción y pequeños propulsores', 'With reaction wheels and small thrusters'), B('Con un timón, como un barco', 'With a rudder, like a boat'), B('No puede girar', 'It cannot turn')],
+        x: B('Las ruedas internas giran en un sentido y la nave gira en el contrario. Los propulsores ayudan.', 'Internal wheels spin one way and the ship turns the other way. Thrusters help.') },
+    ];
+    const QUIZ_AT = [1, 4, 6]; // tras la órbita y tras el 2.º y 4.º capítulo del crucero
+    function makeQuiz() {
+      const used = s.quizUsed || (s.quizUsed = []);
+      const free = QUIZ.map((q, k) => k).filter((k) => !used.includes(k));
+      const k = free[Math.floor(Math.random() * free.length)];
+      used.push(k);
+      const order = [0, 1, 2].sort(() => Math.random() - 0.5);
+      return { k, order, answer: null };
+    }
+    function quizScene() {
+      const q = s.quiz;
+      const ok = q.answer != null && q.order[q.answer] === 0;
+      return svgWrap('quiz', q.answer == null ? 'idle' : 'out', q.answer == null ? '' : ok ? 'right' : 'wrong', `<rect x="150" y="40" width="340" height="170" rx="14" fill="#14301f" stroke="#7a5a2c" stroke-width="10"/>
+        <text x="320" y="150" text-anchor="middle" class="qz-mark">${q.answer == null ? '?' : ok ? '✓' : '✗'}</text>
+        <g transform="translate(520 150)">${s.crew[0] ? avatar(byId(CREW, s.crew[0]), 80).replace('<svg', '<svg x="0" y="0"') : ''}</g>
+        ${ok ? `<text x="320" y="250" text-anchor="middle" class="sc-money">+ 20 M€</text>` : ''}`, L('Pregunta rápida', 'Quick question'));
+    }
+    function quizPanel() {
+      const q = s.quiz, item = QUIZ[q.k];
+      const head = `<p class="kicker">🧠 ${L('Pregunta rápida · si aciertas, +20 M€', 'Quick question · get it right for +€20M')}</p><h3 class="adv-title">${T(item.q)}</h3>`;
+      const opts = q.order.map((oi, i) => {
+        const cls = q.answer == null ? '' : oi === 0 ? ' right' : q.answer === i ? ' wrong' : '';
+        return `<button type="button" class="adv-opt choice quiz${cls}" data-quiz="${i}" ${q.answer != null ? 'disabled' : ''}><span class="adv-opt-name"><span class="adv-key" aria-hidden="true">${'ABC'[i]}</span>${T(item.o[oi])}</span></button>`;
+      }).join('');
+      const after = q.answer == null ? '' : `<aside class="adv-fact"><span aria-hidden="true">${q.order[q.answer] === 0 ? '✅' : '💡'}</span><p>${T(item.x)}</p></aside>
+        <a class="adv-more" href="${item.link}">📖 ${L('Saber más en la web', 'Learn more on the website')} →</a>
+        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="continue">${L('Continuar ▶', 'Continue ▶')}</button></div>`;
+      return head + `<div class="adv-opts choices">${opts}</div>` + after;
+    }
+    function answerQuiz(i) {
+      const q = s.quiz; if (!q || q.answer != null) return;
+      q.answer = i;
+      const ok = q.order[i] === 0, item = QUIZ[q.k];
+      if (ok) { s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull }; s.budget += 20; s.bonus = (s.bonus || 0) + 25; s.quizOk = (s.quizOk || 0) + 1; }
+      s.log.push({ day: s.events[s.ev].day, icon: '🧠', place: B('Pregunta rápida', 'Quick question'), choice: item.q, text: ok ? B('¡Correcto! +20 M€ de la agencia.', 'Correct! +€20M from the agency.') : B(`Fallada. Era: ${item.o[0].es}`, `Missed. It was: ${item.o[0].en}`), d: ok ? { budget: 20 } : null, tone: ok ? 'ok' : 'mid' });
+      sfx(ok ? 'win' : 'wrong');
+      if (ok && s.quizOk === QUIZ_AT.length) unlock('quiz');
+      render(false);
+    }
+
+    // ---------- Medallas (se guardan en el navegador) ----------
+    const ACH = [
+      { id: 'first', icon: '🏁', name: B('Primer viaje', 'First trip'), desc: B('Llega a Marte por primera vez.', 'Reach Mars for the first time.') },
+      { id: 'pioneer', icon: '🚩', name: B('Pionero', 'Pioneer'), desc: B('Aterriza en el cráter Jezero o en el polo norte.', 'Land in Jezero Crater or at the north pole.') },
+      { id: 'three', icon: '⭐', name: B('Misión de libro', 'Textbook mission'), desc: B('Consigue 3 estrellas.', 'Get 3 stars.') },
+      { id: 'flawless', icon: '🛡️', name: B('Sin un rasguño', 'Not a scratch'), desc: B('Llega con la salud y la nave por encima del 85 %.', 'Arrive with health and ship above 85%.') },
+      { id: 'saver', icon: '💰', name: B('Ahorrador', 'Saver'), desc: B('Termina con más de 300 M€.', 'Finish with more than €300M.') },
+      { id: 'veteran', icon: '🎖️', name: B('Veterano', 'Veteran'), desc: B('Gana en difícil.', 'Win on hard.') },
+      { id: 'wires', icon: '🔌', name: B('Maestro de los cables', 'Master of cables'), desc: B('Reconecta los cables sin un solo chispazo.', 'Reconnect the cables without a single spark.') },
+      { id: 'sling', icon: '🌙', name: B('Tirachinas perfecto', 'Perfect slingshot'), desc: B('Encendido perfecto detrás de la Luna.', 'Perfect burn behind the Moon.') },
+      { id: 'aero', icon: '🔥', name: B('Surfista de atmósferas', 'Atmosphere surfer'), desc: B('Aerofrenado de maestro (75 % o más).', 'Master aerobraking (75% or more).') },
+      { id: 'antenna', icon: '📡', name: B('Buena señal', 'Strong signal'), desc: B('Recupera el contacto en 6 segundos o menos.', 'Restore contact in 6 seconds or less.') },
+      { id: 'quiz', icon: '🧠', name: B('Sabelotodo', 'Know-it-all'), desc: B('Acierta las 3 preguntas de una partida.', 'Answer all 3 questions of a game correctly.') },
+      { id: 'explorer', icon: '🧭', name: B('Explorador', 'Explorer'), desc: B('Vive las 12 situaciones posibles del crucero.', 'Live through all 12 possible cruise situations.') },
+      { id: 'oops', icon: '🧯', name: B('Se aprende fallando', 'Learning by failing'), desc: B('Pierde una misión. ¡Le pasa a cualquiera!', 'Lose a mission. It happens to everyone!') },
+    ];
+    const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } } };
+    const MINI_ACH = { 'sling-perfect': 'sling', 'aero-pro': 'aero', 'antenna-fast': 'antenna', 'wires-perfect': 'wires' };
+    function unlock(id) {
+      const have = store.get('advAch', []);
+      if (have.includes(id)) return;
+      have.push(id); store.set('advAch', have);
+      (s.newAch || (s.newAch = [])).push(id);
+      const a = byId(ACH, id);
+      toast(`<span class="tt-ic">${a.icon}</span><span><small>${L('¡Medalla nueva!', 'New medal!')}</small><b>${T(a.name)}</b></span>`);
+      sfx('medal');
+    }
+    function markSeen(id) {
+      const seen = store.get('advSeen', []);
+      if (!seen.includes(id)) { seen.push(id); store.set('advSeen', seen); }
+      const all = EVENTS.concat(NEW_EVENTS).filter((e) => !FIXED_IDS.includes(e.id)).map((e) => e.id);
+      if (all.every((x) => seen.includes(x))) unlock('explorer');
+    }
+    function awardEnd(end) {
+      if (!end.win) return unlock('oops');
+      unlock('first');
+      if (s.landed === 'jezero' || s.landed === 'pole') unlock('pioneer');
+      if (end.stars === 3) unlock('three');
+      if (s.health >= 85 && s.hull >= 85) unlock('flawless');
+      if (s.budget >= 300) unlock('saver');
+      if (s.level === 'hard') unlock('veteran');
+    }
+    function achView() {
+      const have = store.get('advAch', []);
+      const items = ACH.map((a) => `<li class="ach${have.includes(a.id) ? ' got' : ''}"><span class="ach-ic">${a.icon}</span><b>${T(a.name)}</b><small>${T(a.desc)}</small></li>`).join('');
+      return `<div class="adv-diary" role="dialog" aria-modal="true" aria-labelledby="ach-h"><div class="dia-back" data-act="ach-close"></div>
+        <div class="dia-book ach-book"><header class="dia-head"><div><h3 id="ach-h">🏅 ${L('Medallas', 'Medals')}</h3><p>${L(`Tienes ${have.length} de ${ACH.length}`, `You have ${have.length} of ${ACH.length}`)}</p></div>
+          <button type="button" class="dia-close" data-act="ach-close" aria-label="${L('Cerrar', 'Close')}">✕</button></header><ul class="ach-grid">${items}</ul></div></div>`;
+    }
+    function toast(html) {
+      const t = document.createElement('div');
+      t.className = 'adv-toast'; t.setAttribute('role', 'status'); t.innerHTML = html;
+      document.body.appendChild(t);
+      setTimeout(() => t.classList.add('out'), 3200);
+      setTimeout(() => t.remove(), 3800);
+    }
+
+    // ---------- Sonidos (sintetizados con Web Audio, sin archivos) ----------
+    const SND = { on: store.get('advSound', true), ctx: null };
+    function audio() {
+      if (!SND.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { SND.ctx = new C(); } catch (e) { return null; } }
+      if (SND.ctx.state === 'suspended') SND.ctx.resume();
+      return SND.ctx;
+    }
+    function tone(f, dur, { type = 'sine', vol = 0.12, when = 0, slide = 0 } = {}) {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function noise(dur, { vol = 0.15, when = 0, freq = 1000, q = 0.8 } = {}) {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime + when, n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f).connect(g).connect(c.destination); src.start(t);
+    }
+    function sfx(name) {
+      if (!SND.on) return;
+      try {
+        if (name === 'click') tone(620, 0.05, { type: 'square', vol: 0.04 });
+        if (name === 'win') [523, 659, 784].forEach((f, i) => tone(f, 0.18, { type: 'triangle', when: i * 0.09 }));
+        if (name === 'mid') { tone(440, 0.16, { type: 'triangle' }); tone(392, 0.2, { type: 'triangle', when: 0.12 }); }
+        if (name === 'bad') { [0, 0.22].forEach((w) => tone(880, 0.16, { type: 'square', vol: 0.06, when: w, slide: -300 })); noise(0.35, { vol: 0.12, freq: 300 }); }
+        if (name === 'wrong') tone(220, 0.28, { type: 'sawtooth', vol: 0.07, slide: -90 });
+        if (name === 'medal') [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.22, { type: 'triangle', vol: 0.1, when: i * 0.08 }));
+        if (name === 'coin') { tone(988, 0.08, { type: 'square', vol: 0.05 }); tone(1319, 0.2, { type: 'square', vol: 0.05, when: 0.08 }); }
+        if (name === 'plink') tone(1200, 0.09, { type: 'triangle', vol: 0.09 });
+        if (name === 'spark') noise(0.18, { vol: 0.25, freq: 3200, q: 0.5 });
+        if (name === 'launch') { noise(3.2, { vol: 0.28, freq: 160, q: 0.4, when: 1.8 }); [0, 0.6, 1.2].forEach((w) => tone(880, 0.1, { type: 'square', vol: 0.05, when: w })); tone(1320, 0.3, { type: 'square', vol: 0.05, when: 1.8 }); }
+        if (name === 'hum') tone(110, 0.3, { type: 'sawtooth', vol: 0.03 });
+      } catch (e) { /* sin audio */ }
+    }
+
+    // ---------- Guardar la partida en el navegador ----------
+    function saveGame() {
+      if (s.phase === 'end') { store.set('advSave', null); return; }
+      if (s.puzzle || s.mini || (s.phase === 'rocket' && !s.rocket)) return;
+      store.set('advSave', { v: 1, phase: s.phase, level: s.level, rocket: s.rocket && s.rocket.id, crew: s.crew, supplies: s.supplies && s.supplies.id, tools: s.tools,
+        ev: s.ev, budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull, lowPower: s.lowPower, log: s.log, outcome: s.outcome, end: s.end,
+        events: s.events && s.events.map((e) => ({ id: e.id, day: e.day })), science: s.science, landed: s.landed, bonus: s.bonus, quizUsed: s.quizUsed, quizOk: s.quizOk, quizAsked: s.quizAsked, quiz: s.quiz });
+    }
+    function loadGame() {
+      const g = store.get('advSave', null);
+      if (!g || g.v !== 1) return false;
+      try {
+        reset();
+        s.level = g.level in LEVELS ? g.level : 'normal'; LV = LEVELS[s.level]; BUDGET0 = LV.budget;
+        Object.assign(s, { phase: g.phase, crew: g.crew || [], tools: g.tools || [], ev: g.ev || 0, budget: g.budget, fuel: g.fuel, food: g.food, health: g.health, hull: g.hull,
+          lowPower: g.lowPower, log: g.log || [], outcome: g.outcome, end: g.end, science: g.science || 0, landed: g.landed, bonus: g.bonus || 0,
+          quizUsed: g.quizUsed || [], quizOk: g.quizOk || 0, quizAsked: g.quizAsked || [], quiz: g.quiz });
+        s.rocket = g.rocket ? byId(ROCKETS, g.rocket) : null;
+        s.supplies = g.supplies ? byId(SUPPLIES, g.supplies) : null;
+        const month = (d) => Math.max(1, Math.ceil(d / 30));
+        s.events = g.events ? g.events.map((x) => { const base = byId(EVENTS.concat(NEW_EVENTS), x.id);
+          return FIXED_IDS.includes(x.id) ? base : Object.assign({}, base, { day: x.day, place: B(`Crucero · mes ${month(x.day)}`, `Cruise · month ${month(x.day)}`) }); }) : null;
+        if (s.events && s.events.some((e) => !e)) throw new Error('evento desconocido');
+        return s.phase !== 'rocket' || !!s.rocket;
+      } catch (e) { reset(); store.set('advSave', null); return false; }
+    }
+
+    // ---------- Compartir el resultado como imagen ----------
+    function shareResult(noPhoto) {
+      const W = 1080, cv = document.createElement('canvas'); cv.width = W; cv.height = W;
+      const c = cv.getContext('2d');
+      const g = c.createLinearGradient(0, 0, 0, W); g.addColorStop(0, '#05070f'); g.addColorStop(1, '#2a1630'); c.fillStyle = g; c.fillRect(0, 0, W, W);
+      let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      c.fillStyle = '#fff'; for (let i = 0; i < 160; i++) { c.globalAlpha = 0.2 + rnd() * 0.7; c.beginPath(); c.arc(rnd() * W, rnd() * W, rnd() * 1.8 + 0.4, 0, TAU); c.fill(); }
+      c.globalAlpha = 1;
+      if (!noPhoto && marsImg.complete && marsImg.naturalWidth) { c.save(); c.beginPath(); c.arc(860, 860, 300, 0, TAU); c.clip(); c.drawImage(marsImg, 520, 520, 690, 690); c.restore(); }
+      const F = (w, sz) => `${w} ${sz}px "Space Grotesk", Inter, system-ui, sans-serif`;
+      c.fillStyle = '#ff9a6b'; c.font = F(700, 34); c.fillText(L('MISIÓN THE LAST LAP', 'MISSION THE LAST LAP'), 70, 110);
+      const e = s.end;
+      const title = !e.win ? T(e.title) : s.landed ? L('¡Hemos aterrizado en Marte!', 'We landed on Mars!') : L('¡Estamos en órbita de Marte!', 'We are in orbit around Mars!');
+      c.fillStyle = '#fff'; c.font = F(700, 64); wrap(c, title, 70, 200, 900, 72);
+      if (e.win) {
+        c.font = '90px serif'; c.fillText('⭐'.repeat(e.stars) + '☆'.repeat(3 - e.stars), 70, 400);
+        c.fillStyle = '#ffc857'; c.font = F(700, 120); c.fillText(num(e.score), 70, 540);
+        c.fillStyle = '#a3acc4'; c.font = F(500, 34); c.fillText(L('puntos', 'points'), 74, 590);
+      }
+      c.fillStyle = '#d6dcec'; c.font = F(500, 32);
+      const lines = [`${LV.icon} ${L('Dificultad', 'Difficulty')}: ${T(LV.name)}`, `🚀 ${T(s.rocket.name)}`, `🧑‍🚀 ${s.crew.map((id) => T(byId(CREW, id).name).split(' · ')[0]).join(', ')}`];
+      lines.forEach((t, i) => c.fillText(t, 70, 680 + i * 50));
+      RES.forEach((r, i) => {
+        const y = 860 + i * 34, v = s[r.k], f = clamp(v / r.max, 0, 1);
+        c.fillStyle = '#a3acc4'; c.font = F(500, 24); c.fillText(`${r.icon} ${T(r.short)}`, 70, y + 18);
+        c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(260, y, 260, 18);
+        c.fillStyle = ['#ffc857', '#ff7a45', '#6be3b5', '#ff7b9c', '#4ea3ff'][i]; c.fillRect(260, y, 260 * f, 18);
+        c.fillStyle = '#fff'; c.fillText(r.fmt(v), 540, y + 18);
+      });
+      if (/^https?:/.test(location.protocol)) { c.fillStyle = '#6f7a96'; c.font = F(500, 24); c.fillText(location.host + location.pathname.replace(/index\.html$/, ''), 70, W - 30); }
+      try { cv.getContext('2d').getImageData(0, 0, 1, 1); } catch (err) { if (!noPhoto) return shareResult(true); return; }
+      cv.toBlob((blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'the-last-lap.png', { type: 'image/png' });
+        const text = e.win ? L(`¡He llegado a Marte con ${num(e.score)} puntos en The Last Lap!`, `I reached Mars with ${num(e.score)} points in The Last Lap!`) : L('Mi misión a Marte en The Last Lap', 'My mission to Mars in The Last Lap');
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'The Last Lap', text }).catch(() => {}); return; }
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'the-last-lap.png';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        toast(`<span class="tt-ic">📥</span><span><b>${L('Imagen descargada', 'Image downloaded')}</b></span>`);
+      }, 'image/png');
+    }
+    function wrap(c, text, x, y, maxW, lh) {
+      let line = '';
+      text.split(' ').forEach((w) => { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { c.fillText(line, x, y); line = w; y += lh; } else line = t; });
+      c.fillText(line, x, y);
+    }
+
     // --- Lógica ---
     function startTrip() {
       s.budget = BUDGET0 - spentPrep();
@@ -2982,7 +3501,7 @@
       const names = (list, arr) => arr.map((id) => byId(list, id).name);
       const crewEs = names(CREW, s.crew).map((n) => n.es).join(', '), crewEn = names(CREW, s.crew).map((n) => n.en).join(', ');
       const toolsEs = names(TOOLS, s.tools).map((n) => n.es.toLowerCase()).join(', ') || 'ninguna', toolsEn = names(TOOLS, s.tools).map((n) => n.en.toLowerCase()).join(', ') || 'none';
-      s.log.push({ day: 0, icon: '🧑‍🚀', place: B('Preparación', 'Preparation'), tone: 'info',
+      s.log.push({ day: 0, icon: '🧑‍🚀', place: B(`Preparación · ${LV.name.es.toLowerCase()}`, `Preparation · ${LV.name.en.toLowerCase()}`), tone: 'info',
         choice: B(`Misión lista: ${s.rocket.name.es.toLowerCase()} y ${s.supplies.days} días de provisiones`, `Mission ready: ${s.rocket.name.en.toLowerCase()} and ${s.supplies.days} days of supplies`),
         text: B(`Tripulación: ${crewEs}. Herramientas: ${toolsEs}. Fondo de emergencia: ${s.budget} M€.`, `Crew: ${crewEn}. Tools: ${toolsEn}. Emergency fund: €${s.budget}M.`) });
     }
@@ -2990,13 +3509,19 @@
     function choose(i) {
       const e = s.events[s.ev];
       const c = e.choices[i];
-      if (check(c.req) || s.puzzle) return;
+      if (check(c.req) || s.puzzle || s.mini) return;
+      sfx('click');
       if (c.puzzle) return startPuzzle(i);
+      if (c.mini) return startMini(c.mini, i);
       resolve(e, c, i, c.run(s));
     }
     function resolve(e, c, i, r) {
       s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull };
       const d = Object.assign({}, r.d);
+      ['health', 'hull'].forEach((k) => { if (d[k] < 0) d[k] = Math.round(d[k] * LV.dmg); });
+      const cd = Object.assign({}, d);
+      if (r.science) s.science = (s.science || 0) + r.science;
+      if (r.landed) s.landed = e.id === 'land' ? c.fx : s.landed;
       // Provisiones gastadas hasta el siguiente capítulo (con racionamiento si faltan)
       const nextDay = s.ev + 1 < s.events.length ? s.events[s.ev + 1].day : TRIP;
       const days = nextDay - e.day;
@@ -3013,9 +3538,15 @@
           extra = B(`⚠️ Se acaban las provisiones: ${days - eaten} días a media ración.`, `⚠️ Supplies run out: ${days - eaten} days on half rations.`);
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
-      s.outcome = { choice: c.title, text: r.text, d, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad };
+      s.outcome = { choice: c.title, text: r.text, d, cd, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad, mini: r.mini };
       s.log.push({ day: e.day, icon: e.icon, place: e.place, choice: c.title, text: r.text, d: Object.assign({}, d), tone: toneOf(s.outcome) });
       s.end = verdict(e);
+      if (r.mini && MINI_ACH[r.mini]) unlock(MINI_ACH[r.mini]);
+      if (s.end) awardEnd(s.end);
+      const tn = toneOf(s.outcome);
+      if (e.id === 'launch') sfx('launch');
+      sfx(tn === 'ok' ? 'win' : tn === 'mid' ? 'mid' : 'bad');
+      if ((d.budget || 0) > 0) setTimeout(() => sfx('coin'), 500);
       render(true);
     }
 
@@ -3024,14 +3555,13 @@
         text: B('Los daños acumulados eran demasiados. Por suerte, la cápsula de emergencia devuelve al equipo a casa, pero la misión se pierde.', 'The damage had piled up too much. Luckily, the escape capsule takes the crew home, but the mission is lost.') };
       if (s.health <= 0) return { win: false, icon: '🚑', title: B('La tripulación no puede seguir', 'The crew cannot go on'),
         text: B('El equipo está demasiado débil. Control de misión ordena dar la vuelta usando la gravedad de Marte.', 'The crew is too weak. Mission control orders a turnaround using the gravity of Mars.') };
-      if (e.id !== 'arrive' && s.ev + 1 < s.events.length) {
+      if (s.ev + 1 < s.events.length) {
         const ne = s.events[s.ev + 1];
         const can = ne.choices.some((c) => !check(c.req));
         if (!can) return { win: false, icon: '🌌', title: B('Sin combustible para frenar', 'No fuel left to brake'),
           text: B('Llegáis a Marte sin combustible para frenar y pasáis de largo. La nave queda girando alrededor del Sol.', 'You reach Mars with no fuel to brake and fly straight past. The ship ends up circling the Sun.') };
         return null;
       }
-      if (e.id !== 'arrive') return null;
       const parts = [
         [B('Salud del equipo', 'Crew health'), s.health * 3],
         [B('Estado de la nave', 'Ship condition'), s.hull * 2],
@@ -3039,8 +3569,11 @@
         [B('Provisiones sobrantes', 'Supplies left over'), s.food * 2],
         [B('Presupuesto sobrante', 'Budget left over'), Math.max(0, Math.round(s.budget / 2))],
       ];
+      if (s.science) parts.push([B('Ciencia en Marte', 'Science at Mars'), s.science]);
       if (s.crew.includes('geo')) parts.push([B('Ciencia de Kenji en Marte', 'Kenji’s science at Mars'), 150]);
-      const score = parts.reduce((a, p) => a + p[1], 0);
+      if (s.bonus) parts.push([B('Preguntas acertadas', 'Questions answered right'), s.bonus]);
+      let score = parts.reduce((a, p) => a + p[1], 0);
+      if (LV.score !== 1) { const extra = Math.round(score * (LV.score - 1)); parts.push([B(`Dificultad ${T(LV.name).toLowerCase()} (×${num(LV.score, 1)})`, `${T(LV.name)} difficulty (×${num(LV.score, 1)})`), extra]); score += extra; }
       const stars = s.health >= 60 && s.hull >= 40 ? (score >= 650 ? 3 : 2) : 1;
       const text = stars === 3 ? B('¡Una misión de libro! Has gestionado el dinero, el equipo y los recursos con mucha cabeza.', 'A textbook mission! You managed money, crew and resources very wisely.')
         : stars === 2 ? B('Buena misión. Habéis llegado en forma, aunque con algunos sustos por el camino.', 'A good mission. You arrived in good shape, with a few scares along the way.')
@@ -3049,16 +3582,26 @@
     }
 
     const onClick = (ev) => {
-      const b = ev.target.closest('button, g[data-rocket], g[data-pl], g[data-pr], [data-act="diary-close"]');
+      const b = ev.target.closest('button, g[data-rocket], g[data-pl], g[data-pr], [data-act="diary-close"], [data-act="ach-close"]');
       if (!b || b.disabled || !(root.contains(b) || diaryHost.contains(b))) return;
       const d = b.dataset;
       if (suppressClick) { suppressClick = false; if (d.pl || d.pr) return; }
       if (d.act === 'diary') { s.diary = true; render(false); const x = diaryHost.querySelector('.dia-close'); if (x) x.focus(); return; }
+      if (d.act === 'ach') { s.achOpen = true; render(false); const x = diaryHost.querySelector('.dia-close'); if (x) x.focus(); return; }
+      if (d.act === 'ach-close') { s.achOpen = false; render(false); const x = root.querySelector('[data-act="ach"]'); if (x) x.focus(); return; }
+      if (d.act === 'sound') { SND.on = !SND.on; store.set('advSound', SND.on); if (SND.on) sfx('plink'); render(false); return; }
+      if (d.act === 'share') return shareResult();
+      if (d.act === 'newgame') { if (s.phase === 'end' || window.confirm(L('¿Empezar una partida nueva? Se perderá la actual.', 'Start a new game? The current one will be lost.'))) { reset(); store.set('advSave', null); render(true); } return; }
+      if (d.quiz) return answerQuiz(+d.quiz);
       if (d.act === 'diary-close') { s.diary = false; render(false); const x = root.querySelector('.adv-diary-btn'); if (x) x.focus(); return; }
       if (d.pl) { if (s.puzzle && !s.puzzle.links.includes(+d.pl)) { s.puzzle.sel = +d.pl; s.puzzle.wrong = null; render(false); } return; }
       if (d.pr) { if (s.puzzle && s.puzzle.sel != null) connect(s.puzzle.sel, +d.pr); return; }
       if (d.act === 'giveup') return finishPuzzle(false);
-      if (d.rocket) { s.rocket = byId(ROCKETS, d.rocket); }
+      if (d.level && s.phase === 'rocket') {
+        s.level = d.level; LV = LEVELS[d.level]; BUDGET0 = LV.budget;
+        if (BUDGET0 - spentPrep() < 0) { s.crew = []; s.supplies = null; s.tools = []; }
+      }
+      else if (d.rocket) { s.rocket = byId(ROCKETS, d.rocket); }
       else if (d.crew) {
         const i = s.crew.indexOf(d.crew);
         if (i >= 0) s.crew.splice(i, 1); else s.crew.push(d.crew);
@@ -3080,7 +3623,10 @@
         s.phase = order[Math.max(0, order.indexOf(s.phase) - 1)];
         return render(true);
       } else if (d.act === 'continue') {
+        if (s.quiz) { s.quiz = null; s.ev += 1; s.outcome = null; return render(true); }
         if (s.end) { s.phase = 'end'; return render(true); }
+        s.quizAsked = s.quizAsked || [];
+        if (QUIZ_AT.includes(s.ev) && !s.quizAsked.includes(s.ev)) { s.quizAsked.push(s.ev); s.quiz = makeQuiz(); return render(true); }
         s.ev += 1; s.outcome = null; return render(true);
       } else if (d.act === 'restart') { reset(); return render(true); }
       else return;
@@ -3094,7 +3640,8 @@
     // Atajos de teclado: A–D para elegir, Intro para continuar
     document.addEventListener('keydown', (ev) => {
       if (ev.altKey || ev.ctrlKey || ev.metaKey || !root.offsetParent) return;
-      if (s.diary) { if (ev.key === 'Escape') { s.diary = false; render(false); } return; }
+      if (s.diary || s.achOpen) { if (ev.key === 'Escape') { s.diary = false; s.achOpen = false; render(false); } return; }
+      if (s.quiz && s.quiz.answer == null) { const qi = 'abc'.indexOf(ev.key.toLowerCase()); if (qi >= 0) { ev.preventDefault(); answerQuiz(qi); } return; }
       const plug = ev.target.closest && ev.target.closest('[data-pl], [data-pr]');
       if (plug && (ev.key === 'Enter' || ev.key === ' ')) {
         ev.preventDefault();
@@ -3117,8 +3664,20 @@
     });
 
     reset();
+    if (loadGame()) setTimeout(() => toast(`<span class="tt-ic">💾</span><span><b>${L('Partida recuperada', 'Game restored')}</b><small>${L('Pulsa ↺ para empezar otra', 'Press ↺ to start another')}</small></span>`), 600);
     render(false);
     onLang.push(() => render(false));
+  })();
+
+  /* ---------- Menú desplegable de secciones (pantallas estrechas) ---------- */
+  (function menu() {
+    const btn = $('#menu-btn'), head = $('.nav'), nav = $('#site-nav');
+    if (!btn || !head || !nav) return;
+    const set = (open) => { head.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); set(!head.classList.contains('open')); });
+    nav.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && head.classList.contains('open')) { set(false); btn.focus(); } });
+    document.addEventListener('click', (e) => { if (!head.contains(e.target)) set(false); });
   })();
 
   /* ---------- Apartado del juego: con #juego solo se muestra el juego ---------- */
