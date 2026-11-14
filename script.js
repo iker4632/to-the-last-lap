@@ -2133,8 +2133,8 @@
         ] },
       { id: 'sick', day: 140, icon: '🤒', place: B('Crucero · mes 5', 'Cruise · month 5'),
         title: B('Alguien se pone enfermo', 'Someone falls ill'),
-        text: (s) => B(`Un miembro del equipo tiene fiebre alta y dolor fuerte.${s.lowPower ? ' El frío por la falta de energía no ayuda.' : ''} Estáis a más de 10 minutos-luz: cada mensaje a la Tierra tarda en llegar.`,
-          `A crew member has a high fever and severe pain.${s.lowPower ? ' The cold from the power shortage does not help.' : ''} You are more than 10 light-minutes away: every message to Earth takes a while to arrive.`),
+        text: (s) => B(`Un miembro del equipo tiene fiebre alta y dolor fuerte.${s.lowPower ? ' El frío por la falta de energía no ayuda.' : ''} Estáis a varios minutos-luz: cada mensaje a la Tierra tarda en llegar.`,
+          `A crew member has a high fever and severe pain.${s.lowPower ? ' The cold from the power shortage does not help.' : ''} You are several light-minutes away: every message to Earth takes a while to arrive.`),
         fact: B('La luz (y la radio) tarda entre 3 y 22 minutos en ir de la Tierra a Marte. No se puede hablar en directo: es como mandar cartas.', 'Light (and radio) takes between 3 and 22 minutes to travel from Earth to Mars. You cannot talk live: it is like sending letters.'),
         choices: [
           { title: B('La médica la atiende con el botiquín', 'The doctor treats them with the medical kit'), hint: B('+10 % salud', '+10% health'), req: { crew: 'med', tool: 'medkit' },
@@ -2177,7 +2177,122 @@
               : { text: B('La atmósfera de Marte os frena como un paracaídas gigante. ¡Qué ahorro!', 'The Martian atmosphere slows you like a giant parachute. What a saving!'), d: { fuel: -6, hull: -25 } }) },
         ] },
     ];
-    const STAGES = [B('Preparación', 'Preparation')].concat(EVENTS.map((e) => e.place));
+    // Situaciones extra: en cada partida salen al azar (el cortocircuito con el minijuego siempre aparece)
+    const NEW_EVENTS = [
+      { id: 'cables', icon: '⚡', title: B('Cortocircuito en el panel eléctrico', 'Short circuit in the electrical panel'),
+        text: B('¡Zas! Salta un chispazo y se apagan las luces. Los cables del panel principal se han soltado. Si no se reconectan pronto, la nave perderá la calefacción y el control.',
+          'Zap! A spark flies and the lights go out. The main panel’s cables have come loose. If they are not reconnected soon, the ship will lose heating and control.'),
+        fact: B('Las naves llevan los sistemas importantes duplicados («redundancia»): si uno falla, otro toma el relevo. Aun así, saber reparar a mano sigue siendo clave.',
+          'Spacecraft carry duplicate copies of important systems (“redundancy”): if one fails, another takes over. Even so, being able to repair things by hand is still key.'),
+        choices: [
+          { fx: 'puzzle', puzzle: true, title: B('Reconectar los cables tú (minijuego)', 'Reconnect the cables yourself (mini-game)'),
+            hint: (s) => (s.crew.includes('eng') ? B('Tomás te guía: más tiempo', 'Tomás guides you: more time') : B('Une cada cable con su pareja a contrarreloj', 'Match each cable with its pair against the clock')) },
+          { fx: 'backup', title: B('Encender el sistema de reserva', 'Switch on the backup system'), hint: B('−8 % combustible · −10 % nave', '−8% fuel · −10% ship'),
+            run: () => ({ text: B('El sistema de reserva funciona, pero gasta combustible y deja parte de la nave sin protección.', 'The backup works, but it burns fuel and leaves part of the ship unprotected.'), d: { fuel: -8, hull: -10 } }) },
+          { fx: 'remote', title: B('Que la Tierra lo arregle a distancia', 'Let Earth fix it remotely'), hint: B('−60 M€', '−€60M'), req: { budget: 60 },
+            run: () => ({ text: B('Los ingenieros de la Tierra reprograman el panel durante horas. Caro, pero sin riesgos.', 'Engineers on Earth reprogram the panel for hours. Expensive, but safe.'), d: { budget: -60 } }) },
+        ] },
+      { id: 'oxygen', icon: '🫁', title: B('Falla el filtro de CO₂', 'The CO₂ filter fails'),
+        text: B('El aparato que limpia el dióxido de carbono del aire se ha atascado. Sin él, el aire se irá volviendo irrespirable poco a poco.',
+          'The device that removes carbon dioxide from the air has jammed. Without it, the air will slowly become unbreathable.'),
+        fact: B('En el Apolo 13 pasó algo parecido: los astronautas fabricaron un filtro con cartón, bolsas y cinta adhesiva siguiendo instrucciones desde la Tierra.',
+          'Something similar happened on Apollo 13: the astronauts built a filter out of cardboard, bags and duct tape following instructions from Earth.'),
+        choices: [
+          { fx: 'printer', title: B('Imprimir un filtro nuevo', 'Print a new filter'), hint: B('Sin daños', 'No harm'), req: { tool: 'printer' },
+            run: () => ({ text: B('La impresora 3D fabrica la pieza exacta. El aire vuelve a estar limpio en una hora.', 'The 3D printer makes the exact part. The air is clean again within an hour.'), d: {} }) },
+          { fx: 'eng', title: B('El ingeniero lo desmonta y lo limpia', 'The engineer takes it apart and cleans it'), hint: B('−5 % salud', '−5% health'), req: { crew: 'eng' },
+            run: () => ({ text: B('Tomás encuentra el atasco y lo limpia. Unas horas de dolor de cabeza y listo.', 'Tomás finds the blockage and cleans it. A few hours of headaches and it is done.'), d: { health: -5 } }) },
+          { fx: 'tape', title: B('Filtro casero con cinta, como en el Apolo 13', 'Home-made filter with tape, like Apollo 13'), hint: B('Riesgo 35 %', '35% risk'),
+            run: () => (roll(0.35)
+              ? { bad: true, text: B('El filtro casero se despega dos veces. La tripulación pasa días mareada.', 'The home-made filter comes loose twice. The crew feels dizzy for days.'), d: { health: -25 } }
+              : { text: B('¡Funciona! Cinta, bolsas y mucho ingenio. Un poco de dolor de cabeza, nada más.', 'It works! Tape, bags and lots of ingenuity. A bit of a headache, nothing more.'), d: { health: -8 } }) },
+          { fx: 'reserve', title: B('Gastar el oxígeno de reserva', 'Use the reserve oxygen'), hint: B('−20 días de provisiones', '−20 days of supplies'),
+            run: () => ({ text: B('Abrís las botellas de reserva. Respiráis bien, pero esas reservas ya no estarán al final.', 'You open the reserve tanks. You breathe fine, but those reserves will not be there at the end.'), d: { food: -20 } }) },
+        ] },
+      { id: 'water', icon: '💧', title: B('Fuga en el reciclador de agua', 'Leak in the water recycler'),
+        text: B('El sistema que convierte el sudor y la orina en agua potable está goteando. Sí: en el espacio se recicla todo. Las gotas flotan por la cabina como pompas.',
+          'The system that turns sweat and urine into drinking water is leaking. Yes: in space, everything is recycled. The drops float around the cabin like bubbles.'),
+        fact: B('La Estación Espacial Internacional recicla cerca del 98 % de su agua, incluida la orina de los astronautas.', 'The International Space Station recycles about 98% of its water, including the astronauts’ urine.'),
+        choices: [
+          { fx: 'kit', title: B('Tapar la fuga con el kit', 'Seal the leak with the kit'), hint: B('−3 días de provisiones', '−3 days of supplies'), req: { tool: 'kit' },
+            run: () => ({ text: B('Un parche y una abrazadera. Solo se pierden unos litros.', 'A patch and a clamp. Only a few litres are lost.'), d: { food: -3 } }) },
+          { fx: 'eng', title: B('El ingeniero cambia la tubería', 'The engineer replaces the pipe'), hint: B('−5 % nave', '−5% ship'), req: { crew: 'eng' },
+            run: () => ({ text: B('Tomás saca una tubería de otro sistema menos importante. Apaño resuelto.', 'Tomás takes a pipe from a less important system. Sorted.'), d: { hull: -5 } }) },
+          { fx: 'ration', title: B('Racionar el agua hasta Marte', 'Ration water until Mars'), hint: B('−12 % salud', '−12% health'),
+            run: () => ({ text: B('Menos agua para todos. Se nota el cansancio y la piel seca.', 'Less water for everyone. Tiredness and dry skin set in.'), d: { health: -12 } }) },
+          { fx: 'leave', title: B('Dejarlo así', 'Leave it'), hint: B('−35 días de provisiones', '−35 days of supplies'),
+            run: () => ({ bad: true, text: B('El goteo no para. Cuando os dais cuenta, falta muchísima agua.', 'The dripping never stops. By the time you notice, a lot of water is gone.'), d: { food: -35 } }) },
+        ] },
+      { id: 'asteroid', icon: '🪨', title: B('Un asteroide pasa cerca', 'An asteroid flies by'),
+        text: B('Un pequeño asteroide cruzará a solo 2.000 km de la nave. Una agencia científica de la Tierra ofrece dinero por fotos de cerca.',
+          'A small asteroid will pass just 2,000 km from the ship. A science agency on Earth is offering money for close-up photos.'),
+        fact: B('Las sondas aprovechan a veces el viaje para estudiar asteroides por el camino: la sonda Galileo fotografió Gaspra e Ida camino de Júpiter.',
+          'Probes sometimes use the journey to study asteroids along the way: the Galileo probe photographed Gaspra and Ida on its way to Jupiter.'),
+        choices: [
+          { fx: 'close', title: B('Acercarse y fotografiarlo', 'Get close and photograph it'), hint: (s) => B(`+${s.crew.includes('geo') ? 120 : 80} M€ · −8 % combustible · riesgo 15 %`, `+€${s.crew.includes('geo') ? 120 : 80}M · −8% fuel · 15% risk`),
+            run: (s) => { const m = s.crew.includes('geo') ? 120 : 80; return roll(0.15)
+              ? { bad: true, text: B('¡Fotos espectaculares! Pero un trozo de roca golpea la nave al pasar.', 'Spectacular photos! But a chunk of rock hits the ship as you pass.'), d: { budget: m, fuel: -8, hull: -20 } }
+              : { text: s.crew.includes('geo') ? B('Kenji identifica los minerales del asteroide. ¡La agencia paga extra!', 'Kenji identifies the asteroid’s minerals. The agency pays extra!') : B('Fotos increíbles y sin un rasguño. La agencia paga encantada.', 'Amazing photos without a scratch. The agency pays happily.'), d: { budget: m, fuel: -8 } }; } },
+          { fx: 'far', title: B('Fotografiarlo de lejos', 'Photograph it from afar'), hint: B('+25 M€', '+€25M'),
+            run: () => ({ text: B('Las fotos salen pequeñas, pero algo pagan.', 'The photos are small, but they still pay something.'), d: { budget: 25 } }) },
+          { fx: 'ignore', title: B('Seguir sin desviarse', 'Carry on without detours'), hint: B('Sin cambios', 'No change'),
+            run: () => ({ text: B('El asteroide pasa de largo. Nada que contar.', 'The asteroid sails past. Nothing to report.'), d: {} }) },
+        ] },
+      { id: 'computer', icon: '💻', title: B('El ordenador de a bordo se cuelga', 'The on-board computer crashes'),
+        text: B('La pantalla se llena de errores y la nave empieza a girar lentamente sin control. Hay que actuar antes de que los paneles dejen de mirar al Sol.',
+          'The screen fills with errors and the ship starts slowly spinning out of control. You must act before the panels stop facing the Sun.'),
+        fact: B('Durante el alunizaje del Apolo 11, el ordenador mostró alarmas de sobrecarga. Estaba programado para ignorar las tareas menos importantes, y eso salvó la misión.',
+          'During the Apollo 11 landing, the computer showed overload alarms. It was programmed to drop the least important tasks, and that saved the mission.'),
+        choices: [
+          { fx: 'pilot', title: B('La piloto estabiliza a mano', 'The pilot stabilises it by hand'), hint: B('−6 % combustible', '−6% fuel'), req: { crew: 'pilot' },
+            run: () => ({ text: B('Valeria frena el giro con los propulsores mientras el ordenador arranca de nuevo.', 'Valeria stops the spin with the thrusters while the computer restarts.'), d: { fuel: -6 } }) },
+          { fx: 'reboot', title: B('Reiniciar el sistema', 'Reboot the system'), hint: B('Riesgo 30 %', '30% risk'),
+            run: () => (roll(0.3)
+              ? { bad: true, text: B('El reinicio tarda una eternidad y la nave da muchas vueltas antes de recuperarse.', 'The reboot takes ages and the ship spins a lot before recovering.'), d: { fuel: -15, hull: -10 } }
+              : { text: B('Apagar y encender… ¡y funciona! Como con cualquier ordenador.', 'Turn it off and on again… and it works! Just like any computer.'), d: { fuel: -3 } }) },
+          { fx: 'patch', title: B('Parche de software desde la Tierra', 'Software patch from Earth'), hint: B('−45 M€', '−€45M'), req: { budget: 45 },
+            run: () => ({ text: B('Los programadores de la Tierra encuentran el error y mandan la solución.', 'Programmers on Earth find the bug and send the fix.'), d: { budget: -45 } }) },
+        ] },
+      { id: 'morale', icon: '😔', title: B('La tripulación echa de menos la Tierra', 'The crew misses Earth'),
+        text: B('Llevan meses encerrados en un espacio del tamaño de una furgoneta. Hay discusiones y nadie duerme bien.',
+          'They have spent months shut in a space the size of a van. There are arguments and nobody sleeps well.'),
+        fact: B('La salud mental es uno de los mayores retos de un viaje a Marte. En el experimento Mars-500 seis personas vivieron 520 días encerradas para estudiarlo.',
+          'Mental health is one of the biggest challenges of a trip to Mars. In the Mars-500 experiment, six people lived shut in for 520 days to study it.'),
+        choices: [
+          { fx: 'call', title: B('Videollamada con las familias', 'Video call with the families'), hint: (s) => (s.crew.includes('com') ? B('+12 % salud', '+12% health') : B('+4 % salud (los mensajes tardan minutos)', '+4% health (messages take minutes)')),
+            run: (s) => ({ text: s.crew.includes('com') ? B('Amara organiza los mensajes para que parezca una conversación. ¡Sonrisas para todos!', 'Amara arranges the messages so it feels like a conversation. Smiles all round!')
+              : B('Con minutos de retraso cuesta hablar, pero ver a la familia ayuda un poco.', 'With minutes of delay it is hard to chat, but seeing family helps a little.'), d: { health: s.crew.includes('com') ? 12 : 4 } }) },
+          { fx: 'party', title: B('Fiesta con la comida especial', 'Party with the special food'), hint: B('+8 % salud · −6 días de provisiones', '+8% health · −6 days of supplies'),
+            run: () => ({ text: B('Postre, música y un torneo de juegos flotantes. El ambiente mejora mucho.', 'Dessert, music and a floating games tournament. The mood improves a lot.'), d: { health: 8, food: -6 } }) },
+          { fx: 'work', title: B('Seguir trabajando', 'Keep working'), hint: B('−10 % salud', '−10% health'),
+            run: () => ({ text: B('El trabajo sale, pero el cansancio y el mal humor se acumulan.', 'The work gets done, but tiredness and bad moods build up.'), d: { health: -10 } }) },
+        ] },
+      { id: 'sponsor', icon: '🎥', title: B('Un anuncio desde el espacio', 'An advert from space'),
+        text: B('Una empresa de la Tierra ofrece 100 M€ por grabar un anuncio dentro de la nave. Pero llevará días de trabajo extra para la tripulación.',
+          'A company on Earth offers €100M to film an advert inside the ship. But it will mean days of extra work for the crew.'),
+        fact: B('En la Estación Espacial ya se han grabado anuncios, entrevistas e incluso escenas de una película.', 'Adverts, interviews and even scenes from a film have already been shot on the Space Station.'),
+        choices: [
+          { fx: 'yes', title: B('Aceptar', 'Accept'), hint: B('+100 M€ · −10 % salud', '+€100M · −10% health'),
+            run: () => ({ text: B('Tres días de grabación agotadores, pero el dinero llega a la cuenta de la misión.', 'Three exhausting days of filming, but the money lands in the mission’s account.'), d: { budget: 100, health: -10 } }) },
+          { fx: 'short', title: B('Aceptar, pero solo una mañana', 'Accept, but only one morning'), hint: B('+40 M€', '+€40M'),
+            run: () => ({ text: B('Un vídeo corto y divertido. Pagan menos, pero nadie se agota.', 'A short, fun video. They pay less, but nobody gets worn out.'), d: { budget: 40 } }) },
+          { fx: 'no', title: B('Rechazarlo', 'Turn it down'), hint: B('Sin cambios', 'No change'),
+            run: () => ({ text: B('La misión es lo primero. Seguís con lo vuestro.', 'The mission comes first. You carry on.'), d: {} }) },
+        ] },
+    ];
+    const FIXED_IDS = ['launch', 'orbit', 'moon', 'arrive'];
+    const MID_DAYS = [30, 65, 100, 140, 175];
+    function buildTrip() {
+      const pool = EVENTS.filter((e) => !FIXED_IDS.includes(e.id)).concat(NEW_EVENTS.filter((e) => e.id !== 'cables'));
+      const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+      const mid = shuffle(shuffle(pool).slice(0, MID_DAYS.length - 1).concat(byId(NEW_EVENTS, 'cables')));
+      const month = (d) => Math.max(1, Math.ceil(d / 30));
+      return [byId(EVENTS, 'launch'), byId(EVENTS, 'orbit'), byId(EVENTS, 'moon')]
+        .concat(mid.map((e, i) => Object.assign({}, e, { day: MID_DAYS[i], place: B(`Crucero · mes ${month(MID_DAYS[i])}`, `Cruise · month ${month(MID_DAYS[i])}`) })))
+        .concat(byId(EVENTS, 'arrive'));
+    }
+    const stages = () => [B('Preparación', 'Preparation')].concat(s.events ? s.events.map((e) => e.place) : Array.from({ length: 9 }, () => B('…', '…')));
+
 
     // ---------- Ilustraciones (SVG con las fotos reales de la Tierra, la Luna y Marte) ----------
     const IMG = { earth: ['img/tierra-apollo17.jpg', 1.125], moon: ['img/luna-lro.jpg', 1.02], mars: ['img/marte-hubble-2003.jpg', 1.15] };
@@ -2389,6 +2504,64 @@
             <path id="mv-path" d="${path}" class="pred"/>
             <g ${move('mv-path', 2600, 200)} class="mover" transform="translate(20 60)"><g transform="scale(.75)">${ship(p, state === 'out' ? `${fx === 'engine' || fx === 'combo' ? 'retro' : ''}${fx === 'aero' || fx === 'combo' ? ' plasma' : ''}${bad}` : '')}</g></g>`, lbl);
         }
+        case 'cables': {
+          const cols = ['#ff5a5a', '#4ea3ff', '#ffc857', '#6be3b5'];
+          const ok = state === 'out' && fx === 'puzzle' && !o.bad;
+          const wires = cols.map((c, i) => { const y = 70 + i * 45, y2 = 70 + ((i * 3) % 4) * 45;
+            return `<path d="M150 ${y} h60" stroke="${c}" stroke-width="7" stroke-linecap="round"/><path d="M430 ${y2} h60" stroke="${c}" stroke-width="7" stroke-linecap="round"/>
+              ${ok ? `<path class="wire-ok" pathLength="1" d="M210 ${y} C 320 ${y}, 320 ${y2}, 430 ${y2}" stroke="${c}" stroke-width="6" fill="none"/>` : ''}`; }).join('');
+          return svgWrap('cables', state, fx, `<rect x="110" y="30" width="420" height="220" rx="16" fill="#131b31" stroke="#3a4566" stroke-width="2"/>
+            <rect x="130" y="48" width="380" height="184" rx="8" fill="#0a0f1d"/>${wires}
+            ${state === 'idle' || o.bad ? `<g class="zap"><path d="M300 110 l14 18 l-10 4 l16 22" stroke="#fff6b0" stroke-width="3" fill="none"/><path d="M340 170 l-12 14 l10 4 l-14 18" stroke="#fff6b0" stroke-width="3" fill="none"/></g>` : ''}
+            <circle class="lamp ${ok || (state === 'out' && !o.bad && fx !== 'backup') ? 'on' : fx === 'backup' && state === 'out' ? 'dim' : 'off'}" cx="560" cy="60" r="14"/>
+            ${fx === 'remote' && state === 'out' ? `<g class="signal"><path d="M575 140 q25 25 0 50"/><path d="M590 125 q40 40 0 80"/></g>` : ''}`, lbl);
+        }
+        case 'oxygen': {
+          const good = state === 'out' && !o.bad;
+          return svgWrap('oxygen', state, fx, `<rect x="90" y="40" width="460" height="200" rx="24" fill="#131b31" stroke="#3a4566" stroke-width="2"/>
+            ${s.crew.slice(0, 3).map((id, i) => `<g transform="translate(${130 + i * 74} 120)"><g class="${good ? '' : 'dizzy'}">${avatar(byId(CREW, id), 60).replace('<svg', '<svg x="0" y="0"')}</g></g>`).join('')}
+            <g transform="translate(470 130)"><circle r="52" fill="#060a14" stroke="#3a4566" stroke-width="2"/>
+              <path d="M-40 0 A40 40 0 0 1 40 0" fill="none" stroke="#2b3550" stroke-width="8"/>
+              <path d="M-40 0 A40 40 0 0 1 -12 -38" fill="none" stroke="#6be3b5" stroke-width="8"/><path d="M12 -38 A40 40 0 0 1 40 0" fill="none" stroke="#ff5a3c" stroke-width="8"/>
+              <g class="needle ${good ? 'ok' : 'bad'}"><line x1="0" y1="0" x2="0" y2="-34" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g><circle r="5" fill="#fff"/>
+              <text y="30" text-anchor="middle" class="sc-label sm">CO₂</text></g>
+            ${fx === 'tape' && state === 'out' ? `<text x="420" y="225" font-size="30" class="pop">📦</text>` : fx === 'printer' && state === 'out' ? `<text x="420" y="225" font-size="30" class="pop">🖨️</text>` : ''}
+            <g class="bubbles">${[0, 1, 2, 3, 4].map((i) => `<circle cx="${150 + i * 50}" cy="230" r="${3 + (i % 3)}" style="animation-delay:${i * 0.5}s"/>`).join('')}</g>`, lbl);
+        }
+        case 'water': {
+          const drops = Array.from({ length: 9 }, (_, i) => `<circle class="drop" cx="${360 + (i % 3) * 22}" cy="${120 + Math.floor(i / 3) * 20}" r="${4 + (i % 2) * 2}" style="animation-delay:${(i * 0.3).toFixed(1)}s"/>`).join('');
+          return svgWrap('water', state, fx, `<g transform="translate(260 140) scale(1.5)">${ship(p)}</g>
+            <g class="${state === 'out' && fx !== 'leave' ? 'stopped' : ''}">${drops}</g>
+            ${state === 'out' && (fx === 'kit' || fx === 'eng') ? `<text x="330" y="100" font-size="30" class="pop">${fx === 'kit' ? '🧰' : '🔧'}</text>` : ''}`, lbl);
+        }
+        case 'asteroid': {
+          const photo = state === 'out' && fx !== 'ignore';
+          return svgWrap('asteroid', state, fx, `<g class="rockpass ${fx === 'close' && state === 'out' ? 'near' : ''}"><path d="M0 -40 L32 -28 L46 4 L30 36 L-6 44 L-38 26 L-44 -8 L-26 -34Z" fill="#6f6a66" stroke="#9a948e" stroke-width="2"/>
+              <circle cx="-10" cy="-8" r="7" fill="#57524f"/><circle cx="16" cy="14" r="5" fill="#57524f"/><circle cx="-18" cy="20" r="4" fill="#57524f"/></g>
+            <g transform="translate(150 150) scale(1.1)">${ship(p)}</g>
+            ${photo ? `<circle class="camflash" cx="190" cy="150" r="30"/><text x="320" y="60" text-anchor="middle" class="sc-money">+ ${num(o.d.budget || 0)} M€</text>` : ''}`, lbl);
+        }
+        case 'computer': {
+          const ok = state === 'out' && !o.bad;
+          return svgWrap('computer', state, fx, `<g transform="translate(470 140)"><g class="${ok ? '' : 'spin'}"><g transform="scale(1.1)">${ship(p)}</g></g></g>
+            <rect x="70" y="60" width="250" height="160" rx="12" fill="#060a14" stroke="#3a4566" stroke-width="3"/>
+            ${ok ? `<text x="195" y="150" text-anchor="middle" class="sc-ok">SISTEMA OK ✓</text>`
+              : `<g class="glitch"><text x="195" y="120" text-anchor="middle" class="sc-err">ERROR 0x3F</text><text x="195" y="160" text-anchor="middle" class="sc-err sm">REBOOT? ▮</text>
+              <rect x="80" y="100" width="230" height="4" fill="#ff5a3c" opacity=".5"/><rect x="80" y="175" width="230" height="3" fill="#4ea3ff" opacity=".4"/></g>`}`, lbl);
+        }
+        case 'morale': {
+          const happy = state === 'out' && fx !== 'work';
+          return svgWrap('morale', state, fx, `<rect x="90" y="40" width="460" height="200" rx="24" fill="#131b31" stroke="#3a4566" stroke-width="2"/>
+            ${s.crew.map((id, i) => `<g transform="translate(${120 + i * 74} 130)">${avatar(byId(CREW, id), 60).replace('<svg', '<svg x="0" y="0"')}<text x="44" y="6" font-size="20" class="${happy ? 'pop' : ''}">${happy ? '😊' : '😔'}</text></g>`).join('')}
+            ${fx === 'call' && state === 'out' ? `<rect x="420" y="60" width="110" height="74" rx="8" fill="#060a14" stroke="#4ea3ff"/>${planet(p, 'earth', 475, 97, 26)}` : ''}
+            ${fx === 'party' && state === 'out' ? `<g class="confetti">${Array.from({ length: 14 }, (_, i) => `<rect x="${110 + i * 30}" y="50" width="6" height="10" fill="${['#ff5a5a', '#ffc857', '#6be3b5', '#4ea3ff'][i % 4]}" style="animation-delay:${(i * 0.13).toFixed(2)}s"/>`).join('')}</g><text x="470" y="110" font-size="40" class="pop">🎂</text>` : ''}`, lbl);
+        }
+        case 'sponsor': {
+          return svgWrap('sponsor', state, fx, `<rect x="90" y="40" width="460" height="200" rx="24" fill="#131b31" stroke="#3a4566" stroke-width="2"/>
+            ${s.crew.slice(0, 2).map((id, i) => `<g transform="translate(${150 + i * 80} 120)">${avatar(byId(CREW, id), 64).replace('<svg', '<svg x="0" y="0"')}</g>`).join('')}
+            <text x="420" y="160" font-size="56">🎥</text>
+            ${state === 'out' && fx !== 'no' ? `<g class="rec"><circle cx="470" cy="70" r="8" fill="#ff3d2a"/><text x="484" y="76" class="sc-label">REC</text></g><text x="320" y="225" text-anchor="middle" class="sc-money">+ ${num(o.d.budget || 0)} M€</text>` : ''}`, lbl);
+        }
         default: return '';
       }
     }
@@ -2396,6 +2569,7 @@
     // Mapa del viaje: la nave avanza de la Tierra a Marte
     const MAP_PATH = 'M38 30 Q 66 8 92 15 Q 118 22 170 32 Q 390 64 598 27';
     function mapView() {
+      const STAGES = stages();
       const cur = s.phase === 'trip' ? s.ev + 1 : s.phase === 'end' ? STAGES.length - 1 : 0;
       const f = cur / (STAGES.length - 1);
       const from = s.mapFrom == null ? f : s.mapFrom;
@@ -2407,7 +2581,8 @@
         <path d="${MAP_PATH}" fill="none" stroke="rgba(170,185,225,.35)" stroke-dasharray="3 6" stroke-width="2"/>
         <path id="map-path" d="${MAP_PATH}" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round" pathLength="1"
           stroke-dasharray="1 1" stroke-dashoffset="${1 - from}"/>
-        <g data-map="${from}" data-map-to="${f}"><g transform="scale(.32)">${ship('mp')}</g></g></svg></div>`;
+        <g data-map="${from}" data-map-to="${f}"><g transform="scale(.32)">${ship('mp')}</g></g></svg>
+        ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}</div>`;
     }
 
     // Animaciones con JavaScript: movimiento a lo largo de un camino
@@ -2472,7 +2647,7 @@
     let s;
     function reset() {
       s = { phase: 'rocket', rocket: null, crew: [], supplies: null, tools: [], ev: 0, outcome: null, lowPower: false,
-        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null, prev: null, mapFrom: null };
+        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null, prev: null, mapFrom: null, events: null, puzzle: null, diary: false };
     }
     const crewCost = () => s.crew.reduce((a, id) => a + byId(CREW, id).cost, 0);
     const supCost = (opt) => Math.round(opt.days * Math.max(s.crew.length, 1) * SUP_COST);
@@ -2499,7 +2674,7 @@
     function level(k, v, prep) {
       if (k === 'budget') return v < 0 ? 'danger' : v < 60 ? 'warn' : 'ok';
       if (k === 'food') {
-        const need = prep ? TRIP : TRIP - EVENTS[Math.min(s.ev + (s.outcome ? 1 : 0), EVENTS.length - 1)].day;
+        const need = prep || !s.events ? TRIP : TRIP - s.events[Math.min(s.ev + (s.outcome ? 1 : 0), s.events.length - 1)].day;
         return v < need ? 'danger' : v < need + 20 ? 'warn' : 'ok';
       }
       return v < 30 ? 'danger' : v < 60 ? 'warn' : 'ok';
@@ -2535,8 +2710,7 @@
     function banner() {
       const o = s.outcome;
       if (s.phase !== 'trip' || !o) return '';
-      const hurt = Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0);
-      const tone = o.bad || hurt <= -20 ? 'bad' : hurt < 0 ? 'mid' : 'ok';
+      const tone = toneOf(o);
       const txt = { ok: L('✅ ¡Bien hecho!', '✅ Well done!'), mid: L('🩹 Superado, con daños', '🩹 Made it, with damage'), bad: L('⚠️ ¡Problemas!', '⚠️ Trouble!') }[tone];
       return `<div class="adv-banner ${tone}" role="status">${txt}</div>`;
     }
@@ -2602,7 +2776,8 @@
     const nav = (ok, label, back) => `<div class="controls adv-nav">${back ? `<button type="button" class="btn small ghost" data-act="back">◀ ${L('Atrás', 'Back')}</button>` : ''}<button type="button" class="btn small primary" data-act="next" ${ok ? '' : 'disabled'}>${label}</button></div>`;
 
     function tripView() {
-      const e = EVENTS[s.ev];
+      const e = s.events[s.ev];
+      if (s.puzzle) return puzzlePanel(e);
       const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>`;
       if (s.outcome) {
         const o = s.outcome;
@@ -2626,7 +2801,7 @@
       if (!e.win) {
         return `<div class="adv-end fail"><p class="kicker">${L('Fin de la misión', 'Mission over')}</p><h3 class="adv-title">${e.icon} ${T(e.title)}</h3><p class="adv-text">${T(e.text)}</p>
           <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué cambiarías en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
-          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button></div></div>`;
+          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button></div></div>`;
       }
       const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>+${num(p[1])}</b></li>`).join('');
       let best = 0;
@@ -2635,19 +2810,18 @@
         <p class="adv-stars" aria-label="${e.stars} / 3">${[0, 1, 2].map((i) => `<span class="${i < e.stars ? 'on' : 'off'}" style="animation-delay:${0.3 + i * 0.35}s">⭐</span>`).join('')}</p>
         <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
         ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
-        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button></div></div>`;
+        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button></div></div>`;
     }
 
     function logView() {
       if (!s.log.length) return '';
-      const items = s.log.map((l) => `<li><span class="adv-log-day">${L('Día', 'Day')} ${l.day}</span> ${T(l.text)}</li>`).join('');
-      return `<details class="adv-log"><summary>📓 ${L('Diario de a bordo', 'Logbook')} (${s.log.length})</summary><ol>${items}</ol></details>`;
+      return '';
     }
 
     function render(focus) {
       const trip = s.phase === 'trip';
       const panel = s.phase === 'end' ? endView() : trip ? tripView() : prepView();
-      const scene = s.phase === 'end' ? (s.end.win ? winScene() : lostScene()) : trip ? tripScene(EVENTS[s.ev], s.outcome) : prepScene();
+      const scene = s.phase === 'end' ? (s.end.win ? winScene() : lostScene()) : trip ? (s.puzzle ? puzzleScene() : tripScene(s.events[s.ev], s.outcome)) : prepScene();
       const o = trip && s.outcome;
       const shake = o && (o.bad || Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0) <= -20);
       const key = `${s.phase}-${s.ev}-${s.outcome ? 1 : 0}`;
@@ -2655,7 +2829,9 @@
       s.sceneKey = key;
       root.innerHTML = `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
           <div class="adv-screen${shake ? ' shake' : ''}">${scene}${crewOverlay()}${banner()}</div>${hud()}</div>
-        <div class="adv-panel">${panel}</div></div>${logView()}`;
+        <div class="adv-panel">${panel}</div></div>`;
+      diaryHost.innerHTML = s.diary ? diaryView() : '';
+      document.documentElement.classList.toggle('dia-open', !!s.diary);
       s.prev = null;
       animate();
       if (focus) {
@@ -2666,6 +2842,135 @@
       }
     }
 
+    // ---------- Diario de a bordo ----------
+    // Va fuera de la tarjeta (su desenfoque «atraparía» una ventana fija)
+    const diaryHost = document.createElement('div');
+    diaryHost.className = 'adv-diary-host';
+    document.body.appendChild(diaryHost);
+    const toneOf = (o) => {
+      const hurt = Math.min(o.d.health || 0, 0) + Math.min(o.d.hull || 0, 0);
+      return o.bad || hurt <= -20 ? 'bad' : hurt < 0 ? 'mid' : 'ok';
+    };
+    function diaryView() {
+      const items = s.log.map((l, k) => {
+        const ds = l.d ? Object.entries(l.d).filter(([, v]) => v).map(([kk, v]) => fmtDelta(kk, v)).join('') : '';
+        return `<li class="dia-entry t-${l.tone || 'info'}" style="animation-delay:${Math.min(k, 10) * 0.05}s">
+          <div class="dia-day"><span>${L('Día', 'Day')}</span><b>${l.day}</b></div>
+          <div class="dia-dot" aria-hidden="true">${l.icon || '📌'}</div>
+          <div class="dia-body"><p class="dia-place">${T(l.place)}${l.tone && l.tone !== 'info' ? ` <span class="dia-tag">${{ ok: L('Bien', 'Good'), mid: L('Con daños', 'Damaged'), bad: L('Problema', 'Trouble') }[l.tone]}</span>` : ''}</p>
+            <h4>${T(l.choice)}</h4>${l.text ? `<p>${T(l.text)}</p>` : ''}${ds ? `<div class="adv-deltas">${ds}</div>` : ''}</div></li>`;
+      }).join('');
+      const crew = s.crew.map((id) => `<span title="${T(byId(CREW, id).name)}">${avatar(byId(CREW, id), 30)}</span>`).join('');
+      return `<div class="adv-diary" role="dialog" aria-modal="true" aria-labelledby="dia-h"><div class="dia-back" data-act="diary-close"></div>
+        <div class="dia-book"><header class="dia-head"><div><h3 id="dia-h">📓 ${L('Diario de a bordo', 'Logbook')}</h3>
+          <p>${L('Misión The Last Lap', 'Mission The Last Lap')}${s.rocket ? ` · ${T(s.rocket.name)}` : ''}</p></div><div class="dia-crew">${crew}</div>
+          <button type="button" class="dia-close" data-act="diary-close" aria-label="${L('Cerrar el diario', 'Close the logbook')}">✕</button></header>
+        ${items ? `<ol class="dia-list">${items}</ol>` : `<p class="dia-empty">${L('Todavía no hay entradas. ¡El diario empieza con el despegue!', 'No entries yet. The logbook starts at launch!')}</p>`}</div></div>`;
+    }
+    // ---------- Minijuego: reconectar los cables ----------
+    const WIRES = [
+      { c: '#ff5a5a', sym: '●' }, { c: '#4ea3ff', sym: '▲' }, { c: '#ffc857', sym: '■' }, { c: '#6be3b5', sym: '◆' }, { c: '#c58bff', sym: '★' },
+    ];
+    const pzY = (i, n) => 46 + i * (188 / (n - 1));
+    function startPuzzle(i) {
+      const eng = s.crew.includes('eng');
+      const n = eng ? 4 : 5;
+      let right;
+      do { right = Array.from({ length: n }, (_, k) => k).sort(() => Math.random() - 0.5); } while (right.some((w, k) => w === k) && Math.random() < 0.85);
+      s.puzzle = { choice: i, n, right, links: [], mistakes: 0, sel: null, wrong: null, t0: performance.now(), dur: (eng ? 22 : 16) * 1000 };
+      render(true);
+      puzzleTimer();
+    }
+    function puzzleTimer() {
+      const tick = () => {
+        const p = s.puzzle;
+        if (!p) return;
+        const left = Math.max(0, p.dur - (performance.now() - p.t0));
+        const fill = root.querySelector('.pz-timer-fill'), secs = root.querySelector('.pz-secs');
+        if (fill) { fill.style.width = (left / p.dur) * 100 + '%'; fill.classList.toggle('hurry', left < 5000); }
+        if (secs) secs.textContent = `${Math.ceil(left / 1000)} s`;
+        if (left <= 0) return finishPuzzle(false);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+    function connect(i, j) {
+      const p = s.puzzle;
+      if (!p || p.links.includes(i)) return;
+      if (p.right[j] === i) { p.links.push(i); p.wrong = null; }
+      else { p.mistakes++; p.wrong = j; p.t0 -= 1500; } // un chispazo resta 1,5 s
+      p.sel = null;
+      if (p.links.length === p.n) return finishPuzzle(true);
+      render(false);
+    }
+    function finishPuzzle(ok) {
+      const p = s.puzzle;
+      if (!p) return;
+      s.puzzle = null;
+      const e = s.events[s.ev], c = e.choices[p.choice];
+      const secs = Math.max(0, Math.round((performance.now() - p.t0) / 1000));
+      const r = ok
+        ? (p.mistakes === 0
+          ? { text: B(`¡Perfecto! Todos los cables conectados a la primera en ${secs} segundos. Vuelven las luces.`, `Perfect! All cables connected first time in ${secs} seconds. The lights come back on.`), d: {} }
+          : { text: B(`¡Conseguido! Las luces vuelven, aunque ha habido ${p.mistakes} chispazo${p.mistakes > 1 ? 's' : ''} por el camino.`, `Done! The lights come back on, although there ${p.mistakes > 1 ? `were ${p.mistakes} sparks` : 'was 1 spark'} along the way.`), d: { hull: -4 * Math.min(p.mistakes, 4) } })
+        : { bad: true, text: B(`Se acaba el tiempo con ${p.links.length} de ${p.n} cables conectados. El panel se recalienta y la cabina se llena de humo.`, `Time runs out with ${p.links.length} of ${p.n} cables connected. The panel overheats and the cabin fills with smoke.`),
+          d: { hull: -12 - 4 * (p.n - p.links.length), health: -8 } };
+      resolve(e, c, p.choice, r);
+    }
+    function puzzleScene() {
+      const p = s.puzzle, n = p.n;
+      const plugL = (i) => { const w = WIRES[i], y = pzY(i, n), on = p.links.includes(i);
+        return `<g class="plug L${on ? ' done' : ''}${p.sel === i ? ' sel' : ''}" data-pl="${i}" tabindex="0" role="button" aria-label="${L('Cable', 'Cable')} ${w.sym}">
+          <path d="M0 ${y} H108" stroke="${w.c}" stroke-width="10" stroke-linecap="round"/><circle cx="120" cy="${y}" r="27" fill="transparent"/>
+          <circle class="ring" cx="120" cy="${y}" r="17" fill="#0a0f1d" stroke="${w.c}" stroke-width="4"/><text x="120" y="${y + 6}" text-anchor="middle" fill="${w.c}" class="pz-sym">${w.sym}</text></g>`; };
+      const plugR = (j) => { const w = WIRES[p.right[j]], y = pzY(j, n), on = p.links.includes(p.right[j]);
+        return `<g class="plug R${on ? ' done' : ''}${p.wrong === j ? ' wrong' : ''}" data-pr="${j}" tabindex="0" role="button" aria-label="${L('Enchufe', 'Socket')} ${w.sym}">
+          <path d="M532 ${y} H640" stroke="${w.c}" stroke-width="10" stroke-linecap="round"/><circle cx="520" cy="${y}" r="27" fill="transparent"/>
+          <circle class="ring" cx="520" cy="${y}" r="17" fill="#0a0f1d" stroke="${w.c}" stroke-width="4"/><text x="520" y="${y + 6}" text-anchor="middle" fill="${w.c}" class="pz-sym">${w.sym}</text>
+          ${p.wrong === j ? `<g class="pz-spark">${[0, 1, 2, 3, 4, 5].map((k) => `<line x1="520" y1="${y}" x2="${(520 + Math.cos(k) * 30).toFixed(1)}" y2="${(y + Math.sin(k) * 30).toFixed(1)}"/>`).join('')}</g>` : ''}</g>`; };
+      const links = p.links.map((i) => { const j = p.right.indexOf(i), y1 = pzY(i, n), y2 = pzY(j, n);
+        return `<path class="pz-link" d="M137 ${y1} C 320 ${y1}, 320 ${y2}, 503 ${y2}" stroke="${WIRES[i].c}"/>`; }).join('');
+      return `<svg class="adv-scene pz" data-scene="puzzle" data-state="idle" viewBox="0 0 640 280" role="application" aria-label="${L('Minijuego: une cada cable con el enchufe de su mismo color y símbolo', 'Mini-game: connect each cable to the socket with the same colour and symbol')}">
+        <rect width="640" height="280" fill="#0b1020"/><rect x="150" y="14" width="340" height="252" rx="14" fill="#0e1528" stroke="#2b3550" stroke-dasharray="6 6"/>
+        <text x="320" y="140" text-anchor="middle" class="pz-bg">⚡</text>${links}<path id="pz-temp" class="pz-temp" d=""/>
+        ${Array.from({ length: n }, (_, i) => plugL(i)).join('')}${Array.from({ length: n }, (_, j) => plugR(j)).join('')}</svg>`;
+    }
+    function puzzlePanel(e) {
+      const p = s.puzzle;
+      return `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title">⚡ ${L('Reconecta los cables', 'Reconnect the cables')}</h3>
+        <p class="adv-text">${L('Une cada cable de la izquierda con el enchufe de la derecha que tenga <strong>el mismo color y símbolo</strong>. Arrástralo, o toca uno y luego su pareja. Cada error da un chispazo y resta tiempo.', 'Connect each cable on the left to the socket on the right with <strong>the same colour and symbol</strong>. Drag it, or tap one and then its pair. Each mistake makes a spark and costs time.')}</p>
+        <div class="pz-hud"><div class="pz-timer"><i class="pz-timer-fill"></i></div><span class="pz-secs">${Math.ceil(p.dur / 1000)} s</span></div>
+        <div class="pz-stats"><span>🔌 ${p.links.length}/${p.n}</span><span>⚡ ${L('Chispazos', 'Sparks')}: ${p.mistakes}</span>${s.crew.includes('eng') ? `<span>🔧 ${L('Tomás te da más tiempo', 'Tomás gives you more time')}</span>` : ''}</div>
+        <div class="controls adv-nav"><button type="button" class="btn small ghost" data-act="giveup">🏳️ ${L('Rendirse', 'Give up')}</button></div>`;
+    }
+    // Arrastrar un cable
+    let drag = null;
+    root.addEventListener('pointerdown', (ev) => {
+      const g = ev.target.closest && ev.target.closest('[data-pl]');
+      if (!g || !s.puzzle || s.puzzle.links.includes(+g.dataset.pl)) return;
+      const svg = g.ownerSVGElement;
+      drag = { i: +g.dataset.pl, svg, moved: false, x: ev.clientX, y: ev.clientY };
+      ev.preventDefault();
+    });
+    window.addEventListener('pointermove', (ev) => {
+      if (!drag || !drag.svg.isConnected) return;
+      if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 6) drag.moved = true;
+      const pt = drag.svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const q = pt.matrixTransform(drag.svg.getScreenCTM().inverse());
+      const y = pzY(drag.i, s.puzzle.n);
+      const t = drag.svg.querySelector('#pz-temp');
+      if (t) { t.setAttribute('d', `M137 ${y} C ${(137 + q.x) / 2} ${y}, ${(137 + q.x) / 2} ${q.y}, ${q.x} ${q.y}`); t.setAttribute('stroke', WIRES[drag.i].c); }
+    });
+    window.addEventListener('pointerup', (ev) => {
+      if (!drag) return;
+      const d0 = drag; drag = null;
+      const t = d0.svg.querySelector('#pz-temp'); if (t) t.setAttribute('d', '');
+      if (!d0.moved) return;
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const r = el && el.closest && el.closest('[data-pr]');
+      if (r) { suppressClick = true; connect(d0.i, +r.dataset.pr); }
+    });
+    let suppressClick = false;
     // --- Lógica ---
     function startTrip() {
       s.budget = BUDGET0 - spentPrep();
@@ -2673,20 +2978,27 @@
       s.food = s.supplies.days;
       s.hull = s.rocket.hull;
       s.health = 100;
-      s.phase = 'trip'; s.ev = 0; s.outcome = null;
-      s.log.push({ day: 0, text: B(`Despegáis con ${s.rocket.name.es.toLowerCase()}, ${s.crew.length} tripulantes y ${s.tools.length} herramientas. Quedan ${s.budget} M€.`,
-        `You lift off on a ${s.rocket.name.en.toLowerCase()} with ${s.crew.length} crew and ${s.tools.length} tools. €${s.budget}M left.`) });
+      s.phase = 'trip'; s.ev = 0; s.outcome = null; s.events = buildTrip();
+      const names = (list, arr) => arr.map((id) => byId(list, id).name);
+      const crewEs = names(CREW, s.crew).map((n) => n.es).join(', '), crewEn = names(CREW, s.crew).map((n) => n.en).join(', ');
+      const toolsEs = names(TOOLS, s.tools).map((n) => n.es.toLowerCase()).join(', ') || 'ninguna', toolsEn = names(TOOLS, s.tools).map((n) => n.en.toLowerCase()).join(', ') || 'none';
+      s.log.push({ day: 0, icon: '🧑‍🚀', place: B('Preparación', 'Preparation'), tone: 'info',
+        choice: B(`Misión lista: ${s.rocket.name.es.toLowerCase()} y ${s.supplies.days} días de provisiones`, `Mission ready: ${s.rocket.name.en.toLowerCase()} and ${s.supplies.days} days of supplies`),
+        text: B(`Tripulación: ${crewEs}. Herramientas: ${toolsEs}. Fondo de emergencia: ${s.budget} M€.`, `Crew: ${crewEn}. Tools: ${toolsEn}. Emergency fund: €${s.budget}M.`) });
     }
 
     function choose(i) {
-      const e = EVENTS[s.ev];
+      const e = s.events[s.ev];
       const c = e.choices[i];
-      if (check(c.req)) return;
+      if (check(c.req) || s.puzzle) return;
+      if (c.puzzle) return startPuzzle(i);
+      resolve(e, c, i, c.run(s));
+    }
+    function resolve(e, c, i, r) {
       s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull };
-      const r = c.run(s);
       const d = Object.assign({}, r.d);
       // Provisiones gastadas hasta el siguiente capítulo (con racionamiento si faltan)
-      const nextDay = s.ev + 1 < EVENTS.length ? EVENTS[s.ev + 1].day : TRIP;
+      const nextDay = s.ev + 1 < s.events.length ? s.events[s.ev + 1].day : TRIP;
       const days = nextDay - e.day;
       Object.entries(d).forEach(([k, v]) => { s[k] = k === 'budget' ? s[k] + v : clamp(s[k] + v, 0, 100 + (k === 'food' ? 300 : 0)); });
       let extra = null;
@@ -2701,8 +3013,8 @@
           extra = B(`⚠️ Se acaban las provisiones: ${days - eaten} días a media ración.`, `⚠️ Supplies run out: ${days - eaten} days on half rations.`);
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
-      s.outcome = { choice: c.title, text: r.text, d, extra, fx: FX[e.id][i], bad: !!r.bad };
-      s.log.push({ day: e.day, text: B(`${e.place.es}: ${c.title.es}.`, `${e.place.en}: ${c.title.en}.`) });
+      s.outcome = { choice: c.title, text: r.text, d, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad };
+      s.log.push({ day: e.day, icon: e.icon, place: e.place, choice: c.title, text: r.text, d: Object.assign({}, d), tone: toneOf(s.outcome) });
       s.end = verdict(e);
       render(true);
     }
@@ -2712,8 +3024,8 @@
         text: B('Los daños acumulados eran demasiados. Por suerte, la cápsula de emergencia devuelve al equipo a casa, pero la misión se pierde.', 'The damage had piled up too much. Luckily, the escape capsule takes the crew home, but the mission is lost.') };
       if (s.health <= 0) return { win: false, icon: '🚑', title: B('La tripulación no puede seguir', 'The crew cannot go on'),
         text: B('El equipo está demasiado débil. Control de misión ordena dar la vuelta usando la gravedad de Marte.', 'The crew is too weak. Mission control orders a turnaround using the gravity of Mars.') };
-      if (e.id !== 'arrive' && s.ev + 1 < EVENTS.length) {
-        const ne = EVENTS[s.ev + 1];
+      if (e.id !== 'arrive' && s.ev + 1 < s.events.length) {
+        const ne = s.events[s.ev + 1];
         const can = ne.choices.some((c) => !check(c.req));
         if (!can) return { win: false, icon: '🌌', title: B('Sin combustible para frenar', 'No fuel left to brake'),
           text: B('Llegáis a Marte sin combustible para frenar y pasáis de largo. La nave queda girando alrededor del Sol.', 'You reach Mars with no fuel to brake and fly straight past. The ship ends up circling the Sun.') };
@@ -2736,10 +3048,16 @@
       return { win: true, parts, score, stars, text };
     }
 
-    root.addEventListener('click', (ev) => {
-      const b = ev.target.closest('button, g[data-rocket]');
-      if (!b || b.disabled || !root.contains(b)) return;
+    const onClick = (ev) => {
+      const b = ev.target.closest('button, g[data-rocket], g[data-pl], g[data-pr], [data-act="diary-close"]');
+      if (!b || b.disabled || !(root.contains(b) || diaryHost.contains(b))) return;
       const d = b.dataset;
+      if (suppressClick) { suppressClick = false; if (d.pl || d.pr) return; }
+      if (d.act === 'diary') { s.diary = true; render(false); const x = diaryHost.querySelector('.dia-close'); if (x) x.focus(); return; }
+      if (d.act === 'diary-close') { s.diary = false; render(false); const x = root.querySelector('.adv-diary-btn'); if (x) x.focus(); return; }
+      if (d.pl) { if (s.puzzle && !s.puzzle.links.includes(+d.pl)) { s.puzzle.sel = +d.pl; s.puzzle.wrong = null; render(false); } return; }
+      if (d.pr) { if (s.puzzle && s.puzzle.sel != null) connect(s.puzzle.sel, +d.pr); return; }
+      if (d.act === 'giveup') return finishPuzzle(false);
       if (d.rocket) { s.rocket = byId(ROCKETS, d.rocket); }
       else if (d.crew) {
         const i = s.crew.indexOf(d.crew);
@@ -2769,11 +3087,22 @@
       // Volver a ajustar si el presupuesto queda negativo (p. ej., al cambiar de cohete)
       if (s.phase === 'rocket') { s.crew.length && BUDGET0 - spentPrep() < 0 && (s.crew = [], s.supplies = null, s.tools = []); }
       render(false);
-    });
+    };
+    root.addEventListener('click', onClick);
+    diaryHost.addEventListener('click', onClick);
 
     // Atajos de teclado: A–D para elegir, Intro para continuar
     document.addEventListener('keydown', (ev) => {
       if (ev.altKey || ev.ctrlKey || ev.metaKey || !root.offsetParent) return;
+      if (s.diary) { if (ev.key === 'Escape') { s.diary = false; render(false); } return; }
+      const plug = ev.target.closest && ev.target.closest('[data-pl], [data-pr]');
+      if (plug && (ev.key === 'Enter' || ev.key === ' ')) {
+        ev.preventDefault();
+        const sel = plug.dataset.pl ? `[data-pl="${plug.dataset.pl}"]` : `[data-pr="${plug.dataset.pr}"]`;
+        plug.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        const again = root.querySelector(sel); if (again) again.focus();
+        return;
+      }
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((ev.target.tagName || '').toUpperCase())) return;
       const r = root.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return;
