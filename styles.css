@@ -66,6 +66,8 @@ strong { color: #fff; font-weight: 600; }
 .nav nav::-webkit-scrollbar { display: none; }
 .nav nav a { text-decoration: none; color: var(--muted); font-size: .9rem; padding: 6px 10px; border-radius: 999px; white-space: nowrap; transition: color .2s, background .2s; }
 .nav nav a:hover { color: var(--text); background: rgba(255,255,255,.06); }
+.nav nav a.nav-game { color: var(--text); background: rgba(255,122,69,.18); }
+.nav nav a.nav-game:hover { background: rgba(255,122,69,.3); }
 @media (min-width: 900px) { .nav nav { mask-image: none; } }
 
 /* BUTTONS */
