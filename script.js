@@ -1992,6 +1992,450 @@
     show('record');
   })();
 
+  /* ---------- Juego: historia con decisiones (presupuesto, equipo, herramientas y recursos) ---------- */
+  (function adventure() {
+    const root = $('#adv-game');
+    if (!root) return;
+
+    const B = (es, en) => ({ es, en });
+    const T = (o) => (typeof o === 'string' ? o : L(o.es, o.en));
+    const BUDGET0 = 1000;          // millones de euros
+    const TRIP = 210;              // días de viaje hasta Marte
+    const roll = (p) => Math.random() < p;
+
+    // --- Catálogo de la fase de preparación ---
+    const ROCKETS = [
+      { id: 'light', icon: '🚀', cost: 150, fuel: 70, hull: 70, risk: 0.25,
+        name: B('Lanzador ligero', 'Light launcher'),
+        desc: B('Barato, pero lleva poco combustible y es el más arriesgado en el despegue.', 'Cheap, but carries little fuel and is the riskiest at launch.') },
+      { id: 'reuse', icon: '♻️', cost: 280, fuel: 85, hull: 85, risk: 0.12,
+        name: B('Cohete reutilizable', 'Reusable rocket'),
+        desc: B('Equilibrado: su primera etapa aterriza y se vuelve a usar, por eso cuesta menos.', 'Balanced: its first stage lands and is flown again, which makes it cheaper.') },
+      { id: 'heavy', icon: '🏗️', cost: 450, fuel: 100, hull: 100, risk: 0.05,
+        name: B('Cohete pesado', 'Heavy rocket'),
+        desc: B('El más fiable y con más combustible, pero se come casi la mitad del presupuesto.', 'The most reliable and with the most fuel, but it eats almost half the budget.') },
+    ];
+    const CREW = [
+      { id: 'pilot', icon: '🧑‍✈️', cost: 60, name: B('Valeria · Piloto', 'Valeria · Pilot'),
+        desc: B('Maniobras precisas: ahorra combustible en la Luna y al llegar a Marte.', 'Precise manoeuvres: saves fuel at the Moon and on arrival at Mars.') },
+      { id: 'eng', icon: '🔧', cost: 60, name: B('Tomás · Ingeniero', 'Tomás · Engineer'),
+        desc: B('Arregla averías y puede salir de la nave en un paseo espacial.', 'Fixes breakdowns and can go outside on a spacewalk.') },
+      { id: 'med', icon: '🩺', cost: 50, name: B('Nuria · Médica', 'Nuria · Doctor'),
+        desc: B('Cuida de la salud del equipo durante los 7 meses de viaje.', 'Looks after the crew’s health during the 7-month journey.') },
+      { id: 'geo', icon: '🔬', cost: 40, name: B('Kenji · Geólogo', 'Kenji · Geologist'),
+        desc: B('No ayuda en el viaje, pero multiplica la ciencia al llegar a Marte.', 'No help on the journey, but multiplies the science once at Mars.') },
+      { id: 'com', icon: '📡', cost: 40, name: B('Amara · Comunicaciones', 'Amara · Communications'),
+        desc: B('Mantiene el contacto con la Tierra y avisa antes de las tormentas solares.', 'Keeps in touch with Earth and gives early warning of solar storms.') },
+    ];
+    const SUPPLIES = [
+      { id: 'min', days: 200, name: B('Justas', 'Bare minimum'), desc: B('200 días: menos que el viaje. Habrá que racionar.', '200 days: less than the trip. You will have to ration.') },
+      { id: 'ok', days: 240, name: B('Con margen', 'With a margin'), desc: B('240 días: el viaje y un mes de reserva.', '240 days: the trip plus a month in reserve.') },
+      { id: 'max', days: 300, name: B('De sobra', 'Plenty'), desc: B('300 días: tranquilidad, pero pesan y cuestan.', '300 days: peace of mind, but heavy and costly.') },
+    ];
+    const SUP_COST = 0.15; // M€ por persona y día
+    const TOOLS = [
+      { id: 'kit', icon: '🧰', cost: 40, name: B('Kit de reparación', 'Repair kit'), desc: B('Parches y piezas para tapar fugas.', 'Patches and spare parts to seal leaks.') },
+      { id: 'shield', icon: '🛡️', cost: 80, name: B('Escudo antirradiación', 'Radiation shield'), desc: B('Protege de las tormentas solares.', 'Protects against solar storms.') },
+      { id: 'printer', icon: '🖨️', cost: 60, name: B('Impresora 3D', '3D printer'), desc: B('Fabrica piezas de repuesto a bordo.', 'Makes spare parts on board.') },
+      { id: 'medkit', icon: '💊', cost: 30, name: B('Botiquín avanzado', 'Advanced medical kit'), desc: B('Medicinas y aparatos de diagnóstico.', 'Medicines and diagnostic equipment.') },
+      { id: 'panels', icon: '☀️', cost: 50, name: B('Paneles solares de repuesto', 'Spare solar panels'), desc: B('Energía extra si algo falla.', 'Extra power if something fails.') },
+      { id: 'tank', icon: '⛽', cost: 70, name: B('Depósito extra', 'Extra tank'), desc: B('+15 % de combustible.', '+15% fuel.') },
+    ];
+    const byId = (list, id) => list.find((x) => x.id === id);
+
+    // --- Recursos ---
+    const RES = [
+      { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), fmt: (v) => `${num(v)} M€`, max: BUDGET0 },
+      { k: 'fuel', icon: '⛽', name: B('Combustible', 'Fuel'), fmt: (v) => `${num(v)} %`, max: 100 },
+      { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), fmt: (v) => L(`${num(v)} días`, `${num(v)} days`), max: 300 },
+      { k: 'health', icon: '❤️', name: B('Salud del equipo', 'Crew health'), fmt: (v) => `${num(v)} %`, max: 100 },
+      { k: 'hull', icon: '🛰️', name: B('Estado de la nave', 'Ship condition'), fmt: (v) => `${num(v)} %`, max: 100 },
+    ];
+
+    // --- Capítulos del viaje ---
+    // Cada opción: req (requisitos), hint (efecto previsto) y run(s) → { text, d (cambios), fact? }
+    const EVENTS = [
+      { id: 'launch', day: 0, icon: '🌩️', place: B('Despegue', 'Launch'),
+        title: B('Tormenta sobre la base de lanzamiento', 'A storm over the launch site'),
+        text: B('Faltan dos horas para el despegue y se acerca una tormenta eléctrica. La ventana de lanzamiento hacia Marte solo está abierta unos días: si esperas, el camino será un poco menos eficiente.',
+          'Two hours before launch, a thunderstorm is approaching. The launch window to Mars is only open for a few days: if you wait, the route will be slightly less efficient.'),
+        fact: B('Las ventanas de lanzamiento a Marte se abren cada ~26 meses, cerca de la oposición. Perderla significa esperar más de dos años.', 'Launch windows to Mars open every ~26 months, near opposition. Missing one means waiting more than two years.'),
+        choices: [
+          { title: B('Esperar 3 días', 'Wait 3 days'), hint: B('−30 M€ · −5 % combustible · riesgo bajo', '−€30M · −5% fuel · low risk'), req: { budget: 30 },
+            run: (s) => (roll(s.rocket.risk / 3)
+              ? { text: B('Aun con buen tiempo, un sensor falla en el despegue. La nave sale dañada.', 'Even in good weather, a sensor fails during launch. The ship leaves damaged.'), d: { budget: -30, fuel: -5, hull: -20 } }
+              : { text: B('Cielo despejado. Despegue perfecto, aunque la espera ha costado dinero y la trayectoria es algo peor.', 'Clear skies. A perfect launch, although the wait cost money and the route is slightly worse.'), d: { budget: -30, fuel: -5 } }) },
+          { title: B('Despegar ya', 'Launch now'), hint: (s) => B(`Gratis · riesgo ${Math.round((s.rocket.risk + 0.15) * 100)} % de daños`, `Free · ${Math.round((s.rocket.risk + 0.15) * 100)}% risk of damage`),
+            run: (s) => (roll(s.rocket.risk + 0.15)
+              ? { text: B('Un rayo cae cerca y el viento sacude el cohete. Llegáis a órbita, pero con daños y gastando combustible de más.', 'Lightning strikes nearby and the wind shakes the rocket. You reach orbit, but damaged and using extra fuel.'), d: { hull: -30, fuel: -10 } }
+              : { text: B('¡Arriesgado, pero sale bien! El cohete atraviesa las nubes sin problemas.', 'Risky, but it works! The rocket punches through the clouds without trouble.'), d: {} }) },
+        ] },
+      { id: 'orbit', day: 1, icon: '🔋', place: B('Órbita terrestre', 'Earth orbit'),
+        title: B('Un panel solar no se despliega', 'A solar panel will not deploy'),
+        text: B('Ya en órbita, uno de los paneles solares se ha quedado atascado. Con un solo panel la nave tendrá menos energía para la calefacción y el soporte vital.',
+          'Now in orbit, one of the solar panels is stuck. With only one panel, the ship will have less power for heating and life support.'),
+        fact: B('Los paneles solares dan menos energía cuanto más lejos del Sol: en Marte llega menos de la mitad de luz que en la Tierra.', 'Solar panels make less power the farther you are from the Sun: at Mars there is less than half the sunlight we get at Earth.'),
+        choices: [
+          { title: B('Montar los paneles de repuesto', 'Fit the spare panels'), hint: B('Sin coste', 'No cost'), req: { tool: 'panels' },
+            run: () => ({ text: B('Los paneles de repuesto funcionan a la primera. Energía de sobra.', 'The spare panels work first time. Plenty of power.'), d: {} }) },
+          { title: B('Paseo espacial para desatascarlo', 'Spacewalk to free it'), hint: B('Riesgo 20 % para la salud', '20% risk to health'), req: { crew: 'eng' },
+            run: () => (roll(0.2)
+              ? { text: B('Tomás lo consigue, pero se golpea el traje y sufre un susto serio.', 'Tomás manages it, but knocks his suit and has a serious scare.'), d: { health: -15 } }
+              : { text: B('Tomás sale, da un par de golpes precisos con la herramienta y el panel se despliega.', 'Tomás goes out, gives it a couple of precise taps and the panel unfolds.'), d: {} }) },
+          { title: B('Pagar un parche de software', 'Pay for a software patch'), hint: B('−40 M€', '−€40M'), req: { budget: 40 },
+            run: () => ({ text: B('Los ingenieros de la Tierra mueven el panel a sacudidas desde el ordenador. Funciona.', 'Engineers on Earth jiggle the panel loose by computer. It works.'), d: { budget: -40 } }) },
+          { title: B('Seguir con un solo panel', 'Carry on with one panel'), hint: B('Gratis · el equipo pasará frío', 'Free · the crew will be cold'),
+            run: (s) => { s.lowPower = true; return { text: B('Ahorras dinero, pero la nave irá justa de energía todo el viaje.', 'You save money, but the ship will be short of power all the way.'), d: { health: -10 } }; } },
+        ] },
+      { id: 'moon', day: 4, icon: '🌙', place: B('Paso por la Luna', 'Lunar flyby'),
+        title: B('El efecto honda', 'The slingshot'),
+        text: B('Os acercáis a la Luna. Si pasáis justo por detrás de ella, su gravedad os dará un empujón gratis hacia Marte. Pero hay que encender el motor en el momento exacto.',
+          'You are approaching the Moon. If you pass right behind it, its gravity will give you a free push towards Mars. But the engine must fire at exactly the right moment.'),
+        fact: B('En el efecto honda la nave «roba» un poquito de la velocidad de la Luna. La Luna ni se entera, pero la nave gana mucha velocidad.', 'In a slingshot the spacecraft “steals” a tiny bit of the Moon’s speed. The Moon does not notice, but the spacecraft gains a lot of speed.'),
+        choices: [
+          { title: B('Maniobra manual', 'Manual manoeuvre'), hint: B('−5 % combustible · riesgo 10 %', '−5% fuel · 10% risk'), req: { crew: 'pilot' },
+            run: () => (roll(0.1)
+              ? { text: B('Valeria enciende el motor un segundo tarde. Hay que corregir y se gasta más.', 'Valeria fires the engine a second late. A correction is needed, using more fuel.'), d: { fuel: -15 } }
+              : { text: B('¡Perfecta! Valeria clava la maniobra y la Luna os lanza hacia Marte.', 'Perfect! Valeria nails it and the Moon flings you towards Mars.'), d: { fuel: -5 } }) },
+          { title: B('Piloto automático', 'Autopilot'), hint: B('−12 % combustible · sin riesgo', '−12% fuel · no risk'),
+            run: () => ({ text: B('El ordenador hace la maniobra con prudencia: funciona, aunque gasta algo más.', 'The computer flies the manoeuvre cautiously: it works, though it uses a bit more.'), d: { fuel: -12 } }) },
+          { title: B('Ir directos, sin pasar por la Luna', 'Go straight, skip the Moon'), hint: B('−25 % combustible', '−25% fuel'),
+            run: () => ({ text: B('Sin la ayuda de la Luna, el motor tiene que hacer todo el trabajo.', 'Without the Moon’s help, the engine has to do all the work.'), d: { fuel: -25 } }) },
+        ] },
+      { id: 'storm', day: 45, icon: '☀️', place: B('Crucero · mes 2', 'Cruise · month 2'),
+        title: B('¡Tormenta solar!', 'Solar storm!'),
+        text: (s) => (s.crew.includes('com')
+          ? B('Amara recibe un aviso: el Sol ha lanzado una enorme nube de partículas. Llegará en 6 horas. Hay tiempo para prepararse.', 'Amara receives a warning: the Sun has hurled a huge cloud of particles. It will arrive in 6 hours. There is time to get ready.')
+          : B('Los sensores se disparan: una nube de partículas del Sol os alcanza ya. Fuera de la Tierra no hay campo magnético que os proteja.', 'The sensors go wild: a cloud of particles from the Sun is hitting you right now. Away from Earth there is no magnetic field to protect you.')),
+        fact: B('La Tierra nos protege con su campo magnético y su atmósfera. En el espacio, los astronautas se refugian detrás del agua y la comida, que frenan la radiación.', 'The Earth protects us with its magnetic field and atmosphere. In space, astronauts shelter behind water and food, which block radiation.'),
+        choices: [
+          { title: B('Activar el escudo antirradiación', 'Switch on the radiation shield'), hint: B('Sin daños', 'No harm'), req: { tool: 'shield' },
+            run: () => ({ text: B('El escudo aguanta la tormenta. Nadie recibe radiación de más.', 'The shield holds through the storm. Nobody gets an extra dose.'), d: {} }) },
+          { title: B('Refugiarse tras el agua y la comida', 'Shelter behind the water and food'), hint: (s) => (s.crew.includes('com') ? B('−5 % salud · −5 días de provisiones', '−5% health · −5 days of supplies') : B('−12 % salud · −5 días de provisiones', '−12% health · −5 days of supplies')),
+            run: (s) => ({ text: B('Pasáis dos días apretados en el refugio. Se estropea algo de comida, pero estáis a salvo.', 'You spend two cramped days in the shelter. Some food spoils, but you are safe.'), d: { health: s.crew.includes('com') ? -5 : -12, food: -5 } }) },
+          { title: B('Seguir trabajando como si nada', 'Keep working as normal'), hint: B('−30 % salud', '−30% health'),
+            run: () => ({ text: B('Mala idea: la tripulación recibe mucha radiación y se encuentra mal varios días.', 'Bad idea: the crew takes a big radiation dose and feels ill for days.'), d: { health: -30 } }) },
+        ] },
+      { id: 'meteor', day: 100, icon: '☄️', place: B('Crucero · mes 4', 'Cruise · month 4'),
+        title: B('Impacto de un micrometeorito', 'Micrometeoroid impact'),
+        text: B('¡Clonc! Una piedrecita del tamaño de un grano de arena, a 20 km/s, ha hecho un agujero en el almacén. El aire se escapa poco a poco.',
+          'Clonk! A pebble the size of a grain of sand, travelling at 20 km/s, has punched a hole in the storeroom. Air is slowly leaking out.'),
+        fact: B('A esas velocidades, un grano de arena golpea con tanta energía como una bala. Por eso las naves llevan capas de blindaje.', 'At those speeds, a grain of sand hits as hard as a bullet. That is why spacecraft carry layers of shielding.'),
+        choices: [
+          { title: B('Usar el kit de reparación', 'Use the repair kit'), hint: B('−5 % nave', '−5% ship'), req: { tool: 'kit' },
+            run: () => ({ text: B('Un parche, un poco de sellador y listo. Fuga controlada.', 'A patch, a bit of sealant, done. Leak under control.'), d: { hull: -5 } }) },
+          { title: B('Imprimir una pieza en 3D', '3D-print a part'), hint: B('−10 % nave', '−10% ship'), req: { tool: 'printer' },
+            run: () => ({ text: B('La impresora fabrica una tapa a medida en tres horas. Aguanta bien.', 'The printer makes a custom cover in three hours. It holds well.'), d: { hull: -10 } }) },
+          { title: B('Que el ingeniero improvise', 'Let the engineer improvise'), hint: B('−15 % nave', '−15% ship'), req: { crew: 'eng' },
+            run: () => ({ text: B('Tomás tapa el agujero con cinta, una placa y mucho ingenio.', 'Tomás plugs the hole with tape, a plate and a lot of ingenuity.'), d: { hull: -15 } }) },
+          { title: B('Cerrar el almacén para siempre', 'Seal off the storeroom for good'), hint: B('−25 % nave · −30 días de provisiones', '−25% ship · −30 days of supplies'),
+            run: () => ({ text: B('Cerráis la escotilla. Se acaba la fuga, pero perdéis todo lo que había dentro.', 'You close the hatch. The leak stops, but you lose everything inside.'), d: { hull: -25, food: -30 } }) },
+        ] },
+      { id: 'sick', day: 140, icon: '🤒', place: B('Crucero · mes 5', 'Cruise · month 5'),
+        title: B('Alguien se pone enfermo', 'Someone falls ill'),
+        text: (s) => B(`Un miembro del equipo tiene fiebre alta y dolor fuerte.${s.lowPower ? ' El frío por la falta de energía no ayuda.' : ''} Estáis a más de 10 minutos-luz: cada mensaje a la Tierra tarda en llegar.`,
+          `A crew member has a high fever and severe pain.${s.lowPower ? ' The cold from the power shortage does not help.' : ''} You are more than 10 light-minutes away: every message to Earth takes a while to arrive.`),
+        fact: B('La luz (y la radio) tarda entre 3 y 22 minutos en ir de la Tierra a Marte. No se puede hablar en directo: es como mandar cartas.', 'Light (and radio) takes between 3 and 22 minutes to travel from Earth to Mars. You cannot talk live: it is like sending letters.'),
+        choices: [
+          { title: B('La médica la atiende con el botiquín', 'The doctor treats them with the medical kit'), hint: B('+10 % salud', '+10% health'), req: { crew: 'med', tool: 'medkit' },
+            run: () => ({ text: B('Nuria hace un diagnóstico rápido y el tratamiento funciona. ¡Todos mejoran!', 'Nuria makes a quick diagnosis and the treatment works. Everyone feels better!'), d: { health: 10 } }) },
+          { title: B('La médica improvisa', 'The doctor improvises'), hint: B('−5 % salud', '−5% health'), req: { crew: 'med' },
+            run: () => ({ text: B('Sin el material ideal, Nuria lo resuelve con lo que hay. Recuperación lenta.', 'Without ideal equipment, Nuria makes do. A slow recovery.'), d: { health: -5 } }) },
+          { title: B('Usar el botiquín siguiendo las instrucciones', 'Use the medical kit with the instructions'), hint: B('−8 % salud', '−8% health'), req: { tool: 'medkit' },
+            run: () => ({ text: B('El botiquín trae guías paso a paso. No es como tener una médica, pero funciona.', 'The kit has step-by-step guides. Not like having a doctor, but it works.'), d: { health: -8 } }) },
+          { title: B('Pedir ayuda a los médicos de la Tierra', 'Ask doctors on Earth for help'), hint: (s) => (s.crew.includes('com') ? B('−10 % salud', '−10% health') : B('−20 % salud', '−20% health')),
+            run: (s) => ({ text: s.crew.includes('com')
+              ? B('Amara organiza las consultas y, pese al retraso, el tratamiento llega a tiempo.', 'Amara organises the calls and, despite the delay, the treatment arrives in time.')
+              : B('Las respuestas tardan horas. La recuperación es lenta y a todos les afecta.', 'Replies take hours. Recovery is slow and it affects everyone.'), d: { health: s.crew.includes('com') ? -10 : -20 } }) },
+        ] },
+      { id: 'nav', day: 170, icon: '🧭', place: B('Crucero · mes 6', 'Cruise · month 6'),
+        title: B('Os estáis desviando', 'You are drifting off course'),
+        text: B('Los cálculos indican que, si no corregís, pasaréis a 5.000 km de Marte… demasiado lejos para quedaros en órbita.',
+          'The calculations show that, if you do not correct, you will pass 5,000 km from Mars… too far to go into orbit.'),
+        fact: B('Todas las naves hacen pequeñas «correcciones de trayectoria» durante el viaje: un pequeño error al principio se hace enorme después de millones de kilómetros.', 'Every spacecraft makes small “course corrections” along the way: a tiny error at the start grows huge after millions of kilometres.'),
+        choices: [
+          { title: B('Corrección precisa a mano', 'Precise manual correction'), hint: B('−4 % combustible', '−4% fuel'), req: { crew: 'pilot' },
+            run: () => ({ text: B('Valeria enciende el motor 12 segundos. Rumbo corregido.', 'Valeria fires the engine for 12 seconds. Course corrected.'), d: { fuel: -4 } }) },
+          { title: B('Pagar cálculos a la red de antenas', 'Pay the antenna network for calculations'), hint: B('−50 M€ · −4 % combustible', '−€50M · −4% fuel'), req: { budget: 50 },
+            run: () => ({ text: B('Las grandes antenas de la Tierra miden vuestra posición al metro. Corrección perfecta.', 'Earth’s big antennas measure your position to the metre. A perfect correction.'), d: { budget: -50, fuel: -4 } }) },
+          { title: B('Corrección automática', 'Automatic correction'), hint: B('−10 % combustible', '−10% fuel'),
+            run: () => ({ text: B('El ordenador corrige con margen de seguridad y gasta algo más.', 'The computer corrects with a safety margin and uses a bit more.'), d: { fuel: -10 } }) },
+        ] },
+      { id: 'arrive', day: TRIP, icon: '🔴', place: B('Llegada a Marte', 'Arrival at Mars'),
+        title: B('Hay que frenar', 'Time to brake'),
+        text: B('Marte ya se ve enorme por la ventanilla. Vais demasiado rápido: si no frenáis, pasaréis de largo y seguiréis hacia el espacio profundo.',
+          'Mars looks huge through the window. You are going too fast: if you do not brake, you will fly past and carry on into deep space.'),
+        fact: B('El aerofrenado usa el roce con la atmósfera de Marte para frenar sin gastar combustible. Es barato, pero calienta y sacude la nave.', 'Aerobraking uses friction with the Martian atmosphere to slow down without fuel. It is cheap, but it heats and shakes the ship.'),
+        choices: [
+          { title: B('Frenar solo con el motor', 'Brake with the engine only'), hint: (s) => B(`−${s.crew.includes('pilot') ? 30 : 35} % combustible · sin riesgo`, `−${s.crew.includes('pilot') ? 30 : 35}% fuel · no risk`), req: (s) => ({ fuel: s.crew.includes('pilot') ? 30 : 35 }),
+            run: (s) => ({ text: B('El motor ruge durante 20 minutos. Entráis en órbita de Marte con suavidad.', 'The engine roars for 20 minutes. You slip gently into orbit around Mars.'), d: { fuel: s.crew.includes('pilot') ? -30 : -35 } }) },
+          { title: B('Combinar motor y aerofrenado', 'Combine engine and aerobraking'), hint: B('−18 % combustible · −12 % nave', '−18% fuel · −12% ship'), req: { fuel: 18 },
+            run: () => ({ text: B('Un frenazo con el motor y varias pasadas por la atmósfera. Equilibrado.', 'One burn with the engine and several passes through the atmosphere. Balanced.'), d: { fuel: -18, hull: -12 } }) },
+          { title: B('Solo aerofrenado', 'Aerobraking only'), hint: (s) => B(`−6 % combustible · −25 % nave · riesgo ${s.crew.includes('pilot') ? 10 : 30} %`, `−6% fuel · −25% ship · ${s.crew.includes('pilot') ? 10 : 30}% risk`), req: { fuel: 6 },
+            run: (s) => (roll(s.crew.includes('pilot') ? 0.1 : 0.3)
+              ? { text: B('Entráis demasiado bajo. El escudo térmico brilla al rojo y algo se rompe.', 'You go in too low. The heat shield glows red-hot and something breaks.'), d: { fuel: -6, hull: -45 } }
+              : { text: B('La atmósfera de Marte os frena como un paracaídas gigante. ¡Qué ahorro!', 'The Martian atmosphere slows you like a giant parachute. What a saving!'), d: { fuel: -6, hull: -25 } }) },
+        ] },
+    ];
+    const STAGES = [B('Preparación', 'Preparation')].concat(EVENTS.map((e) => e.place));
+
+    let s;
+    function reset() {
+      s = { phase: 'rocket', rocket: null, crew: [], supplies: null, tools: [], ev: 0, outcome: null, lowPower: false,
+        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null };
+    }
+    const crewCost = () => s.crew.reduce((a, id) => a + byId(CREW, id).cost, 0);
+    const supCost = (opt) => Math.round(opt.days * Math.max(s.crew.length, 1) * SUP_COST);
+    const toolCost = () => s.tools.reduce((a, id) => a + byId(TOOLS, id).cost, 0);
+    const spentPrep = () => (s.rocket ? s.rocket.cost : 0) + crewCost() + (s.supplies ? supCost(s.supplies) : 0) + toolCost();
+
+    function check(req) {
+      if (!req) return null;
+      if (typeof req === 'function') req = req(s);
+      if (req.crew && !s.crew.includes(req.crew)) return L(`Necesitas a ${T(byId(CREW, req.crew).name).split(' · ')[0]}`, `You need ${T(byId(CREW, req.crew).name).split(' · ')[0]}`);
+      if (req.tool && !s.tools.includes(req.tool)) return L(`Necesitas: ${T(byId(TOOLS, req.tool).name)}`, `You need: ${T(byId(TOOLS, req.tool).name)}`);
+      if (req.budget && s.budget < req.budget) return L('No queda presupuesto', 'Not enough budget');
+      if (req.fuel && s.fuel < req.fuel) return L('No queda combustible suficiente', 'Not enough fuel');
+      return null;
+    }
+
+    // --- Pintado ---
+    const fmtDelta = (k, v) => {
+      const r = RES.find((x) => x.k === k);
+      const sign = v > 0 ? '+' : '−';
+      return `<span class="adv-delta ${v > 0 ? 'up' : 'down'}">${r.icon} ${sign}${r.fmt(Math.abs(v))}</span>`;
+    };
+    function hud() {
+      const prep = s.phase !== 'trip' && s.phase !== 'end';
+      const vals = prep
+        ? { budget: BUDGET0 - spentPrep(), fuel: s.rocket ? Math.min(100, s.rocket.fuel + (s.tools.includes('tank') ? 15 : 0)) : 0,
+          food: s.supplies ? s.supplies.days : 0, health: 100, hull: s.rocket ? s.rocket.hull : 0 }
+        : s;
+      const meters = RES.map((r) => {
+        const v = vals[r.k];
+        const pct = clamp(v / r.max, 0, 1) * 100;
+        const low = r.k === 'food' ? v < (prep ? TRIP : TRIP - (EVENTS[Math.min(s.ev, EVENTS.length - 1)].day)) : (r.k !== 'budget' && pct < 30);
+        return `<div class="adv-meter${low && v > 0 ? ' low' : ''}${v < 0 ? ' neg' : ''}">
+          <span class="adv-m-head"><span>${r.icon} ${T(r.name)}</span><b>${r.fmt(v)}</b></span>
+          <span class="adv-m-track"><span class="adv-m-bar ${r.k}" style="width:${pct}%"></span></span></div>`;
+      }).join('');
+      const chips = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="adv-chip">${c.icon} ${T(c.name).split(' · ')[0]}</span>`; })
+        .concat(s.tools.map((id) => { const t = byId(TOOLS, id); return `<span class="adv-chip tool">${t.icon} ${T(t.name)}</span>`; })).join('');
+      const cur = s.phase === 'trip' ? s.ev + 1 : s.phase === 'end' ? STAGES.length : 0;
+      const route = STAGES.map((st, i) => `<li class="${i < cur ? 'done' : i === cur ? 'now' : ''}"><span class="adv-dot"></span><span class="adv-st">${T(st)}</span></li>`).join('');
+      return `<ol class="adv-route" aria-label="${L('Etapas del viaje', 'Journey stages')}">${route}</ol>
+        <div class="adv-hud">${meters}</div>${chips ? `<div class="adv-chips">${chips}</div>` : ''}`;
+    }
+
+    function optCard(o, { on, disabled, reason, cost, group, value, multi }) {
+      return `<button type="button" class="adv-opt${on ? ' on' : ''}" data-${group}="${value}" ${multi ? `aria-pressed="${!!on}"` : `aria-pressed="${!!on}"`} ${disabled ? 'disabled' : ''}>
+        <span class="adv-opt-head"><span class="adv-opt-icon" aria-hidden="true">${o.icon || ''}</span><span class="adv-opt-name">${T(o.name)}</span>${cost != null ? `<span class="adv-cost">${num(cost)} M€</span>` : ''}</span>
+        <span class="adv-opt-desc">${T(o.desc)}</span>${reason ? `<span class="adv-why">${reason}</span>` : ''}</button>`;
+    }
+
+    function prepView() {
+      const left = BUDGET0 - spentPrep();
+      const steps = ['rocket', 'crew', 'supplies', 'tools'];
+      const n = steps.indexOf(s.phase) + 1;
+      const head = (k, title, lead) => `<p class="kicker">${L('Preparación', 'Preparation')} · ${n}/4</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>`;
+      let body = '', next = '', ok = false;
+      if (s.phase === 'rocket') {
+        body = ROCKETS.map((r) => optCard(Object.assign({}, r, { desc: B(`${r.desc.es} Combustible ${r.fuel} %, nave ${r.hull} %, riesgo en despegue ${Math.round(r.risk * 100)} %.`,
+          `${r.desc.en} Fuel ${r.fuel}%, ship ${r.hull}%, launch risk ${Math.round(r.risk * 100)}%.`) }), { on: s.rocket === r, cost: r.cost, group: 'rocket', value: r.id })).join('');
+        ok = !!s.rocket;
+        return head('rocket', L('Elige el cohete', 'Choose the rocket'), L('Es la decisión más cara. Un cohete mejor lleva más combustible y es más resistente, pero deja menos dinero para lo demás.', 'This is the most expensive decision. A better rocket carries more fuel and is tougher, but leaves less money for everything else.'))
+          + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: el equipo ▶', 'Next: the crew ▶'), false);
+      }
+      if (s.phase === 'crew') {
+        body = CREW.map((c) => {
+          const on = s.crew.includes(c.id);
+          const full = !on && s.crew.length >= 4;
+          const poor = !on && c.cost > left;
+          return optCard(c, { on, cost: c.cost, group: 'crew', value: c.id, multi: true, disabled: full || poor, reason: full ? L('Máximo 4 personas', 'Maximum 4 people') : poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+        }).join('');
+        ok = s.crew.length >= 2;
+        return head('crew', L('Forma el equipo (de 2 a 4 personas)', 'Pick the crew (2 to 4 people)'), L('Cada especialista cobra su sueldo y sabe resolver problemas distintos. Más personas también significa más comida, agua y oxígeno.', 'Each specialist has a salary and can solve different problems. More people also means more food, water and oxygen.'))
+          + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: provisiones ▶', 'Next: supplies ▶'), true);
+      }
+      if (s.phase === 'supplies') {
+        body = SUPPLIES.map((o) => {
+          const c = supCost(o);
+          const poor = s.supplies !== o && c > left + (s.supplies ? supCost(s.supplies) : 0);
+          return optCard(Object.assign({ icon: '🥫' }, o), { on: s.supplies === o, cost: c, group: 'sup', value: o.id, disabled: poor, reason: poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+        }).join('');
+        ok = !!s.supplies;
+        return head('supplies', L('Comida, agua y oxígeno', 'Food, water and oxygen'), L(`El viaje dura unos ${TRIP} días (7 meses). El precio depende de cuántas personas viajan: ${s.crew.length}.`, `The journey takes about ${TRIP} days (7 months). The price depends on how many people travel: ${s.crew.length}.`))
+          + `<div class="adv-opts">${body}</div>` + nav(ok, L('Siguiente: herramientas ▶', 'Next: tools ▶'), true);
+      }
+      body = TOOLS.map((t) => {
+        const on = s.tools.includes(t.id);
+        const poor = !on && t.cost > left;
+        return optCard(t, { on, cost: t.cost, group: 'tool', value: t.id, multi: true, disabled: poor, reason: poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+      }).join('');
+      return head('tools', L('Herramientas y equipamiento', 'Tools and equipment'), L('Opcionales. Lo que no gastes queda como fondo de emergencia para pagar ayuda desde la Tierra durante el viaje.', 'Optional. Whatever you do not spend stays as an emergency fund to pay for help from Earth during the trip.'))
+        + `<div class="adv-opts">${body}</div>` + nav(true, L('🚀 ¡Al despegue!', '🚀 Go for launch!'), true);
+    }
+    const nav = (ok, label, back) => `<div class="controls adv-nav">${back ? `<button type="button" class="btn small ghost" data-act="back">◀ ${L('Atrás', 'Back')}</button>` : ''}<button type="button" class="btn small primary" data-act="next" ${ok ? '' : 'disabled'}>${label}</button></div>`;
+
+    function tripView() {
+      const e = EVENTS[s.ev];
+      const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>
+        <p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p>`;
+      if (s.outcome) {
+        const o = s.outcome;
+        const ds = Object.entries(o.d).filter(([, v]) => v).map(([k, v]) => fmtDelta(k, v)).join('') || `<span class="adv-delta">${L('Sin cambios', 'No change')}</span>`;
+        return head + `<div class="adv-outcome" aria-live="polite"><p class="adv-chosen">${L('Has elegido', 'You chose')}: <strong>${T(o.choice)}</strong></p><p>${T(o.text)}</p>
+          <div class="adv-deltas">${ds}</div>${o.extra ? `<p class="adv-extra">${T(o.extra)}</p>` : ''}</div>
+          <aside class="adv-fact"><span aria-hidden="true">💡</span><p>${T(e.fact)}</p></aside>
+          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="continue">${s.end ? L('Ver el final ▶', 'See the ending ▶') : L('Continuar ▶', 'Continue ▶')}</button></div>`;
+      }
+      const opts = e.choices.map((c, i) => {
+        const why = check(c.req);
+        const hint = typeof c.hint === 'function' ? c.hint(s) : c.hint;
+        return `<button type="button" class="adv-opt choice" data-choice="${i}" ${why ? 'disabled' : ''}>
+          <span class="adv-opt-name">${T(c.title)}</span><span class="adv-opt-desc">${T(hint)}</span>${why ? `<span class="adv-why">🔒 ${why}</span>` : ''}</button>`;
+      }).join('');
+      return head + `<div class="adv-opts choices">${opts}</div>`;
+    }
+
+    function endView() {
+      const e = s.end;
+      if (!e.win) {
+        return `<div class="adv-end fail"><p class="kicker">${L('Fin de la misión', 'Mission over')}</p><h3 class="adv-title">${e.icon} ${T(e.title)}</h3><p class="adv-text">${T(e.text)}</p>
+          <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué habrías cambiado en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
+          <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button></div></div>`;
+      }
+      const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>+${num(p[1])}</b></li>`).join('');
+      let best = 0;
+      try { best = +localStorage.getItem('advBest') || 0; if (e.score > best) localStorage.setItem('advBest', e.score); } catch (err) { /* sin almacenamiento */ }
+      return `<div class="adv-end win"><p class="kicker">${L('¡Misión cumplida!', 'Mission accomplished!')}</p><h3 class="adv-title">🔴 ${L('Estáis en órbita de Marte', 'You are in orbit around Mars')}</h3>
+        <p class="adv-stars" aria-label="${e.stars} / 3">${'⭐'.repeat(e.stars)}${'<span class="off">⭐</span>'.repeat(3 - e.stars)}</p>
+        <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
+        ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
+        <div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button></div></div>`;
+    }
+
+    function logView() {
+      if (!s.log.length) return '';
+      const items = s.log.map((l) => `<li><span class="adv-log-day">${L('Día', 'Day')} ${l.day}</span> ${T(l.text)}</li>`).join('');
+      return `<details class="adv-log"><summary>📓 ${L('Diario de a bordo', 'Logbook')} (${s.log.length})</summary><ol>${items}</ol></details>`;
+    }
+
+    function render(focus) {
+      const main = s.phase === 'end' ? endView() : s.phase === 'trip' ? tripView() : prepView();
+      root.innerHTML = `${hud()}<div class="adv-stage">${main}</div>${logView()}`;
+      if (focus) { const h = root.querySelector('.adv-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+    }
+
+    // --- Lógica ---
+    function startTrip() {
+      s.budget = BUDGET0 - spentPrep();
+      s.fuel = Math.min(100, s.rocket.fuel + (s.tools.includes('tank') ? 15 : 0));
+      s.food = s.supplies.days;
+      s.hull = s.rocket.hull;
+      s.health = 100;
+      s.phase = 'trip'; s.ev = 0; s.outcome = null;
+      s.log.push({ day: 0, text: B(`Despegáis con ${s.rocket.name.es.toLowerCase()}, ${s.crew.length} tripulantes y ${s.tools.length} herramientas. Quedan ${s.budget} M€.`,
+        `You lift off on a ${s.rocket.name.en.toLowerCase()} with ${s.crew.length} crew and ${s.tools.length} tools. €${s.budget}M left.`) });
+    }
+
+    function choose(i) {
+      const e = EVENTS[s.ev];
+      const c = e.choices[i];
+      if (check(c.req)) return;
+      const r = c.run(s);
+      const d = Object.assign({}, r.d);
+      // Provisiones gastadas hasta el siguiente capítulo (con racionamiento si faltan)
+      const nextDay = s.ev + 1 < EVENTS.length ? EVENTS[s.ev + 1].day : TRIP;
+      const days = nextDay - e.day;
+      Object.entries(d).forEach(([k, v]) => { s[k] = k === 'budget' ? s[k] + v : clamp(s[k] + v, 0, 100 + (k === 'food' ? 300 : 0)); });
+      let extra = null;
+      if (days > 0) {
+        const eaten = Math.min(days, s.food);
+        s.food -= eaten;
+        d.food = (d.food || 0) - eaten;
+        if (eaten < days) {
+          const hurt = Math.round((days - eaten) * 0.6);
+          s.health = clamp(s.health - hurt, 0, 100);
+          d.health = (d.health || 0) - hurt;
+          extra = B(`⚠️ Se acaban las provisiones: ${days - eaten} días a media ración.`, `⚠️ Supplies run out: ${days - eaten} days on half rations.`);
+        } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
+      }
+      s.outcome = { choice: c.title, text: r.text, d, extra };
+      s.log.push({ day: e.day, text: B(`${e.place.es}: ${c.title.es}.`, `${e.place.en}: ${c.title.en}.`) });
+      s.end = verdict(e);
+      render(true);
+    }
+
+    function verdict(e) {
+      if (s.hull <= 0) return { win: false, icon: '💥', title: B('La nave no ha aguantado', 'The ship did not survive'),
+        text: B('Los daños acumulados eran demasiados. Por suerte, la cápsula de emergencia devuelve al equipo a casa, pero la misión se pierde.', 'The damage had piled up too much. Luckily, the escape capsule takes the crew home, but the mission is lost.') };
+      if (s.health <= 0) return { win: false, icon: '🚑', title: B('La tripulación no puede seguir', 'The crew cannot go on'),
+        text: B('El equipo está demasiado débil. Control de misión ordena dar la vuelta usando la gravedad de Marte.', 'The crew is too weak. Mission control orders a turnaround using the gravity of Mars.') };
+      if (e.id !== 'arrive' && s.ev + 1 < EVENTS.length) {
+        const ne = EVENTS[s.ev + 1];
+        const can = ne.choices.some((c) => !check(c.req));
+        if (!can) return { win: false, icon: '🌌', title: B('Sin combustible para frenar', 'No fuel left to brake'),
+          text: B('Llegáis a Marte sin combustible para frenar y pasáis de largo. La nave queda girando alrededor del Sol.', 'You reach Mars with no fuel to brake and fly straight past. The ship ends up circling the Sun.') };
+        return null;
+      }
+      if (e.id !== 'arrive') return null;
+      const parts = [
+        [B('Salud del equipo', 'Crew health'), s.health * 3],
+        [B('Estado de la nave', 'Ship condition'), s.hull * 2],
+        [B('Combustible sobrante', 'Fuel left over'), s.fuel * 2],
+        [B('Provisiones sobrantes', 'Supplies left over'), s.food * 2],
+        [B('Presupuesto sobrante', 'Budget left over'), Math.max(0, Math.round(s.budget / 2))],
+      ];
+      if (s.crew.includes('geo')) parts.push([B('Ciencia de Kenji en Marte', 'Kenji’s science at Mars'), 150]);
+      const score = parts.reduce((a, p) => a + p[1], 0);
+      const stars = s.health >= 60 && s.hull >= 40 ? (score >= 650 ? 3 : 2) : 1;
+      const text = stars === 3 ? B('¡Una misión de libro! Has gestionado el dinero, el equipo y los recursos con mucha cabeza.', 'A textbook mission! You managed money, crew and resources very wisely.')
+        : stars === 2 ? B('Buena misión. Habéis llegado en forma, aunque con algunos sustos por el camino.', 'A good mission. You arrived in good shape, with a few scares along the way.')
+          : B('¡Habéis llegado! Por los pelos: la nave o la tripulación están muy tocadas.', 'You made it! Only just: the ship or the crew are badly battered.');
+      return { win: true, parts, score, stars, text };
+    }
+
+    root.addEventListener('click', (ev) => {
+      const b = ev.target.closest('button');
+      if (!b || b.disabled || !root.contains(b)) return;
+      const d = b.dataset;
+      if (d.rocket) { s.rocket = byId(ROCKETS, d.rocket); }
+      else if (d.crew) {
+        const i = s.crew.indexOf(d.crew);
+        if (i >= 0) s.crew.splice(i, 1); else s.crew.push(d.crew);
+        s.supplies = null; // el precio de las provisiones depende del equipo
+      }
+      else if (d.sup) s.supplies = byId(SUPPLIES, d.sup);
+      else if (d.tool) { const i = s.tools.indexOf(d.tool); if (i >= 0) s.tools.splice(i, 1); else s.tools.push(d.tool); }
+      else if (d.choice) return choose(+d.choice);
+      else if (d.act === 'next') {
+        const order = ['rocket', 'crew', 'supplies', 'tools'];
+        const i = order.indexOf(s.phase);
+        if (s.phase === 'rocket' && BUDGET0 - spentPrep() < 0) return;
+        if (i < 3) s.phase = order[i + 1]; else startTrip();
+        // Si al cambiar de cohete o de equipo ya no alcanza el dinero, se deshacen las herramientas
+        while (BUDGET0 - spentPrep() < 0 && s.tools.length) s.tools.pop();
+        return render(true);
+      } else if (d.act === 'back') {
+        const order = ['rocket', 'crew', 'supplies', 'tools'];
+        s.phase = order[Math.max(0, order.indexOf(s.phase) - 1)];
+        return render(true);
+      } else if (d.act === 'continue') {
+        if (s.end) { s.phase = 'end'; return render(true); }
+        s.ev += 1; s.outcome = null; return render(true);
+      } else if (d.act === 'restart') { reset(); return render(true); }
+      else return;
+      // Volver a ajustar si el presupuesto queda negativo (p. ej., al cambiar de cohete)
+      if (s.phase === 'rocket') { s.crew.length && BUDGET0 - spentPrep() < 0 && (s.crew = [], s.supplies = null, s.tools = []); }
+      render(false);
+    });
+
+    reset();
+    render(false);
+    onLang.push(() => render(false));
+  })();
+
   /* ---------- Cambio de idioma (botón con bandera) ---------- */
   (function i18n() {
     const EN = window.I18N_EN || {};
@@ -1999,7 +2443,7 @@
     const SKIP = new Set(['solar-date', 'solar-next', 'solar-play', 'solar-status', 'sling-speed', 'm-day', 'm-date', 'm-photos',
       'm-status', 'm-play', 'fb-days', 'fb-dist', 'fb-moon', 'fb-escape', 'fb-play', 'fb-part-kicker', 'fb-part-title', 'fb-part-text',
       'dist-mars', 'dist-ratio', 'dist-meters', 'dist-light', 'dist-case-note', 'tl-launch', 'tl-arrival', 'lang-btn',
-      'm-around', 'm-photos', 'm-delay', 'tl-aero', 'tl-photos', 'spin-caption', 'gs-mode', 'gs-speedup', 'gs-results', 'mg-result']);
+      'm-around', 'm-photos', 'm-delay', 'tl-aero', 'tl-photos', 'spin-caption', 'gs-mode', 'gs-speedup', 'gs-results', 'mg-result', 'adv-game']);
     const INLINE = new Set(['STRONG', 'EM', 'B', 'I', 'BR', 'SPAN', 'A', 'SMALL', 'ABBR']);
     const IGNORE = new Set(['SCRIPT', 'STYLE', 'CANVAS', 'INPUT', 'OUTPUT', 'DEFS', 'NOSCRIPT']);
     const norm = (str) => str.replace(/\s+/g, ' ').trim();
@@ -2016,7 +2460,7 @@
         else visit(c);
       }
     })(document.body);
-    const attrs = $$('[aria-label]').filter((el) => el.id !== 'lang-btn').map((el) => ({ el, es: el.getAttribute('aria-label') }));
+    const attrs = $$('[aria-label]').filter((el) => el.id !== 'lang-btn' && !el.closest('#adv-game')).map((el) => ({ el, es: el.getAttribute('aria-label') }));
     const meta = $('meta[name="description"]');
     const metaEs = meta ? meta.content : '';
     const btn = $('#lang-btn');

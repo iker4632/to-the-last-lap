@@ -186,8 +186,8 @@ window.I18N_EN = {
   'Distancia Tierra–Marte': 'Earth–Mars distance',
 
   // ---------- Ampliación: magnetismo, 7 pasos, orientación, regreso y estación ----------
-  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar":
-    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a>",
+  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar Juego":
+    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a> <a href=\"#juego\">Game</a>",
   "Escudo invisible":
     "An invisible shield",
   "¿Marte tiene campo magnético?":
@@ -476,4 +476,14 @@ window.I18N_EN = {
     "<strong>Hint:</strong> aim at where the Moon <em>will be</em>, not where it is, and pass behind it (on the side it is coming from). Simplified and with no air: the Earth and the Moon are enlarged and the Moon’s gravity is exaggerated.",
   "Reto: lanza una pelota desde la Tierra para que pase junto a la Luna y salga impulsada por el efecto honda":
     "Challenge: throw a ball from the Earth so it passes the Moon and gets boosted by the slingshot effect",
+
+  // ---------- Juego: tú diriges la misión ----------
+  "Juego · Tú diriges la misión":
+    "Game · You run the mission",
+  "Del despegue a Marte: tus decisiones":
+    "From launch to Mars: your decisions",
+  "Eres la directora o el director de la misión. Tienes un presupuesto de 1.000 millones de euros para elegir el cohete, el equipo, las provisiones y las herramientas. Después, durante el viaje, cada decisión gasta dinero, combustible, provisiones o pone en juego la salud de la tripulación y la nave. ¿Llegaréis a Marte?":
+    "You are the mission director. You have a <strong>budget of 1,000 million euros</strong> to choose the rocket, the crew, the supplies and the tools. Then, during the journey, every decision costs <strong>money, fuel or supplies</strong>, or puts the <strong>crew’s health</strong> and the <strong>ship</strong> at risk. Will you make it to Mars?",
+  "Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.":
+    "A made-up story for learning purposes. Prices, odds and figures are simplified so the game is playable.",
 };
