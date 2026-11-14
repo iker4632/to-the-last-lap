@@ -2047,7 +2047,7 @@
     const RES = [
       { k: 'budget', icon: '💶', name: B('Presupuesto', 'Budget'), fmt: (v) => `${num(v)} M€`, max: BUDGET0 },
       { k: 'fuel', icon: '⛽', name: B('Combustible', 'Fuel'), fmt: (v) => `${num(v)} %`, max: 100 },
-      { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), fmt: (v) => L(`${num(v)} días`, `${num(v)} days`), max: 300 },
+      { k: 'food', icon: '🥫', name: B('Provisiones', 'Supplies'), fmt: (v) => (v === 1 ? L('1 día', '1 day') : L(`${num(v)} días`, `${num(v)} days`)), max: 300 },
       { k: 'health', icon: '❤️', name: B('Salud del equipo', 'Crew health'), fmt: (v) => `${num(v)} %`, max: 100 },
       { k: 'hull', icon: '🛰️', name: B('Estado de la nave', 'Ship condition'), fmt: (v) => `${num(v)} %`, max: 100 },
     ];
@@ -2063,11 +2063,11 @@
         choices: [
           { title: B('Esperar 3 días', 'Wait 3 days'), hint: B('−30 M€ · −5 % combustible · riesgo bajo', '−€30M · −5% fuel · low risk'), req: { budget: 30 },
             run: (s) => (roll(s.rocket.risk / 3)
-              ? { text: B('Aun con buen tiempo, un sensor falla en el despegue. La nave sale dañada.', 'Even in good weather, a sensor fails during launch. The ship leaves damaged.'), d: { budget: -30, fuel: -5, hull: -20 } }
+              ? { bad: true, text: B('Aun con buen tiempo, un sensor falla en el despegue. La nave sale dañada.', 'Even in good weather, a sensor fails during launch. The ship leaves damaged.'), d: { budget: -30, fuel: -5, hull: -20 } }
               : { text: B('Cielo despejado. Despegue perfecto, aunque la espera ha costado dinero y la trayectoria es algo peor.', 'Clear skies. A perfect launch, although the wait cost money and the route is slightly worse.'), d: { budget: -30, fuel: -5 } }) },
           { title: B('Despegar ya', 'Launch now'), hint: (s) => B(`Gratis · riesgo ${Math.round((s.rocket.risk + 0.15) * 100)} % de daños`, `Free · ${Math.round((s.rocket.risk + 0.15) * 100)}% risk of damage`),
             run: (s) => (roll(s.rocket.risk + 0.15)
-              ? { text: B('Un rayo cae cerca y el viento sacude el cohete. Llegáis a órbita, pero con daños y gastando combustible de más.', 'Lightning strikes nearby and the wind shakes the rocket. You reach orbit, but damaged and using extra fuel.'), d: { hull: -30, fuel: -10 } }
+              ? { bad: true, text: B('Un rayo cae cerca y el viento sacude el cohete. Llegáis a órbita, pero con daños y gastando combustible de más.', 'Lightning strikes nearby and the wind shakes the rocket. You reach orbit, but damaged and using extra fuel.'), d: { hull: -30, fuel: -10 } }
               : { text: B('¡Arriesgado, pero sale bien! El cohete atraviesa las nubes sin problemas.', 'Risky, but it works! The rocket punches through the clouds without trouble.'), d: {} }) },
         ] },
       { id: 'orbit', day: 1, icon: '🔋', place: B('Órbita terrestre', 'Earth orbit'),
@@ -2080,7 +2080,7 @@
             run: () => ({ text: B('Los paneles de repuesto funcionan a la primera. Energía de sobra.', 'The spare panels work first time. Plenty of power.'), d: {} }) },
           { title: B('Paseo espacial para desatascarlo', 'Spacewalk to free it'), hint: B('Riesgo 20 % para la salud', '20% risk to health'), req: { crew: 'eng' },
             run: () => (roll(0.2)
-              ? { text: B('Tomás lo consigue, pero se golpea el traje y sufre un susto serio.', 'Tomás manages it, but knocks his suit and has a serious scare.'), d: { health: -15 } }
+              ? { bad: true, text: B('Tomás lo consigue, pero se golpea el traje y sufre un susto serio.', 'Tomás manages it, but knocks his suit and has a serious scare.'), d: { health: -15 } }
               : { text: B('Tomás sale, da un par de golpes precisos con la herramienta y el panel se despliega.', 'Tomás goes out, gives it a couple of precise taps and the panel unfolds.'), d: {} }) },
           { title: B('Pagar un parche de software', 'Pay for a software patch'), hint: B('−40 M€', '−€40M'), req: { budget: 40 },
             run: () => ({ text: B('Los ingenieros de la Tierra mueven el panel a sacudidas desde el ordenador. Funciona.', 'Engineers on Earth jiggle the panel loose by computer. It works.'), d: { budget: -40 } }) },
@@ -2095,7 +2095,7 @@
         choices: [
           { title: B('Maniobra manual', 'Manual manoeuvre'), hint: B('−5 % combustible · riesgo 10 %', '−5% fuel · 10% risk'), req: { crew: 'pilot' },
             run: () => (roll(0.1)
-              ? { text: B('Valeria enciende el motor un segundo tarde. Hay que corregir y se gasta más.', 'Valeria fires the engine a second late. A correction is needed, using more fuel.'), d: { fuel: -15 } }
+              ? { bad: true, text: B('Valeria enciende el motor un segundo tarde. Hay que corregir y se gasta más.', 'Valeria fires the engine a second late. A correction is needed, using more fuel.'), d: { fuel: -15 } }
               : { text: B('¡Perfecta! Valeria clava la maniobra y la Luna os lanza hacia Marte.', 'Perfect! Valeria nails it and the Moon flings you towards Mars.'), d: { fuel: -5 } }) },
           { title: B('Piloto automático', 'Autopilot'), hint: B('−12 % combustible · sin riesgo', '−12% fuel · no risk'),
             run: () => ({ text: B('El ordenador hace la maniobra con prudencia: funciona, aunque gasta algo más.', 'The computer flies the manoeuvre cautiously: it works, though it uses a bit more.'), d: { fuel: -12 } }) },
@@ -2173,16 +2173,296 @@
             run: () => ({ text: B('Un frenazo con el motor y varias pasadas por la atmósfera. Equilibrado.', 'One burn with the engine and several passes through the atmosphere. Balanced.'), d: { fuel: -18, hull: -12 } }) },
           { title: B('Solo aerofrenado', 'Aerobraking only'), hint: (s) => B(`−6 % combustible · −25 % nave · riesgo ${s.crew.includes('pilot') ? 10 : 30} %`, `−6% fuel · −25% ship · ${s.crew.includes('pilot') ? 10 : 30}% risk`), req: { fuel: 6 },
             run: (s) => (roll(s.crew.includes('pilot') ? 0.1 : 0.3)
-              ? { text: B('Entráis demasiado bajo. El escudo térmico brilla al rojo y algo se rompe.', 'You go in too low. The heat shield glows red-hot and something breaks.'), d: { fuel: -6, hull: -45 } }
+              ? { bad: true, text: B('Entráis demasiado bajo. El escudo térmico brilla al rojo y algo se rompe.', 'You go in too low. The heat shield glows red-hot and something breaks.'), d: { fuel: -6, hull: -45 } }
               : { text: B('La atmósfera de Marte os frena como un paracaídas gigante. ¡Qué ahorro!', 'The Martian atmosphere slows you like a giant parachute. What a saving!'), d: { fuel: -6, hull: -25 } }) },
         ] },
     ];
     const STAGES = [B('Preparación', 'Preparation')].concat(EVENTS.map((e) => e.place));
 
+    // ---------- Ilustraciones (SVG con las fotos reales de la Tierra, la Luna y Marte) ----------
+    const IMG = { earth: ['img/tierra-apollo17.jpg', 1.125], moon: ['img/luna-lro.jpg', 1.02], mars: ['img/marte-hubble-2003.jpg', 1.15] };
+    const STARS = (() => {
+      let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      let out = '';
+      for (let i = 0; i < 70; i++) out += `<circle cx="${(rnd() * 640).toFixed(1)}" cy="${(rnd() * 280).toFixed(1)}" r="${(rnd() * 1.1 + 0.3).toFixed(2)}" opacity="${(rnd() * 0.7 + 0.2).toFixed(2)}"/>`;
+      return `<g class="sc-stars" fill="#fff">${out}</g>`;
+    })();
+    const DEFS = (p) => `<defs>
+      <radialGradient id="${p}-shade" cx="32%" cy="30%" r="80%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".75"/></radialGradient>
+      <linearGradient id="${p}-body" x1="0" x2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#aeb8cc"/></linearGradient>
+      <linearGradient id="${p}-flame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffa03c"/><stop offset="1" stop-color="#ff4a1c" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${p}-flameh" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffa03c"/><stop offset="1" stop-color="#ff4a1c" stop-opacity="0"/></linearGradient>
+      <radialGradient id="${p}-sun"><stop offset="0" stop-color="#fff6d8"/><stop offset=".35" stop-color="#ffc857"/><stop offset="1" stop-color="#ff8a3c" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${p}-glow"><stop offset="0" stop-color="#ff9a5a" stop-opacity=".9"/><stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>
+      <linearGradient id="${p}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2140"/><stop offset="1" stop-color="#3a2f4a"/></linearGradient>
+    </defs>`;
+    function planet(p, body, cx, cy, r, extra = '') {
+      const [src, z] = IMG[body];
+      const sz = r * 2 * z;
+      return `<g class="sc-planet ${body} ${extra}"><clipPath id="${p}-cp-${body}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+        <circle cx="${cx}" cy="${cy}" r="${r * 1.5}" fill="${body === 'mars' ? 'rgba(255,106,61,.12)' : body === 'earth' ? 'rgba(78,163,255,.14)' : 'rgba(220,225,240,.08)'}"/>
+        <image href="${src}" x="${cx - sz / 2}" y="${cy - sz / 2}" width="${sz}" height="${sz}" clip-path="url(#${p}-cp-${body})" preserveAspectRatio="xMidYMid slice"/>
+        ${body === 'mars' ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(230,60,20,.2)"/>` : ''}
+        ${body === 'moon' ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(210,215,225,.35)" style="mix-blend-mode:screen"/>` : ''}
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${p}-shade)"/></g>`;
+    }
+    // Cohete vertical apoyado en (x, y) de altura h
+    function rocket(p, x, y, h, kind, attrs = '') {
+      const w = h * 0.2;
+      const boosters = kind === 'heavy' ? [-1, 1].map((sgn) => `<g transform="translate(${sgn * w * 0.78} 0)">
+          <rect x="${-w * 0.28}" y="${-h * 0.55}" width="${w * 0.56}" height="${h * 0.55}" rx="${w * 0.1}" fill="url(#${p}-body)"/>
+          <path d="M${-w * 0.28} ${-h * 0.55} Q0 ${-h * 0.7} ${w * 0.28} ${-h * 0.55}Z" fill="#cfd6e4"/></g>`).join('') : '';
+      const legs = kind === 'reuse' ? `<path d="M${-w * 0.5} ${-h * 0.08} L${-w * 0.95} 0 M${w * 0.5} ${-h * 0.08} L${w * 0.95} 0" stroke="#8a93a8" stroke-width="2"/>
+          <path d="M${-w * 0.6} ${-h * 0.78} h${-w * 0.25} M${w * 0.6} ${-h * 0.78} h${w * 0.25}" stroke="#8a93a8" stroke-width="3"/>` : '';
+      const acc = kind === 'light' ? '#4ea3ff' : kind === 'reuse' ? '#6be3b5' : '#ff6a3d';
+      return `<g class="rk" transform="translate(${x} ${y})" ${attrs}><g class="rk-in">
+        <g class="rk-flame"><path d="M${-w * 0.4} 0 Q0 ${h * 0.6} ${w * 0.4} 0Z" fill="url(#${p}-flame)"/></g>
+        ${boosters}${legs}
+        <path d="M${-w / 2} ${-h * 0.25} L${-w * 0.95} 0 L${-w / 2} 0Z M${w / 2} ${-h * 0.25} L${w * 0.95} 0 L${w / 2} 0Z" fill="${acc}"/>
+        <rect x="${-w / 2}" y="${-h * 0.85}" width="${w}" height="${h * 0.85}" rx="${w * 0.12}" fill="url(#${p}-body)"/>
+        <rect x="${-w / 2}" y="${-h * 0.38}" width="${w}" height="${h * 0.05}" fill="${acc}"/>
+        <path d="M${-w / 2} ${-h * 0.85} Q0 ${-h * 1.12} ${w / 2} ${-h * 0.85}Z" fill="${acc}"/>
+        <circle cy="${-h * 0.64}" r="${w * 0.2}" fill="#4ea3ff" stroke="#2a3550" stroke-width="1.5"/></g></g>`;
+    }
+    // Nave horizontal (mira a +x) con paneles solares arriba y abajo
+    function ship(p, extra = '', stuck = false) {
+      return `<g class="ship ${extra}"><g class="ship-in">
+        <g class="ship-flame"><path d="M-27 -6 Q-58 0 -27 6Z" fill="url(#${p}-flameh)"/></g>
+        <g class="ship-retro"><path d="M22 -5 Q48 0 22 5Z" fill="url(#${p}-flameh)" transform="scale(-1 1) translate(-44 0)"/></g>
+        <rect x="-8" y="-62" width="16" height="48" rx="2" fill="#25407a" stroke="#7fb0ff" stroke-width="1"/>
+        <path d="M-8 -50 h16 M-8 -38 h16 M-8 -26 h16 M0 -62 v48" stroke="#7fb0ff" stroke-width=".6"/>
+        <g class="panel-b${stuck ? ' stuck' : ''}"><rect x="-8" y="14" width="16" height="48" rx="2" fill="#25407a" stroke="#7fb0ff" stroke-width="1"/>
+        <path d="M-8 26 h16 M-8 38 h16 M-8 50 h16 M0 14 v48" stroke="#7fb0ff" stroke-width=".6"/></g>
+        <path d="M-20 -6 L-28 -9 L-28 9 L-20 6Z" fill="#8a93a8"/>
+        <rect x="-21" y="-12" width="42" height="24" rx="5" fill="url(#${p}-body)"/>
+        <line x1="-4" y1="-12" x2="-4" y2="-18" stroke="#aab3c8" stroke-width="1.5"/><path d="M-12 -24 Q-4 -15 4 -24Z" fill="#eef1f7"/>
+        <circle cx="10" cy="0" r="4" fill="#4ea3ff" stroke="#2a3550" stroke-width="1"/>
+        <path d="M21 -8 Q30 0 21 8Z" fill="#ff6a3d"/></g></g>`;
+    }
+    function avatar(c, size = 48) {
+      const A = { pilot: ['#2b4c8c', '#f1c7a5', '#3b2416'], eng: ['#8c5a2b', '#d9a27c', '#c9c9c9'], med: ['#2b8c6a', '#8d5a3b', '#1d1d1d'],
+        geo: ['#6a2b8c', '#f3d2b3', '#1d1d1d'], com: ['#8c2b4a', '#5b3a29', '#2b1b12'] }[c.id];
+      const [suit, skin, hair] = A;
+      return `<svg class="adv-ava" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
+        <circle cx="24" cy="24" r="23" fill="${suit}" opacity=".35"/><path d="M6 46 Q24 28 42 46Z" fill="${suit}"/>
+        <path d="M16 38 l8 4 l8 -4" stroke="#fff" stroke-opacity=".5" fill="none" stroke-width="1.5"/>
+        <circle cx="24" cy="21" r="10" fill="${skin}"/>
+        <path d="${c.id === 'med' || c.id === 'com' ? 'M13 22 Q12 9 24 9 Q36 9 35 22 Q33 14 24 14 Q15 14 13 22Z' : c.id === 'eng' ? 'M14 18 Q16 10 24 10 Q32 10 34 18 Q28 14 24 14 Q20 14 14 18Z' : 'M14 19 Q15 10 24 10 Q33 10 34 19 Q30 13 22 14 Q17 15 14 19Z'}" fill="${hair}"/>
+        <circle cx="20.5" cy="22" r="1.4" fill="#1a1a1a"/><circle cx="27.5" cy="22" r="1.4" fill="#1a1a1a"/>
+        <path d="M20.5 26.5 Q24 29 27.5 26.5" stroke="#1a1a1a" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        <circle cx="24" cy="21" r="14.5" fill="none" stroke="#cfe5ff" stroke-opacity=".55" stroke-width="2"/></svg>`;
+    }
+    const svgWrap = (key, state, fx, inner, label) => `<svg class="adv-scene" data-scene="${key}" data-state="${state}" data-fx="${fx || ''}" viewBox="0 0 640 280" role="img" aria-label="${label}">
+      ${DEFS('sc')}<rect width="640" height="280" fill="#070a16"/>${STARS}${inner}</svg>`;
+    const move = (pathId, dur, delay = 0) => `data-move="${pathId}" data-dur="${dur}" data-delay="${delay}"`;
+
+    function prepScene() {
+      const p = 'sc';
+      if (s.phase === 'rocket') {
+        const r = ROCKETS.map((k, i) => {
+          const x = 170 + i * 150, h = [95, 140, 185][i];
+          const on = s.rocket === k;
+          return `<g class="pick${on ? ' on' : ''}${s.rocket && !on ? ' off' : ''}" data-rocket="${k.id}">
+            ${on ? `<path d="M${x - 50} 240 L${x - 14} 0 L${x + 14} 0 L${x + 50} 240Z" fill="rgba(255,200,87,.10)"/>` : ''}
+            <rect x="${x - 55}" y="20" width="110" height="225" fill="transparent"/>
+            ${rocket(p, x, 238, h, k.id)}
+            <text x="${x}" y="262" text-anchor="middle" class="sc-label">${num(k.cost)} M€</text></g>`;
+        }).join('');
+        return svgWrap('prep-rocket', 'idle', '', `<rect y="238" width="640" height="42" fill="#121828"/><path d="M0 238 H640" stroke="#2b3550"/>${r}
+          <text x="320" y="22" text-anchor="middle" class="sc-hint">${L('Toca un cohete para elegirlo', 'Tap a rocket to choose it')}</text>`, L('Plataforma de lanzamiento con los tres cohetes', 'Launch pad with the three rockets'));
+      }
+      if (s.phase === 'crew') {
+        const seats = [0, 1, 2, 3].map((i) => {
+          const x = 170 + i * 100, id = s.crew[i];
+          const c = id && byId(CREW, id);
+          return `<g transform="translate(${x - 34} 92)"><rect width="68" height="92" rx="16" fill="#0d1428" stroke="${c ? '#4ea3ff' : '#3a4566'}" stroke-dasharray="${c ? '0' : '5 5'}" stroke-width="2"/>
+            ${c ? `<g transform="translate(6 10)"><g class="pop">${avatar(c, 56).replace('<svg', '<svg x="0" y="0"')}</g></g><text x="34" y="82" text-anchor="middle" class="sc-label sm">${T(c.name).split(' · ')[0]}</text>` : `<text x="34" y="54" text-anchor="middle" class="sc-q">?</text>`}</g>`;
+        }).join('');
+        return svgWrap('prep-crew', 'idle', '', `<rect x="90" y="60" width="460" height="150" rx="70" fill="#1a2238" stroke="#3a4566" stroke-width="2"/>
+          <path d="M550 90 Q620 135 550 180Z" fill="#ff6a3d"/><path d="M90 100 L50 85 L50 185 L90 170Z" fill="#8a93a8"/>${seats}
+          <text x="320" y="240" text-anchor="middle" class="sc-hint">${L(`Asientos ocupados: ${s.crew.length} de 4`, `Seats taken: ${s.crew.length} of 4`)}</text>`, L('Cápsula con los asientos de la tripulación', 'Capsule with the crew seats'));
+      }
+      if (s.phase === 'supplies') {
+        const n = s.supplies ? Math.round(s.supplies.days / 20) : 0;
+        const crates = Array.from({ length: n }, (_, i) => {
+          const col = i % 8, row = Math.floor(i / 8);
+          return `<g transform="translate(${150 + col * 44} ${170 - row * 50})"><g class="pop" style="animation-delay:${i * 40}ms"><rect width="38" height="40" rx="4" fill="${['#6be3b5', '#4ea3ff', '#ffc857'][i % 3]}" opacity=".85"/><text x="19" y="27" text-anchor="middle" font-size="18">${['🥫', '💧', '🫁'][i % 3]}</text></g></g>`;
+        }).join('');
+        return svgWrap('prep-sup', 'idle', '', `<rect x="130" y="40" width="380" height="186" rx="10" fill="#111a30" stroke="#3a4566" stroke-width="2"/>
+          <path d="M130 116 H510 M130 166 H510" stroke="#2b3550" stroke-width="3"/>${crates}
+          <text x="320" y="252" text-anchor="middle" class="sc-hint">${s.supplies ? L(`Bodega: ${s.supplies.days} días de comida, agua y oxígeno`, `Hold: ${s.supplies.days} days of food, water and oxygen`) : L('La bodega está vacía', 'The hold is empty')}</text>`, L('Bodega de provisiones', 'Supplies hold'));
+      }
+      const slots = TOOLS.map((t, i) => {
+        const x = 110 + i * 72, on = s.tools.includes(t.id);
+        return `<g transform="translate(${x} 96)"><rect width="60" height="70" rx="10" fill="${on ? 'rgba(255,122,69,.18)' : '#0d1428'}" stroke="${on ? '#ff7a45' : '#3a4566'}" stroke-dasharray="${on ? '0' : '5 5'}" stroke-width="2"/>
+          ${on ? `<text class="pop" x="30" y="46" text-anchor="middle" font-size="30">${t.icon}</text>` : ''}</g>`;
+      }).join('');
+      return svgWrap('prep-tools', 'idle', '', `<rect x="90" y="70" width="460" height="122" rx="14" fill="#151d33" stroke="#3a4566" stroke-width="2"/>${slots}
+        <text x="320" y="230" text-anchor="middle" class="sc-hint">${L(`Material cargado: ${s.tools.length} de ${TOOLS.length}`, `Equipment loaded: ${s.tools.length} of ${TOOLS.length}`)}</text>`, L('Compartimento de herramientas', 'Tool bay'));
+    }
+
+    function tripScene(e, o) {
+      const p = 'sc';
+      const state = o ? 'out' : 'idle';
+      const fx = o ? o.fx : '';
+      const bad = o && o.bad ? ' bad' : '';
+      const lbl = T(e.title);
+      switch (e.id) {
+        case 'launch': {
+          const h = { light: 120, reuse: 150, heavy: 175 }[s.rocket.id];
+          return svgWrap('launch', state, fx, `<rect width="640" height="280" fill="url(#${p}-sky)" class="sky"/>${STARS}
+            <circle class="sun-out" cx="560" cy="60" r="60" fill="url(#${p}-sun)"/>
+            <g class="clouds"><ellipse cx="120" cy="40" rx="110" ry="34" fill="#4a4f66"/><ellipse cx="260" cy="30" rx="120" ry="38" fill="#3e4359"/>
+              <ellipse cx="430" cy="44" rx="130" ry="36" fill="#4a4f66"/><ellipse cx="590" cy="30" rx="100" ry="34" fill="#3e4359"/></g>
+            <path class="bolt" d="M300 60 L285 105 L300 105 L282 150" stroke="#fff6b0" stroke-width="4" fill="none" stroke-linejoin="round"/>
+            <rect y="246" width="640" height="34" fill="#121828"/>
+            <g class="tower"><rect x="372" y="${246 - h - 10}" width="12" height="${h + 10}" fill="#4a5470"/><path d="M372 ${246 - h} h-26" stroke="#4a5470" stroke-width="4"/></g>
+            <g class="smoke"><circle cx="300" cy="246" r="20"/><circle cx="340" cy="250" r="24"/><circle cx="260" cy="250" r="18"/><circle cx="380" cy="248" r="16"/></g>
+            <g class="${bad.trim()}">${rocket(p, 320, 246, h, s.rocket.id)}</g>
+            <rect class="flash" width="640" height="280" fill="#fff"/>`, lbl);
+        }
+        case 'orbit':
+          return svgWrap('orbit', state, fx, `${planet(p, 'earth', 320, 600, 360)}
+            <g transform="translate(320 120) scale(1.4)">${ship(p, `${bad}${fx === 'one' ? ' cold' : ''}`, true)}</g>
+            ${fx === 'eva' ? `<g transform="translate(${state === 'out' ? 345 : 300} 190)"><g class="astro${bad}"><circle r="7" fill="#fff"/><rect x="-6" y="6" width="12" height="14" rx="4" fill="#e9edf7"/><circle r="4" cy="-1" fill="#ffb84d" opacity=".8"/></g></g>` : ''}
+            ${fx === 'patch' ? `<g class="signal"><path d="M560 250 q30 -40 0 -80" /><path d="M580 260 q45 -60 0 -120"/></g>` : ''}
+            ${fx === 'one' ? `<text x="360" y="90" class="sc-big">❄️</text>` : ''}`, lbl);
+        case 'moon': {
+          const P1 = 'M90 200 C 210 250, 320 245, 380 205 S 460 110, 640 40';
+          const P1b = 'M90 200 C 210 255, 320 250, 372 218 S 430 200, 470 150 S 560 70, 640 50';
+          const P2 = 'M90 200 Q 320 70 640 60';
+          const path = fx === 'direct' ? P2 : (bad ? P1b : P1);
+          return svgWrap('moon', state, fx, `${planet(p, 'earth', 70, 210, 36)}${planet(p, 'moon', 360, 160, 44)}
+            <text x="600" y="28" text-anchor="end" class="sc-label">${L('hacia Marte →', 'to Mars →')}</text>
+            <path d="${P1}" class="pred" />
+            <path id="mv-path" d="${path}" class="trail ${fx === 'direct' ? 'warn' : ''}" pathLength="1"/>
+            <g ${move('mv-path', 3200, 200)} class="mover"><g transform="scale(.6)">${ship(p, state === 'out' && fx === 'direct' ? 'burn' : '')}</g></g>
+            ${state === 'out' && fx !== 'direct' && !bad ? `<text x="470" y="96" class="sc-boost">${L('¡Impulso!', 'Boost!')}</text>` : ''}`, lbl);
+        }
+        case 'storm': {
+          const pts = Array.from({ length: 16 }, (_, i) => `<line class="pt" x1="40" y1="${40 + (i * 37) % 200}" x2="70" y2="${40 + (i * 37) % 200}" style="animation-delay:${(i * 0.23) % 1.6}s"/>`).join('');
+          return svgWrap('storm', state, fx, `<circle cx="-30" cy="140" r="170" fill="url(#${p}-sun)"/>${pts}
+            <g transform="translate(470 140) scale(1.2)">${ship(p, `${fx === 'ignore' ? ' hurt' : ''}`)}</g>
+            <circle class="shield" cx="470" cy="140" r="86"/>
+            ${fx === 'shelter' ? `<g class="shelter"><rect x="440" y="215" width="64" height="26" rx="6"/><text x="472" y="233" text-anchor="middle" font-size="14">💧🥫</text></g>` : ''}
+            <text class="warn-ic" x="560" y="70" font-size="34">⚠️</text>`, lbl);
+        }
+        case 'meteor':
+          return svgWrap('meteor', state, fx, `<g transform="translate(300 140) scale(1.5)">${ship(p)}
+              <g class="module${fx === 'seal' ? ' sealed' : ''}"><rect x="21" y="-14" width="46" height="28" rx="5" fill="url(#${p}-body)"/>
+              <circle class="hole" cx="48" cy="-4" r="4" fill="#05070f"/>
+              <g class="leak"><circle cx="54" cy="-14" r="2"/><circle cx="60" cy="-22" r="1.6"/><circle cx="50" cy="-26" r="1.3"/></g>
+              <rect class="patch" x="42" y="-10" width="12" height="12" rx="2" fill="${fx === 'print' ? '#6be3b5' : '#ffc857'}"/>
+              ${fx === 'seal' ? `<path d="M26 -10 L62 10 M62 -10 L26 10" stroke="#ff6a3d" stroke-width="3"/>` : ''}</g></g>
+            <g class="rock"><line x1="0" y1="0" x2="40" y2="-30" stroke="#ffb48f" stroke-width="2" opacity=".6"/><circle r="4" fill="#d9c2a6"/></g>
+            ${fx === 'print' ? `<text x="140" y="70" font-size="34" class="pop">🖨️</text>` : fx === 'kit' ? `<text x="140" y="70" font-size="34" class="pop">🧰</text>` : fx === 'eng' ? `<text x="140" y="70" font-size="34" class="pop">🔧</text>` : ''}`, lbl);
+        case 'sick': {
+          const dh = o ? (o.d.health || 0) : -1;
+          const tone = !o ? 'red' : dh >= 0 ? 'green' : dh > -12 ? 'amber' : 'red';
+          const crew = s.crew.map((id, i) => `<g transform="translate(${120 + i * 78} 120)">${avatar(byId(CREW, id), 64).replace('<svg', '<svg x="0" y="0"')}${i === 0 ? `<circle class="fever" cx="32" cy="32" r="36"/><text class="fever-ic" x="52" y="10" font-size="26">🤒</text><text class="ok-ic" x="52" y="10" font-size="26">😊</text>` : ''}</g>`).join('');
+          return svgWrap('sick', state, `${fx} ${tone}`, `<rect x="90" y="50" width="460" height="190" rx="24" fill="#131b31" stroke="#3a4566" stroke-width="2"/>${crew}
+            <g class="monitor ${tone}"><rect x="400" y="70" width="136" height="104" rx="10" fill="#060a14" stroke="#3a4566" stroke-width="2"/>
+            <path d="M400 118 h136" stroke="#1c2540"/>
+            <path class="ecg" pathLength="1" d="M406 118 h24 l8 -26 l10 48 l8 -22 h18 l6 -10 l6 10 h50"/>
+            <text x="468" y="166" text-anchor="middle" class="sc-label sm">❤️ ${s.health} %</text></g>
+            ${fx === 'earth' ? `<g class="signal"><path d="M560 60 q30 30 0 60"/><path d="M575 45 q50 45 0 90"/></g>${planet(p, 'earth', 620, 90, 16)}` : ''}
+            ${fx === 'medkit' || fx === 'kit' ? `<text x="440" y="200" font-size="34" class="pop">💊</text>` : ''}`, lbl);
+        }
+        case 'nav': {
+          const ok = 'M80 160 Q 330 120 498 150';
+          return svgWrap('nav', state, fx, `${planet(p, 'mars', 560, 150, 56)}
+            <path d="M80 160 Q 330 60 640 22" class="drift"/><text x="520" y="54" class="sc-label warn">5.000 km</text>
+            <path id="mv-path" d="${ok}" class="trail" pathLength="1"/>
+            ${fx === 'antenna' ? `${planet(p, 'earth', 40, 40, 18)}<g class="signal"><path d="M70 40 q20 20 0 40"/><path d="M85 30 q35 30 0 60"/></g>` : ''}
+            <g ${move('mv-path', 2600, 300)} class="mover" transform="translate(80 160)"><g transform="scale(.7)">${ship(p, state === 'out' ? 'burn' : '')}</g></g>`, lbl);
+        }
+        case 'arrive': {
+          const path = 'M20 60 C 200 40, 300 70, 330 150';
+          return svgWrap('arrive', state, fx, `${planet(p, 'mars', 450, 150, 115)}
+            <circle class="atmo" cx="450" cy="150" r="124"/>
+            <ellipse class="orbit-line" cx="450" cy="150" rx="150" ry="132" pathLength="1"/>
+            <path id="mv-path" d="${path}" class="pred"/>
+            <g ${move('mv-path', 2600, 200)} class="mover" transform="translate(20 60)"><g transform="scale(.75)">${ship(p, state === 'out' ? `${fx === 'engine' || fx === 'combo' ? 'retro' : ''}${fx === 'aero' || fx === 'combo' ? ' plasma' : ''}${bad}` : '')}</g></g>`, lbl);
+        }
+        default: return '';
+      }
+    }
+
+    // Mapa del viaje: la nave avanza de la Tierra a Marte
+    const MAP_PATH = 'M48 52 Q 82 18 112 30 Q 140 42 190 56 Q 390 104 584 48';
+    function mapView() {
+      const cur = s.phase === 'trip' ? s.ev + 1 : s.phase === 'end' ? STAGES.length - 1 : 0;
+      const f = cur / (STAGES.length - 1);
+      const from = s.mapFrom == null ? f : s.mapFrom;
+      s.mapFrom = f;
+      const stageName = s.phase === 'end' ? T(STAGES[STAGES.length - 1]) : T(STAGES[cur]);
+      return `<div class="adv-map"><svg viewBox="0 0 640 96" role="img" aria-label="${L('Mapa del viaje', 'Journey map')}: ${stageName}">
+        ${DEFS('mp')}${planet('mp', 'earth', 30, 54, 24)}${planet('mp', 'moon', 112, 30, 9)}${planet('mp', 'mars', 606, 46, 26)}
+        <path d="${MAP_PATH}" fill="none" stroke="rgba(170,185,225,.35)" stroke-dasharray="3 6" stroke-width="2"/>
+        <path id="map-path" d="${MAP_PATH}" fill="none" stroke="#ff7a45" stroke-width="3" stroke-linecap="round" pathLength="1"
+          stroke-dasharray="1 1" stroke-dashoffset="${1 - from}" data-to="${1 - f}" class="map-done"/>
+        <g data-map="${from}" data-map-to="${f}"><g transform="scale(.42)">${ship('mp')}</g></g></svg>
+        <p class="adv-map-cap"><span>${L('Etapa', 'Stage')} ${cur + 1}/${STAGES.length}</span> <b>${stageName}</b></p></div>`;
+    }
+
+    // Animaciones con JavaScript: movimiento a lo largo de un camino
+    function placeOn(path, el, t, scaleFix) {
+      const len = path.getTotalLength();
+      const a = path.getPointAtLength(clamp(t, 0, 1) * len);
+      const b = path.getPointAtLength(clamp(t + 0.01, 0, 1) * len);
+      const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      el.setAttribute('transform', `translate(${a.x} ${a.y}) rotate(${t >= 0.995 ? el.dataset.ang || ang : ang})`);
+      el.dataset.ang = ang;
+    }
+    function animate() {
+      root.querySelectorAll('[data-move]').forEach((el) => {
+        const path = root.querySelector('#' + el.dataset.move);
+        const svg = el.closest('svg');
+        const out = svg.dataset.state === 'out';
+        if (!path) return;
+        if (!out) { placeOn(path, el, 0); return; }
+        const dur = +el.dataset.dur, delay = +el.dataset.delay;
+        if (reduceMotion) { placeOn(path, el, 1); return; }
+        const t0 = performance.now() + delay;
+        placeOn(path, el, 0);
+        const tick = (now) => {
+          if (!el.isConnected) return;
+          const t = clamp((now - t0) / dur, 0, 1);
+          placeOn(path, el, smooth(t) * 0.5 + t * 0.5);
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      const mp = root.querySelector('#map-path'), mk = root.querySelector('[data-map]');
+      if (mp && mk) {
+        const from = +mk.dataset.map, to = +mk.dataset.mapTo;
+        placeOn(mp, mk, from);
+        if (from !== to && !reduceMotion) {
+          const t0 = performance.now();
+          const tick = (now) => {
+            if (!mk.isConnected) return;
+            const t = clamp((now - t0) / 1400, 0, 1), v = lerp(from, to, smooth(t));
+            placeOn(mp, mk, v); mp.setAttribute('stroke-dashoffset', 1 - v);
+            if (t < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        } else { placeOn(mp, mk, to); mp.setAttribute('stroke-dashoffset', 1 - to); }
+      }
+      // Barras de recursos: de su valor anterior al nuevo
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        root.querySelectorAll('.adv-m-bar[data-w]').forEach((b) => { b.style.width = b.dataset.w + '%'; });
+      }));
+    }
+
+    // Efecto visual de cada opción (mismo orden que en EVENTS)
+    const FX = { launch: ['wait', 'now'], orbit: ['panels', 'eva', 'patch', 'one'], moon: ['manual', 'auto', 'direct'],
+      storm: ['shield', 'shelter', 'ignore'], meteor: ['kit', 'print', 'eng', 'seal'], sick: ['medkit', 'med', 'kit', 'earth'],
+      nav: ['pilot', 'antenna', 'auto'], arrive: ['engine', 'combo', 'aero'] };
+
     let s;
     function reset() {
       s = { phase: 'rocket', rocket: null, crew: [], supplies: null, tools: [], ev: 0, outcome: null, lowPower: false,
-        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null };
+        budget: BUDGET0, fuel: 0, food: 0, health: 100, hull: 0, log: [], end: null, prev: null, mapFrom: null };
     }
     const crewCost = () => s.crew.reduce((a, id) => a + byId(CREW, id).cost, 0);
     const supCost = (opt) => Math.round(opt.days * Math.max(s.crew.length, 1) * SUP_COST);
@@ -2211,19 +2491,21 @@
         ? { budget: BUDGET0 - spentPrep(), fuel: s.rocket ? Math.min(100, s.rocket.fuel + (s.tools.includes('tank') ? 15 : 0)) : 0,
           food: s.supplies ? s.supplies.days : 0, health: 100, hull: s.rocket ? s.rocket.hull : 0 }
         : s;
+      const prev = s.prev;
       const meters = RES.map((r) => {
         const v = vals[r.k];
         const pct = clamp(v / r.max, 0, 1) * 100;
+        const pPct = prev ? clamp(prev[r.k] / r.max, 0, 1) * 100 : pct;
+        const dv = prev ? v - prev[r.k] : 0;
         const low = r.k === 'food' ? v < (prep ? TRIP : TRIP - (EVENTS[Math.min(s.ev, EVENTS.length - 1)].day)) : (r.k !== 'budget' && pct < 30);
-        return `<div class="adv-meter${low && v > 0 ? ' low' : ''}${v < 0 ? ' neg' : ''}">
-          <span class="adv-m-head"><span>${r.icon} ${T(r.name)}</span><b>${r.fmt(v)}</b></span>
-          <span class="adv-m-track"><span class="adv-m-bar ${r.k}" style="width:${pct}%"></span></span></div>`;
+        return `<div class="adv-meter${low && v > 0 ? ' low' : ''}${v < 0 ? ' neg' : ''}${dv < 0 ? ' hit' : dv > 0 ? ' gain' : ''}">
+          <span class="adv-m-head" title="${T(r.name)}"><span>${r.icon} <span class="adv-m-name">${T(r.name)}</span></span><b>${r.fmt(v)}</b></span>
+          <span class="adv-m-track"><span class="adv-m-bar ${r.k}" style="width:${pPct}%" ${prev ? `data-w="${pct}"` : ''}></span></span>
+          ${dv ? `<span class="adv-float ${dv > 0 ? 'up' : 'down'}">${dv > 0 ? '+' : '−'}${r.fmt(Math.abs(dv))}</span>` : ''}</div>`;
       }).join('');
-      const chips = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="adv-chip">${c.icon} ${T(c.name).split(' · ')[0]}</span>`; })
+      const chips = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="adv-chip">${avatar(c, 22)} ${T(c.name).split(' · ')[0]}</span>`; })
         .concat(s.tools.map((id) => { const t = byId(TOOLS, id); return `<span class="adv-chip tool">${t.icon} ${T(t.name)}</span>`; })).join('');
-      const cur = s.phase === 'trip' ? s.ev + 1 : s.phase === 'end' ? STAGES.length : 0;
-      const route = STAGES.map((st, i) => `<li class="${i < cur ? 'done' : i === cur ? 'now' : ''}"><span class="adv-dot"></span><span class="adv-st">${T(st)}</span></li>`).join('');
-      return `<ol class="adv-route" aria-label="${L('Etapas del viaje', 'Journey stages')}">${route}</ol>
+      return `${mapView()}
         <div class="adv-hud">${meters}</div>${chips ? `<div class="adv-chips">${chips}</div>` : ''}`;
     }
 
@@ -2237,7 +2519,7 @@
       const left = BUDGET0 - spentPrep();
       const steps = ['rocket', 'crew', 'supplies', 'tools'];
       const n = steps.indexOf(s.phase) + 1;
-      const head = (k, title, lead) => `<p class="kicker">${L('Preparación', 'Preparation')} · ${n}/4</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>`;
+      const head = (k, title, lead) => `<p class="kicker">${L('Preparación', 'Preparation')} · ${n}/4</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>${prepScene()}`;
       let body = '', next = '', ok = false;
       if (s.phase === 'rocket') {
         body = ROCKETS.map((r) => optCard(Object.assign({}, r, { desc: B(`${r.desc.es} Combustible ${r.fuel} %, nave ${r.hull} %, riesgo en despegue ${Math.round(r.risk * 100)} %.`,
@@ -2251,7 +2533,7 @@
           const on = s.crew.includes(c.id);
           const full = !on && s.crew.length >= 4;
           const poor = !on && c.cost > left;
-          return optCard(c, { on, cost: c.cost, group: 'crew', value: c.id, multi: true, disabled: full || poor, reason: full ? L('Máximo 4 personas', 'Maximum 4 people') : poor ? L('No hay presupuesto', 'Not enough budget') : '' });
+          return optCard(Object.assign({}, c, { icon: avatar(c, 40) }), { on, cost: c.cost, group: 'crew', value: c.id, multi: true, disabled: full || poor, reason: full ? L('Máximo 4 personas', 'Maximum 4 people') : poor ? L('No hay presupuesto', 'Not enough budget') : '' });
         }).join('');
         ok = s.crew.length >= 2;
         return head('crew', L('Forma el equipo (de 2 a 4 personas)', 'Pick the crew (2 to 4 people)'), L('Cada especialista cobra su sueldo y sabe resolver problemas distintos. Más personas también significa más comida, agua y oxígeno.', 'Each specialist has a salary and can solve different problems. More people also means more food, water and oxygen.'))
@@ -2280,7 +2562,7 @@
     function tripView() {
       const e = EVENTS[s.ev];
       const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>
-        <p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p>`;
+        <p class="adv-text">${T(typeof e.text === 'function' ? e.text(s) : e.text)}</p>${tripScene(e, s.outcome)}`;
       if (s.outcome) {
         const o = s.outcome;
         const ds = Object.entries(o.d).filter(([, v]) => v).map(([k, v]) => fmtDelta(k, v)).join('') || `<span class="adv-delta">${L('Sin cambios', 'No change')}</span>`;
@@ -2309,6 +2591,8 @@
       let best = 0;
       try { best = +localStorage.getItem('advBest') || 0; if (e.score > best) localStorage.setItem('advBest', e.score); } catch (err) { /* sin almacenamiento */ }
       return `<div class="adv-end win"><p class="kicker">${L('¡Misión cumplida!', 'Mission accomplished!')}</p><h3 class="adv-title">🔴 ${L('Estáis en órbita de Marte', 'You are in orbit around Mars')}</h3>
+        ${svgWrap('win', 'out', 'win', `${planet('sc', 'mars', 320, 150, 100)}<ellipse class="orbit-line" cx="320" cy="150" rx="150" ry="70" pathLength="1"/>
+          <path id="mv-path" d="M470 150 A150 70 0 1 1 469.9 149" fill="none"/><g data-move="mv-path" data-dur="9000" data-delay="0" class="mover"><g transform="scale(.5)">${ship('sc')}</g></g>`, L('La nave en órbita de Marte', 'The ship in orbit around Mars'))}
         <p class="adv-stars" aria-label="${e.stars} / 3">${'⭐'.repeat(e.stars)}${'<span class="off">⭐</span>'.repeat(3 - e.stars)}</p>
         <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
         ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
@@ -2324,6 +2608,8 @@
     function render(focus) {
       const main = s.phase === 'end' ? endView() : s.phase === 'trip' ? tripView() : prepView();
       root.innerHTML = `${hud()}<div class="adv-stage">${main}</div>${logView()}`;
+      s.prev = null;
+      animate();
       if (focus) { const h = root.querySelector('.adv-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
     }
 
@@ -2343,6 +2629,7 @@
       const e = EVENTS[s.ev];
       const c = e.choices[i];
       if (check(c.req)) return;
+      s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull };
       const r = c.run(s);
       const d = Object.assign({}, r.d);
       // Provisiones gastadas hasta el siguiente capítulo (con racionamiento si faltan)
@@ -2361,7 +2648,7 @@
           extra = B(`⚠️ Se acaban las provisiones: ${days - eaten} días a media ración.`, `⚠️ Supplies run out: ${days - eaten} days on half rations.`);
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
-      s.outcome = { choice: c.title, text: r.text, d, extra };
+      s.outcome = { choice: c.title, text: r.text, d, extra, fx: FX[e.id][i], bad: !!r.bad };
       s.log.push({ day: e.day, text: B(`${e.place.es}: ${c.title.es}.`, `${e.place.en}: ${c.title.en}.`) });
       s.end = verdict(e);
       render(true);
@@ -2397,7 +2684,7 @@
     }
 
     root.addEventListener('click', (ev) => {
-      const b = ev.target.closest('button');
+      const b = ev.target.closest('button, g[data-rocket]');
       if (!b || b.disabled || !root.contains(b)) return;
       const d = b.dataset;
       if (d.rocket) { s.rocket = byId(ROCKETS, d.rocket); }
