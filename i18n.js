@@ -9,8 +9,8 @@ window.I18N_EN = {
   'Misión The Last Lap': 'Mission <span class="grad">The Last Lap</span>',
   '¿Cómo llegaríamos a Marte aprovechando el empujón de la Luna y el mejor momento de las órbitas? Te lo contamos paso a paso, con animaciones.':
     'How could we get to Mars using a push from the Moon and the best moment in the planets’ orbits? We explain it step by step, with animations.',
-  'Ver la misión ▶ Empezar por lo básico':
-    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn ghost" href="#orbitas">Start with the basics</a>',
+  'Ver la misión ▶ 🎮 Jugar Empezar por lo básico':
+    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn accent" href="#juego">🎮 Play</a> <a class="btn ghost" href="#orbitas">Start with the basics</a>',
   '384.000 kmde la Tierra a la Luna': '<strong>384,000 km</strong><span>from the Earth to the Moon</span>',
   '~26 mesesentre dos oposiciones de Marte': '<strong>~26 months</strong><span>between two oppositions of Mars</span>',
   '7–9 mesesde viaje hasta Marte': '<strong>7–9 months</strong><span>of travel to Mars</span>',
@@ -476,4 +476,18 @@ window.I18N_EN = {
     "<strong>Hint:</strong> aim at where the Moon <em>will be</em>, not where it is, and pass behind it (on the side it is coming from). Simplified and with no air: the Earth and the Moon are enlarged and the Moon’s gravity is exaggerated.",
   "Reto: lanza una pelota desde la Tierra para que pase junto a la Luna y salga impulsada por el efecto honda":
     "Challenge: throw a ball from the Earth so it passes the Moon and gets boosted by the slingshot effect",
+
+  // ---------- Juego: tú diriges la misión ----------
+  "🎮 Juego":
+    "🎮 Game",
+  "◀ Volver a la web":
+    "◀ Back to the website",
+  "Juego · Tú diriges la misión":
+    "Game · You run the mission",
+  "Del despegue a Marte: tus decisiones":
+    "From launch to Mars: your decisions",
+  "Eres la directora o el director de la misión. Tienes un presupuesto de 1.000 millones de euros para elegir el cohete, el equipo, las provisiones y las herramientas. Después, durante el viaje, cada decisión gasta dinero, combustible, provisiones o pone en juego la salud de la tripulación y la nave. ¿Llegaréis a Marte?":
+    "You are the mission director. You have a <strong>budget of 1,000 million euros</strong> to choose the rocket, the crew, the supplies and the tools. Then, during the journey, every decision costs <strong>money, fuel or supplies</strong>, or puts the <strong>crew’s health</strong> and the <strong>ship</strong> at risk. Will you make it to Mars?",
+  "Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.":
+    "A made-up story for learning purposes. Prices, odds and figures are simplified so the game is playable.",
 };
