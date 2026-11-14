@@ -9,8 +9,8 @@ window.I18N_EN = {
   'Misión The Last Lap': 'Mission <span class="grad">The Last Lap</span>',
   '¿Cómo llegaríamos a Marte aprovechando el empujón de la Luna y el mejor momento de las órbitas? Te lo contamos paso a paso, con animaciones.':
     'How could we get to Mars using a push from the Moon and the best moment in the planets’ orbits? We explain it step by step, with animations.',
-  'Ver la misión ▶ Empezar por lo básico':
-    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn ghost" href="#orbitas">Start with the basics</a>',
+  'Ver la misión ▶ Empezar por lo básico 🎮 Diseña tu propia misión':
+    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn ghost" href="#orbitas">Start with the basics</a> <a class="btn accent" href="juego/">🎮 Design your own mission</a>',
   '384.000 kmde la Tierra a la Luna': '<strong>384,000 km</strong><span>from the Earth to the Moon</span>',
   '~26 mesesentre dos oposiciones de Marte': '<strong>~26 months</strong><span>between two oppositions of Mars</span>',
   '7–9 mesesde viaje hasta Marte': '<strong>7–9 months</strong><span>of travel to Mars</span>',
@@ -186,8 +186,8 @@ window.I18N_EN = {
   'Distancia Tierra–Marte': 'Earth–Mars distance',
 
   // ---------- Ampliación: magnetismo, 7 pasos, orientación, regreso y estación ----------
-  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar":
-    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a>",
+  "🎮 Juego Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar":
+    "<a class=\"nav-game\" href=\"juego/\">🎮 Game</a> <a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a>",
   "Escudo invisible":
     "An invisible shield",
   "¿Marte tiene campo magnético?":
