@@ -98,13 +98,14 @@
 </head>
 <body>
 <header>
-  <h1>🚀 Misión a lo Loco</h1>
-  <span class="sub">Diseña una misión espacial de verdad: cada decisión tiene un precio.</span>
-  <a class="learn-link" href="../">📚 Aprende con The Last Lap</a>
+  <h1 id="brand">🚀 Misión a lo Loco</h1>
+  <span class="sub" id="tagline">Diseña una misión espacial de verdad: cada decisión tiene un precio.</span>
+  <a class="learn-link" href="../" id="learnLink">📚 Aprende con The Last Lap</a>
   <button type="button" id="homeBtn" hidden>⟲ Nueva misión</button>
+  <button type="button" id="langBtn" aria-label="Switch to English">EN</button>
 </header>
 <main id="app"></main>
-<footer>Proyecto para NASA Space Apps 2026 · Reto «Space Mission Design Game». Las explicaciones paso a paso están en <a href="../" style="color:var(--cyan)">The Last Lap</a>. Los números están simplificados para jugar, pero siguen las compensaciones reales del diseño de misiones.</footer>
+<footer><span id="footText">Proyecto para NASA Space Apps 2026 · Reto «Space Mission Design Game». Las explicaciones paso a paso están en </span><a href="../" style="color:var(--cyan)">The Last Lap</a>.</footer>
 <script src="model.js"></script>
 <script src="app.js"></script>
 </body>

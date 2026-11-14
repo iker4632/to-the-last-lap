@@ -1,4 +1,5 @@
-/* UI for Misión a lo Loco: start -> secret goals -> design -> simulation -> report. */
+/* UI for Misión a lo Loco: start -> secret goals -> design -> simulation -> report.
+   Texts use L("español", "English") from model.js. */
 
 const app = document.getElementById("app");
 const G = {
@@ -18,20 +19,26 @@ function h(tag, props, ...kids) {
   for (const k of kids.flat()) if (k != null && k !== false) n.append(k instanceof Node ? k : document.createTextNode(String(k)));
   return n;
 }
-const fmtN = v => Math.round(v).toLocaleString("es");
-// fmt1 comes from model.js
+const fmtN = v => Math.round(v).toLocaleString(LOCALE);
+// fmt1 and money come from model.js
 const pctS = v => Math.round(v * 100) + "%";
-const moneyS = v => v === Infinity ? "sin límite" : "$" + fmt1(v) + " M";
+const moneyS = money;
+const playerName = i => (G.players[i] && G.players[i].name) || L(`Jugador ${i + 1}`, `Player ${i + 1}`);
 
 /* Optional lessons in The Last Lap (the site one folder up) for each part of the design. */
 const LEARN = {
-  dir: [["../#orbitas", "Cómo se mueven la Tierra, la Luna y Marte"], ["../#oposicion", "Por qué a Marte solo se viaja cada 26 meses"], ["../#honda", "El efecto honda: ganar velocidad gratis"]],
-  ing: [["../#orientacion", "Cómo se orienta una nave: cámara, antena, paneles y motor"], ["../#magnetismo", "El escudo magnético y la radiación"]],
-  sci: [["../#mision", "Una misión a Marte paso a paso"], ["../#zoom-luna", "Qué se observa al pasar junto a la Luna"]],
-  com: [["../#distancias", "Cuánto tarda una señal en llegar desde Marte"], ["../#orientacion", "Por qué la antena tiene que apuntar a la Tierra"]]
+  dir: [["../#orbitas", L("Cómo se mueven la Tierra, la Luna y Marte", "How the Earth, the Moon and Mars move")],
+        ["../#oposicion", L("Por qué a Marte solo se viaja cada 26 meses", "Why we can only travel to Mars every 26 months")],
+        ["../#honda", L("El efecto honda: ganar velocidad gratis", "The slingshot effect: free speed")]],
+  ing: [["../#orientacion", L("Cómo se orienta una nave: cámara, antena, paneles y motor", "How a spacecraft points its camera, antenna, panels and engine")],
+        ["../#magnetismo", L("El escudo magnético y la radiación", "The magnetic shield and radiation")]],
+  sci: [["../#mision", L("Una misión a Marte paso a paso", "A mission to Mars step by step")],
+        ["../#zoom-luna", L("Qué se observa al pasar junto a la Luna", "What we observe when flying past the Moon")]],
+  com: [["../#distancias", L("Cuánto tarda una señal en llegar desde Marte", "How long a signal takes to arrive from Mars")],
+        ["../#orientacion", L("Por qué la antena tiene que apuntar a la Tierra", "Why the antenna has to point at Earth")]]
 };
 function learnLinks(role) {
-  return h("p", { class: "learn" }, "📚 Aprende más: ",
+  return h("p", { class: "learn" }, L("📚 Aprende más: ", "📚 Learn more: "),
     ...LEARN[role].flatMap(([href, text], i) => [i ? " · " : "", h("a", { href }, text)]));
 }
 
@@ -45,9 +52,8 @@ function roleAssignment(n) {
   ][n - 1];
 }
 function ownerOf(role) {
-  const a = roleAssignment(G.players.length);
-  const i = a.findIndex(rs => rs.includes(role));
-  return G.players[i] ? (G.players[i].name || `Jugador ${i + 1}`) : "";
+  const i = roleAssignment(G.players.length).findIndex(rs => rs.includes(role));
+  return i >= 0 ? playerName(i) : "";
 }
 const team = () => G.players.length > 1;
 
@@ -55,13 +61,14 @@ function show(screen) {
   G.screen = screen;
   if (G.timer) { clearInterval(G.timer); G.timer = null; }
   document.getElementById("homeBtn").hidden = screen === "start";
+  document.getElementById("langBtn").disabled = screen === "sim"; // never switch language mid-flight
   render();
   window.scrollTo(0, 0);
 }
 function render() {
   // Re-rendering replaces the DOM, so remember which control had focus and restore it.
   const a = document.activeElement;
-  const key = a && a !== document.body ? (a.id ? "#" + CSS.escape(a.id) : a.getAttribute("aria-label") ? `[aria-label="${CSS.escape(a.getAttribute("aria-label"))}"]` : null) : null;
+  const key = a && a !== document.body && app.contains(a) ? (a.id ? "#" + CSS.escape(a.id) : a.getAttribute("aria-label") ? `[aria-label="${CSS.escape(a.getAttribute("aria-label"))}"]` : null) : null;
   app.replaceChildren(({ start: viewStart, secrets: viewSecrets, design: viewDesign, sim: viewSim, report: viewReport })[G.screen]());
   if (key) { const n = app.querySelector(key); if (n && !n.disabled) n.focus({ preventScroll: true }); }
 }
@@ -71,7 +78,9 @@ function viewStart() {
   const scen = h("div", { class: "grid2" }, Object.entries(SCENARIOS).map(([id, s]) =>
     h("button", { type: "button", class: "choice", "aria-pressed": String(G.scenario === id), onclick: () => { G.scenario = id; render(); } },
       h("b", null, `${s.emoji} ${s.name}`), h("span", null, s.brief),
-      h("div", { class: "small", style: "margin-top:6px" }, s.sandbox ? "Presupuesto: sin límite" : `Presupuesto base: ${moneyS(s.budget)} · Meta: ${s.goal} puntos de ciencia`))));
+      h("div", { class: "small", style: "margin-top:6px" }, s.sandbox
+        ? L("Presupuesto: sin límite", "Budget: unlimited")
+        : L(`Presupuesto base: ${moneyS(s.budget)} · Meta: ${s.goal} puntos de ciencia`, `Base budget: ${moneyS(s.budget)} · Goal: ${s.goal} science points`)))));
 
   const diff = h("div", { class: "row" }, Object.entries(DIFFICULTY).map(([id, d]) =>
     h("button", { type: "button", "aria-pressed": String(G.difficulty === id), title: d.desc, onclick: () => { G.difficulty = id; render(); } }, d.name)));
@@ -81,28 +90,29 @@ function viewStart() {
     h("button", { type: "button", "aria-pressed": String(n === k), onclick: () => {
       while (G.players.length < k) G.players.push({ name: "" });
       G.players.length = k; render();
-    } }, k === 1 ? "1 jugador" : `${k} jugadores`)));
+    } }, k === 1 ? L("1 jugador", "1 player") : L(`${k} jugadores`, `${k} players`))));
 
   const assign = roleAssignment(n);
   const names = h("div", { class: "grid2" }, G.players.map((p, i) =>
     h("div", null,
-      h("label", { for: "pn" + i, class: "small muted" }, `Jugador ${i + 1}: ` + assign[i].map(r => ROLES[r].emoji + " " + ROLES[r].name).join(" + ")),
-      h("input", { type: "text", id: "pn" + i, maxlength: 20, value: p.name, placeholder: `Nombre del jugador ${i + 1}`, oninput: e => { p.name = e.target.value; } }))));
+      h("label", { for: "pn" + i, class: "small muted" }, L(`Jugador ${i + 1}: `, `Player ${i + 1}: `) + assign[i].map(r => ROLES[r].emoji + " " + ROLES[r].name).join(" + ")),
+      h("input", { type: "text", id: "pn" + i, maxlength: 20, value: p.name, placeholder: L(`Nombre del jugador ${i + 1}`, `Player ${i + 1} name`), oninput: e => { p.name = e.target.value; } }))));
 
   return h("div", { class: "stack" },
     h("section", { class: "card" },
-      h("h2", null, "1. Elige la misión"), scen),
+      h("h2", null, L("1. Elige la misión", "1. Choose the mission")), scen),
     h("section", { class: "card" },
-      h("h2", null, "2. Dificultad"), diff,
+      h("h2", null, L("2. Dificultad", "2. Difficulty")), diff,
       h("p", { class: "small muted" }, DIFFICULTY[G.difficulty].desc)),
     h("section", { class: "card" },
-      h("h2", null, "3. ¿Quiénes juegan?"), playerCount,
+      h("h2", null, L("3. ¿Quiénes juegan?", "3. Who's playing?")), playerCount,
       h("p", { class: "small muted" }, n === 1
-        ? "Jugarás todos los roles: dirección, ingeniería, ciencia y comunicaciones."
-        : "Cada jugador controla una parte de la nave y tiene un objetivo secreto. Tendrán que negociar en el mismo dispositivo."),
+        ? L("Jugarás todos los roles: dirección, ingeniería, ciencia y comunicaciones.", "You'll play every role: mission director, engineering, science and communications.")
+        : L("Cada jugador controla una parte de la nave y tiene un objetivo secreto. Tendrán que negociar en el mismo dispositivo.",
+            "Each player controls part of the spacecraft and has a secret goal. You'll have to negotiate on the same device.")),
       names),
     h("div", { class: "row" },
-      h("button", { type: "button", class: "primary big", onclick: startGame }, "Empezar misión 🚀")));
+      h("button", { type: "button", class: "primary big", onclick: startGame }, L("Empezar misión 🚀", "Start mission 🚀"))));
 }
 
 function startGame() {
@@ -117,19 +127,20 @@ function startGame() {
 function viewSecrets() {
   const assign = roleAssignment(G.players.length);
   return h("section", { class: "card stack" },
-    h("h2", null, "Objetivos secretos"),
-    h("p", null, "Pasen el dispositivo. Cada jugador toca su nombre, lee su rol y su objetivo secreto, y lo oculta antes de pasarlo. Los objetivos chocan entre sí: ¡negocien!"),
+    h("h2", null, L("Objetivos secretos", "Secret goals")),
+    h("p", null, L("Pasen el dispositivo. Cada jugador toca su nombre, lee su rol y su objetivo secreto, y lo oculta antes de pasarlo. Los objetivos chocan entre sí: ¡negocien!",
+      "Pass the device around. Each player taps their name, reads their role and secret goal, and hides it before passing it on. The goals clash with each other: negotiate!")),
     ...G.players.map((p, i) => {
       const open = G.revealed === i;
       return h("div", null,
         h("button", { type: "button", "aria-expanded": String(open), onclick: () => { G.revealed = open ? -1 : i; render(); } },
-          open ? "🙈 Ocultar" : `👀 Soy ${p.name || "Jugador " + (i + 1)}: ver mi objetivo`),
+          open ? L("🙈 Ocultar", "🙈 Hide") : L(`👀 Soy ${playerName(i)}: ver mi objetivo`, `👀 I'm ${playerName(i)}: show my goal`)),
         open && h("div", { class: "secret" },
           ...assign[i].map(r => h("p", { style: "margin:0 0 8px" },
             h("b", null, `${ROLES[r].emoji} ${ROLES[r].name}: `), ROLES[r].owns + ".", h("br"),
-            h("span", { class: "muted" }, "Objetivo secreto: "), ROLES[r].secret.text))));
+            h("span", { class: "muted" }, L("Objetivo secreto: ", "Secret goal: ")), ROLES[r].secret.text))));
     }),
-    h("div", null, h("button", { type: "button", class: "primary big", onclick: () => show("design") }, "A diseñar la nave →")));
+    h("div", null, h("button", { type: "button", class: "primary big", onclick: () => show("design") }, L("A diseñar la nave →", "Design the spacecraft →"))));
 }
 
 /* ---------------- Design ---------------- */
@@ -144,11 +155,11 @@ function viewDesign() {
     h("section", { class: "card" },
       h("div", { class: "row", style: "justify-content:space-between" },
         h("div", null, h("b", { style: "font-size:18px" }, `${sc.emoji} ${sc.name}`), " ", h("span", { class: "pill" }, DIFFICULTY[d.difficulty].name)),
-        h("span", { class: "muted small" }, `Presupuesto: ${moneyS(r.budget)} · Meta: ${sc.goal} puntos de ciencia`)),
+        h("span", { class: "muted small" }, L(`Presupuesto: ${moneyS(r.budget)} · Meta: ${sc.goal} puntos de ciencia`, `Budget: ${moneyS(r.budget)} · Goal: ${sc.goal} science points`))),
       h("p", { style: "margin:8px 0 0" }, sc.brief, " ", h("span", { class: "muted" }, "💡 " + sc.hint))),
     h("div", { class: "design" },
       h("section", { class: "card" }, tabs,
-        h("p", { class: "small muted", style: "margin-top:0" }, ROLES[G.tab].owns + (team() ? ` · decide ${ownerOf(G.tab)}` : "")),
+        h("p", { class: "small muted", style: "margin-top:0" }, ROLES[G.tab].owns + (team() ? L(` · decide ${ownerOf(G.tab)}`, ` · ${ownerOf(G.tab)} decides`) : "")),
         panel, learnLinks(G.tab)),
       h("aside", { class: "card sticky" }, dashboard(d, r))));
 }
@@ -160,25 +171,28 @@ function panelMission(d, r) {
     return h("button", { type: "button", class: "orbit", "aria-pressed": String(d.orbit === id), onclick: () => { d.orbit = id; render(); } },
       h("b", null, o.name), h("span", null, o.desc),
       h("div", { class: "fit", style: `color:${fit >= 1 ? "var(--good)" : fit > 0 ? "var(--accent)" : "var(--bad)"}` },
-        fit >= 1 ? "✔ Ideal para esta misión" : fit > 0 ? `≈ Sirve a medias (${pctS(fit)})` : "✘ No sirve para este objetivo"));
+        fit >= 1 ? L("✔ Ideal para esta misión", "✔ Ideal for this mission")
+          : fit > 0 ? L(`≈ Sirve a medias (${pctS(fit)})`, `≈ Partly useful (${pctS(fit)})`)
+          : L("✘ No sirve para este objetivo", "✘ Doesn't work for this goal")));
   }));
   const launchers = h("div", { class: "grid2" }, Object.entries(LAUNCHERS).map(([id, l]) => {
-    const cap = l.cap[ORBITS[d.orbit].launch];
+    const cap = l.cap[ORBITS[d.orbit].launch], dest = ORBITS[d.orbit].short;
     return h("button", { type: "button", class: "orbit", "aria-pressed": String(d.launcher === id), onclick: () => { d.launcher = id; render(); } },
       h("b", null, `${l.name} · ${moneyS(l.cost)}`),
-      h("span", null, cap ? `Lleva hasta ${fmtN(cap)} kg a ${ORBITS[d.orbit].short}` : `No llega a ${ORBITS[d.orbit].short}`));
+      h("span", null, cap ? L(`Lleva hasta ${fmtN(cap)} kg a ${dest}`, `Carries up to ${fmtN(cap)} kg to ${dest}`) : L(`No llega a ${dest}`, `Can't reach ${dest}`)));
   }));
   return h("div", null,
-    h("h3", null, "Órbita"), orbits,
-    h("h3", null, "Cohete"), launchers,
-    h("h3", null, "Duración planeada"),
+    h("h3", null, L("Órbita", "Orbit")), orbits,
+    h("h3", null, L("Cohete", "Rocket")), launchers,
+    h("h3", null, L("Duración planeada", "Planned length")),
     h("label", { for: "years", class: "small", id: "yearsLabel" }, yearsText(d.years)),
     h("input", { type: "range", id: "years", min: 1, max: 10, value: d.years,
       oninput: e => { d.years = +e.target.value; document.getElementById("yearsLabel").textContent = yearsText(d.years); },
       onchange: () => render() }));
 }
 function yearsText(y) {
-  return `${y} ${y === 1 ? "año" : "años"} de operación (cada año cuesta dinero de operación y combustible)`;
+  return L(`${y} ${y === 1 ? "año" : "años"} de operación (cada año cuesta dinero de operación y combustible)`,
+    `${y} ${y === 1 ? "year" : "years"} of operations (each year costs operations money and fuel)`);
 }
 
 function panelParts(d, role) {
@@ -191,10 +205,10 @@ function panelParts(d, role) {
     for (const id of ids.filter(i => PARTS[i].cat === c)) out.push(partRow(d, id));
   }
   if (role === "com") {
-    out.push(h("h3", null, "Red de estaciones terrestres (segmento terrestre)"));
+    out.push(h("h3", null, L("Red de estaciones terrestres (segmento terrestre)", "Ground station network (ground segment)")));
     out.push(h("div", { class: "grid2" }, Object.entries(NETWORKS).map(([id, n]) =>
       h("button", { type: "button", class: "orbit", "aria-pressed": String(d.network === id), onclick: () => { d.network = id; render(); } },
-        h("b", null, `${n.name} · ${moneyS(n.costPerYear)}/año`), h("span", null, n.desc)))));
+        h("b", null, `${n.name} · ${moneyS(n.costPerYear)}${L("/año", "/year")}`), h("span", null, n.desc)))));
   }
   return h("div", null, out);
 }
@@ -202,13 +216,13 @@ function panelParts(d, role) {
 function partRow(d, id) {
   const p = PARTS[id], n = d.parts[id] || 0;
   const stats = [`${fmtN(p.mass)} kg`, moneyS(p.cost)];
-  if (p.power) stats.push(`usa ${p.power} W`);
-  if (p.solar) stats.push(`+${p.solar} W con Sol`);
-  if (p.rtg) stats.push(`+${p.rtg} W siempre`);
+  if (p.power) stats.push(L(`usa ${p.power} W`, `uses ${p.power} W`));
+  if (p.solar) stats.push(L(`+${p.solar} W con Sol`, `+${p.solar} W in sunlight`));
+  if (p.rtg) stats.push(L(`+${p.rtg} W siempre`, `+${p.rtg} W always`));
   if (p.wh) stats.push(`${p.wh} Wh`);
-  if (p.fuel) stats.push(`${p.fuel} kg de combustible`);
+  if (p.fuel) stats.push(L(`${p.fuel} kg de combustible`, `${p.fuel} kg of fuel`));
   if (p.rate) stats.push(`${p.rate} Mbps`);
-  if (p.data) stats.push(`genera ${p.data} Mbps`);
+  if (p.data) stats.push(L(`genera ${p.data} Mbps`, `generates ${p.data} Mbps`));
   const set = v => { d.parts[id] = Math.max(0, Math.min(p.max, v)); if (!d.parts[id]) delete d.parts[id]; render(); };
   // Only one computer and one attitude system at a time: picking one swaps the other.
   const swap = v => {
@@ -219,12 +233,12 @@ function partRow(d, id) {
     set(v);
   };
   return h("div", { class: "part" },
-    h("div", null, h("div", { class: "name" }, p.name, p.advanced ? h("span", { class: "pill", style: "margin-left:6px" }, "avanzado") : null),
+    h("div", null, h("div", { class: "name" }, p.name, p.advanced ? h("span", { class: "pill", style: "margin-left:6px" }, L("avanzado", "advanced")) : null),
       h("div", { class: "stats" }, stats.join(" · "))),
     h("div", { class: "counter" },
-      h("button", { type: "button", "aria-label": "Quitar " + p.name, disabled: n === 0, onclick: () => swap(n - 1) }, "−"),
+      h("button", { type: "button", "aria-label": L("Quitar ", "Remove ") + p.name, disabled: n === 0, onclick: () => swap(n - 1) }, "−"),
       h("output", { "aria-live": "polite" }, n),
-      h("button", { type: "button", "aria-label": "Agregar " + p.name, disabled: n >= p.max, onclick: () => swap(n + 1) }, "+")),
+      h("button", { type: "button", "aria-label": L("Agregar ", "Add ") + p.name, disabled: n >= p.max, onclick: () => swap(n + 1) }, "+")),
     h("div", { class: "desc" }, p.desc));
 }
 
@@ -244,33 +258,41 @@ function dashboard(d, r) {
   const fuelState = !r.arrives ? "bad" : r.fuel < r.fuelNeeded ? "warn" : "";
   const sciState = r.science >= r.goal ? "" : r.science >= 0.6 * r.goal ? "warn" : "bad";
   const canLaunch = r.blockers.length === 0;
+  const lifeNote = r.lifeLimiter === "radiacion" ? L("La radiación dañará la computadora comercial.", "Radiation will damage the commercial computer.")
+    : r.lifeLimiter === "combustible" ? L("El combustible no alcanza para todos los años.", "There isn't enough fuel for every year.")
+    : r.lifeLimiter === "arrastre" ? L("Sin motor, la atmósfera la hará caer.", "Without an engine, the atmosphere will bring it down.") : null;
   return h("div", null,
     craftSvg(d),
-    h("div", { class: "seg" }, "Segmento de lanzamiento"),
-    meter("Masa / capacidad del cohete", `${fmtN(r.wetMass)} / ${fmtN(r.capacity)} kg`, r.capacity ? r.wetMass / r.capacity : 1, massState,
-      `Incluye ${fmtN(r.structure)} kg de estructura, que crece con todo lo que agregas.`),
-    meter("Costo / presupuesto", `${moneyS(r.cost)} / ${moneyS(r.budget)}`, r.sandbox ? null : r.cost / r.budget, costState,
-      `Piezas ${moneyS(r.costParts)} · cohete ${moneyS(r.costLaunch)} · desarrollo ${moneyS(r.costDev)} · operación ${moneyS(r.costOps)}`),
-    h("div", { class: "seg" }, "Segmento espacial"),
-    meter("Energía: genera / consume", `${fmtN(r.gen)} / ${fmtN(r.load)} W`, r.load ? r.gen / r.load : 1, powerState,
-      orb.sun < 1 ? `En ${orb.short} los paneles reciben ${pctS(orb.sun)} de la luz.` : `A la sombra ${pctS(orb.eclipseFrac)} del tiempo.`),
-    orb.eclipseFrac > 0 ? meter("Batería para la sombra", `${fmtN(r.battery)} / ${fmtN(r.batteryNeed)} Wh`, r.batteryNeed ? r.battery / r.batteryNeed : 1,
+    h("div", { class: "seg" }, L("Segmento de lanzamiento", "Launch segment")),
+    meter(L("Masa / capacidad del cohete", "Mass / rocket capacity"), `${fmtN(r.wetMass)} / ${fmtN(r.capacity)} kg`, r.capacity ? r.wetMass / r.capacity : 1, massState,
+      L(`Incluye ${fmtN(r.structure)} kg de estructura, que crece con todo lo que agregas.`, `Includes ${fmtN(r.structure)} kg of structure, which grows with everything you add.`)),
+    meter(L("Costo / presupuesto", "Cost / budget"), `${moneyS(r.cost)} / ${moneyS(r.budget)}`, r.sandbox ? null : r.cost / r.budget, costState,
+      L(`Piezas ${moneyS(r.costParts)} · cohete ${moneyS(r.costLaunch)} · desarrollo ${moneyS(r.costDev)} · operación ${moneyS(r.costOps)}`,
+        `Parts ${moneyS(r.costParts)} · rocket ${moneyS(r.costLaunch)} · development ${moneyS(r.costDev)} · operations ${moneyS(r.costOps)}`)),
+    h("div", { class: "seg" }, L("Segmento espacial", "Space segment")),
+    meter(L("Energía: genera / consume", "Power: generated / used"), `${fmtN(r.gen)} / ${fmtN(r.load)} W`, r.load ? r.gen / r.load : 1, powerState,
+      orb.sun < 1 ? L(`En ${orb.short} los paneles reciben ${pctS(orb.sun)} de la luz.`, `At ${orb.short} the panels get ${pctS(orb.sun)} of the light.`)
+        : L(`A la sombra ${pctS(orb.eclipseFrac)} del tiempo.`, `In shadow ${pctS(orb.eclipseFrac)} of the time.`)),
+    orb.eclipseFrac > 0 ? meter(L("Batería para la sombra", "Battery for the shadow"), `${fmtN(r.battery)} / ${fmtN(r.batteryNeed)} Wh`, r.batteryNeed ? r.battery / r.batteryNeed : 1,
       r.battery < r.batteryNeed ? "warn" : "") : null,
-    meter("Combustible", `${fmtN(r.fuel)} / ${fmtN(r.fuelNeeded)} kg`, r.fuelNeeded ? r.fuel / r.fuelNeeded : 1, fuelState,
-      r.fuelArrive ? `${fmtN(r.fuelArrive)} kg para llegar y ${fmt1(r.fuelPerYear)} kg por año para mantener la órbita.` : `${fmt1(r.fuelPerYear)} kg por año para mantener la órbita.`),
-    meter("Vida útil esperada", `${fmt1(r.lifetime)} de ${d.years} años`, r.lifetime / d.years, r.lifetime < d.years ? "warn" : "",
-      r.lifeLimiter === "radiacion" ? "La radiación dañará la computadora comercial." : r.lifeLimiter === "combustible" ? "El combustible no alcanza para todos los años." : r.lifeLimiter === "arrastre" ? "Sin motor, la atmósfera la hará caer." : null),
-    h("div", { class: "seg" }, "Segmento terrestre"),
-    meter("Datos: genera / puede enviar", `${fmt1(r.dataPerDay)} / ${fmt1(r.downPerDay)} Gb/día`, r.dataPerDay ? r.dataFactor : null, dataState,
-      `Contacto con estaciones: ${pctS(r.contact)} del día${r.recorder ? " · con grabadora" : " · sin grabadora"}`),
-    h("div", { class: "seg" }, "Segmento de usuarios (ciencia)"),
-    meter("Ciencia esperada / meta", `${fmtN(r.science)} / ${r.goal}`, r.science / r.goal, sciState, "Antes de las sorpresas del viaje."),
+    meter(L("Combustible", "Fuel"), `${fmtN(r.fuel)} / ${fmtN(r.fuelNeeded)} kg`, r.fuelNeeded ? r.fuel / r.fuelNeeded : 1, fuelState,
+      r.fuelArrive
+        ? L(`${fmtN(r.fuelArrive)} kg para llegar y ${fmt1(r.fuelPerYear)} kg por año para mantener la órbita.`, `${fmtN(r.fuelArrive)} kg to arrive and ${fmt1(r.fuelPerYear)} kg per year to hold the orbit.`)
+        : L(`${fmt1(r.fuelPerYear)} kg por año para mantener la órbita.`, `${fmt1(r.fuelPerYear)} kg per year to hold the orbit.`)),
+    meter(L("Vida útil esperada", "Expected lifetime"), L(`${fmt1(r.lifetime)} de ${d.years} años`, `${fmt1(r.lifetime)} of ${d.years} years`), r.lifetime / d.years, r.lifetime < d.years ? "warn" : "", lifeNote),
+    h("div", { class: "seg" }, L("Segmento terrestre", "Ground segment")),
+    meter(L("Datos: genera / puede enviar", "Data: generated / can send"), L(`${fmt1(r.dataPerDay)} / ${fmt1(r.downPerDay)} Gb/día`, `${fmt1(r.dataPerDay)} / ${fmt1(r.downPerDay)} Gb/day`),
+      r.dataPerDay ? r.dataFactor : null, dataState,
+      L(`Contacto con estaciones: ${pctS(r.contact)} del día${r.recorder ? " · con grabadora" : " · sin grabadora"}`,
+        `Station contact: ${pctS(r.contact)} of the day${r.recorder ? " · with recorder" : " · no recorder"}`)),
+    h("div", { class: "seg" }, L("Segmento de usuarios (ciencia)", "User segment (science)")),
+    meter(L("Ciencia esperada / meta", "Expected science / goal"), `${fmtN(r.science)} / ${r.goal}`, r.science / r.goal, sciState, L("Antes de las sorpresas del viaje.", "Before any surprises on the way.")),
     (r.blockers.length || r.warnings.length) ? h("ul", { class: "alerts" },
       ...r.blockers.map(b => h("li", { class: "block" }, "⛔ " + b)), ...r.warnings.map(w => h("li", null, "⚠️ " + w))) : null,
     h("button", { type: "button", class: "primary big", style: "width:100%", disabled: !canLaunch, onclick: launch },
-      canLaunch ? "🚀 ¡Lanzar!" : "Resuelve lo marcado con ⛔"),
+      canLaunch ? L("🚀 ¡Lanzar!", "🚀 Launch!") : L("Resuelve lo marcado con ⛔", "Fix the items marked ⛔")),
     h("div", { class: "row", style: "margin-top:8px" },
-      h("button", { type: "button", class: "small", onclick: shareDesign }, "🔗 Copiar diseño")));
+      h("button", { type: "button", class: "small", onclick: shareDesign }, L("🔗 Copiar diseño", "🔗 Copy design"))));
 }
 
 /* Spacecraft drawing that grows with the parts you add. */
@@ -278,7 +300,7 @@ function craftSvg(d) {
   const ns = "http://www.w3.org/2000/svg";
   const s = document.createElementNS(ns, "svg");
   s.setAttribute("viewBox", "0 0 360 190"); s.id = "craft"; s.setAttribute("role", "img");
-  s.setAttribute("aria-label", "Dibujo de tu nave");
+  s.setAttribute("aria-label", L("Dibujo de tu nave", "Drawing of your spacecraft"));
   const add = (tag, a) => { const e = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); s.append(e); return e; };
   const c = id => d.parts[id] || 0;
   const cx = 180, cy = 100;
@@ -311,15 +333,18 @@ function craftSvg(d) {
     add("rect", { x: cx - bodyW / 2 + 6 + (k % 4) * 13, y: cy - 8 + Math.floor(k / 4) * 13, width: 10, height: 10, rx: 2, fill: colors[k % colors.length] });
   });
   if (!Object.keys(d.parts).length) {
-    const t = add("text", { x: cx, y: 180, fill: "#a3acca", "font-size": 12, "text-anchor": "middle" }); t.textContent = "Tu nave está vacía: agrega piezas en cada rol";
+    const t = add("text", { x: cx, y: 180, fill: "#a3acca", "font-size": 12, "text-anchor": "middle" });
+    t.textContent = L("Tu nave está vacía: agrega piezas en cada rol", "Your spacecraft is empty: add parts in each role");
   }
   return s;
 }
 
+function encodeDesign(d) { return btoa(unescape(encodeURIComponent(JSON.stringify(d)))); }
 function shareDesign() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(G.design))));
-  const url = location.origin + location.pathname + "#d=" + code;
-  navigator.clipboard.writeText(url).then(() => alert("Enlace del diseño copiado. Ábrelo en otro dispositivo para comparar."), () => prompt("Copia este enlace:", url));
+  const url = location.origin + location.pathname + "#d=" + encodeDesign(G.design);
+  navigator.clipboard.writeText(url).then(
+    () => alert(L("Enlace del diseño copiado. Ábrelo en otro dispositivo para comparar.", "Design link copied. Open it on another device to compare.")),
+    () => prompt(L("Copia este enlace:", "Copy this link:"), url));
 }
 
 /* ---------------- Simulation ---------------- */
@@ -335,8 +360,8 @@ function simTick() {
   stepRun(s);
   if (s.done && !s.pending) {
     clearInterval(G.timer); G.timer = null;
-    G.outcome = finishRun(s, team() ? ROLE_ORDER : ROLE_ORDER);
-    G.history.unshift({ scenario: G.design.scenario, orbit: G.design.orbit, cost: s.r.cost + s.extraCost, mass: s.r.wetMass, science: G.outcome.science, points: G.outcome.score.points, design: JSON.parse(JSON.stringify(G.design)) });
+    G.outcome = finishRun(s, ROLE_ORDER);
+    G.history.unshift({ scenario: G.design.scenario, orbit: G.design.orbit, cost: s.r.cost + s.extraCost, mass: s.r.wetMass, science: G.outcome.science, points: G.outcome.score.points });
     setTimeout(() => show("report"), 700);
   }
   render();
@@ -348,28 +373,31 @@ function viewSim() {
   const node = h("div", { class: "sim" },
     h("div", null, spaceSvg(s)),
     h("aside", { class: "card" },
-      h("h2", null, `Mes ${s.month} de ${Math.max(s.lifeMonths, s.month)}`),
-      !s.arrived ? h("p", { class: "muted" }, "⚠️ No había combustible para frenar: la nave pasa de largo...") : null,
-      meter("Ciencia lograda / meta", `${fmtN(sci)} / ${r.goal}`, sci / r.goal, sci >= r.goal ? "" : "warn"),
-      meter("Datos recibidos en la Tierra", `${fmtN(s.dataSent)} Gb`, null),
-      meter("Combustible restante", `${fmtN(s.fuel)} kg`, r.fuel ? s.fuel / r.fuel : 0, s.fuel < r.fuel * 0.15 ? "warn" : ""),
-      meter("Gasto extra por imprevistos", moneyS(s.extraCost), null),
-      h("h3", null, "Bitácora"),
-      h("ul", { class: "why small" }, s.eventLog.length ? s.eventLog.map(e => h("li", { class: e.bad ? "bad" : "" }, `${e.title}: ${e.result}`)) : h("li", null, `Rumbo a ${orb.short}...`))));
+      h("h2", null, L(`Mes ${s.month} de ${Math.max(s.lifeMonths, s.month)}`, `Month ${s.month} of ${Math.max(s.lifeMonths, s.month)}`)),
+      !s.arrived ? h("p", { class: "muted" }, L("⚠️ No había combustible para frenar: la nave pasa de largo...", "⚠️ There was no fuel to brake: the spacecraft flies right past...")) : null,
+      meter(L("Ciencia lograda / meta", "Science so far / goal"), `${fmtN(sci)} / ${r.goal}`, sci / r.goal, sci >= r.goal ? "" : "warn"),
+      meter(L("Datos recibidos en la Tierra", "Data received on Earth"), `${fmtN(s.dataSent)} Gb`, null),
+      meter(L("Combustible restante", "Fuel left"), `${fmtN(s.fuel)} kg`, r.fuel ? s.fuel / r.fuel : 0, s.fuel < r.fuel * 0.15 ? "warn" : ""),
+      meter(L("Gasto extra por imprevistos", "Extra spending on surprises"), moneyS(s.extraCost), null),
+      h("h3", null, L("Bitácora", "Mission log")),
+      h("ul", { class: "why small" }, s.eventLog.length
+        ? s.eventLog.map(e => h("li", { class: e.bad ? "bad" : "" }, `${e.title}: ${e.result}`))
+        : h("li", null, L(`Rumbo a ${orb.short}...`, `Heading to ${orb.short}...`)))));
   if (s.pending) node.append(eventModal(s));
   return node;
 }
 
 function eventModal(s) {
   const ev = s.pending, role = ROLES[ev.role];
+  const who = `${role.emoji} ${role.name}${team() ? " (" + ownerOf(ev.role) + ")" : ""}`;
   return h("div", { class: "modal-wrap", role: "dialog", "aria-modal": "true", "aria-labelledby": "evTitle" },
     h("div", { class: "modal" },
       h("h3", { id: "evTitle" }, ev.title),
-      h("div", { class: "who" }, `Decide ${role.emoji} ${role.name}${team() ? " (" + ownerOf(ev.role) + ")" : ""}, consultando al equipo`),
+      h("div", { class: "who" }, L(`Decide ${who}, consultando al equipo`, `${who} decides, after talking with the team`)),
       h("p", null, ev.text),
       ...ev.options.map((o, i) => {
         const ok = !o.enabled || o.enabled(s, s.d, s.r);
-        return h("button", { type: "button", disabled: !ok, onclick: () => { chooseOption(s, i); render(); } }, o.label + (ok ? "" : " (no es posible)"));
+        return h("button", { type: "button", disabled: !ok, onclick: () => { chooseOption(s, i); render(); } }, o.label + (ok ? "" : L(" (no es posible)", " (not possible)")));
       })));
 }
 
@@ -377,10 +405,11 @@ function spaceSvg(s) {
   const ns = "http://www.w3.org/2000/svg", d = s.d;
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", "0 0 600 380"); svg.id = "space";
-  svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Animación de la nave en órbita");
+  svg.setAttribute("role", "img"); svg.setAttribute("aria-label", L("Animación de la nave en órbita", "Animation of the spacecraft in orbit"));
   const add = (tag, a, txt) => { const e = document.createElementNS(ns, tag); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (txt) e.textContent = txt; svg.append(e); return e; };
   for (let i = 0; i < 90; i++) add("circle", { cx: (i * 137) % 600, cy: (i * 89) % 380, r: (i % 3) * .4 + .4, fill: "#5d6890" });
-  const body = { leo: ["#3a7bd5", 60, "Tierra"], geo: ["#3a7bd5", 40, "Tierra"], luna: ["#c9ccd6", 50, "Luna"], l2: ["#3a7bd5", 26, "Tierra"], marte: ["#d1603d", 55, "Marte"] }[d.orbit];
+  const earth = L("Tierra", "Earth");
+  const body = { leo: ["#3a7bd5", 60, earth], geo: ["#3a7bd5", 40, earth], luna: ["#c9ccd6", 50, L("Luna", "Moon")], l2: ["#3a7bd5", 26, earth], marte: ["#d1603d", 55, L("Marte", "Mars")] }[d.orbit];
   const cx = 300, cy = 190;
   if (d.orbit === "l2") add("circle", { cx: 70, cy, r: 30, fill: "#ffd166" });
   add("circle", { cx: d.orbit === "l2" ? 250 : cx, cy, r: body[1], fill: body[0] });
@@ -394,7 +423,7 @@ function spaceSvg(s) {
   add("rect", { x: x - 6, y: y - 4, width: 12, height: 8, fill: "#c9a24a" });
   add("rect", { x: x - 20, y: y - 2, width: 12, height: 4, fill: "#7aa7ff" });
   add("rect", { x: x + 8, y: y - 2, width: 12, height: 4, fill: "#7aa7ff" });
-  if (s.done) add("text", { x: 300, y: 36, fill: "#ffb238", "font-size": 18, "text-anchor": "middle", "font-weight": 700 }, "Fin de la misión");
+  if (s.done) add("text", { x: 300, y: 36, fill: "#ffb238", "font-size": 18, "text-anchor": "middle", "font-weight": 700 }, L("Fin de la misión", "End of mission"));
   return svg;
 }
 
@@ -406,20 +435,18 @@ function saveBoard(b) { try { localStorage.setItem(BOARD_KEY, JSON.stringify(b.s
 function viewReport() {
   const o = G.outcome, d = G.design, r = evaluate(d), sc = SCENARIOS[d.scenario];
   const assign = roleAssignment(G.players.length);
-  const secrets = team() ? h("div", null,
-    h("h3", null, "Objetivos secretos del equipo"),
-    h("ul", { class: "why" }, ...G.players.map((p, i) => assign[i].map(role => {
-      const ok = o.secrets.find(x => x.role === role).ok;
-      return h("li", { class: ok ? "" : "bad" }, `${ok ? "✔" : "✘"} ${p.name || "Jugador " + (i + 1)} (${ROLES[role].name}): ${ROLES[role].secret.text}`);
-    })).flat())) :
-    h("div", null, h("h3", null, "Logros"),
-      h("ul", { class: "why" }, ...ROLE_ORDER.map(role => {
-        const ok = o.secrets.find(x => x.role === role).ok;
-        return h("li", { class: ok ? "" : "bad" }, `${ok ? "✔" : "✘"} ${ROLES[role].secret.text}`);
-      })));
+  const goalItem = (role, who) => {
+    const ok = o.secrets.find(x => x.role === role).ok;
+    return h("li", { class: ok ? "" : "bad" }, `${ok ? "✔" : "✘"} ${who ? who + ` (${ROLES[role].name}): ` : ""}${ROLES[role].secret.text}`);
+  };
+  const secrets = team()
+    ? h("div", null, h("h3", null, L("Objetivos secretos del equipo", "The team's secret goals")),
+        h("ul", { class: "why" }, ...G.players.map((p, i) => assign[i].map(role => goalItem(role, playerName(i)))).flat()))
+    : h("div", null, h("h3", null, L("Logros", "Achievements")),
+        h("ul", { class: "why" }, ...ROLE_ORDER.map(role => goalItem(role, null))));
 
   const board = loadBoard().filter(b => b.scenario === d.scenario).sort((a, b) => b.points - a.points).slice(0, 8);
-  const teamName = G.players.map((p, i) => p.name || "Jugador " + (i + 1)).join(", ");
+  const teamName = G.players.map((p, i) => playerName(i)).join(", ");
   let saved = false;
   const saveBtn = h("button", { type: "button", onclick: () => {
     if (saved) return;
@@ -427,56 +454,110 @@ function viewReport() {
     const b = loadBoard();
     b.push({ scenario: d.scenario, team: teamName, points: o.score.points, cost: o.spent, orbit: d.orbit, difficulty: d.difficulty, date: new Date().toISOString().slice(0, 10) });
     saveBoard(b); render();
-  } }, "🏆 Guardar en el ranking");
+  } }, L("🏆 Guardar en el ranking", "🏆 Save to the leaderboard"));
 
   return h("div", { class: "stack" },
     h("section", { class: "card" },
       h("div", { class: "row", style: "justify-content:space-between;align-items:flex-end" },
         h("div", null,
-          h("h2", null, `Informe de misión · ${sc.emoji} ${sc.name}`),
-          h("div", { class: "score" }, fmtN(o.score.points)), h("div", { class: "muted small" }, "puntos de misión")),
+          h("h2", null, L(`Informe de misión · ${sc.emoji} ${sc.name}`, `Mission report · ${sc.emoji} ${sc.name}`)),
+          h("div", { class: "score" }, fmtN(o.score.points)), h("div", { class: "muted small" }, L("puntos de misión", "mission points"))),
         h("div", { class: "small", style: "text-align:right" },
-          h("div", null, `Ciencia: ${o.science} de ${r.goal} (${pctS(Math.min(1.5, o.score.objective))})`),
-          h("div", null, `Duró ${o.months} meses de ${d.years * 12} planeados`),
-          h("div", null, `Costo final: ${moneyS(o.spent)}${r.sandbox ? "" : " de " + moneyS(r.budget)}`))),
-      h("p", { class: "small muted" }, "Puntos: objetivo científico hasta 500 (+200 si lo superas) · presupuesto ahorrado hasta 200 · vida útil hasta 100 · 50 por cada objetivo secreto cumplido.")),
+          h("div", null, L(`Ciencia: ${o.science} de ${r.goal} (${pctS(Math.min(1.5, o.score.objective))})`, `Science: ${o.science} of ${r.goal} (${pctS(Math.min(1.5, o.score.objective))})`)),
+          h("div", null, L(`Duró ${o.months} meses de ${d.years * 12} planeados`, `Lasted ${o.months} of ${d.years * 12} planned months`)),
+          h("div", null, L(`Costo final: ${moneyS(o.spent)}${r.sandbox ? "" : " de " + moneyS(r.budget)}`, `Final cost: ${moneyS(o.spent)}${r.sandbox ? "" : " of " + moneyS(r.budget)}`)))),
+      h("p", { class: "small muted" }, L(
+        "Puntos: objetivo científico hasta 500 (+200 si lo superas) · presupuesto ahorrado hasta 200 · vida útil hasta 100 · 50 por cada objetivo secreto cumplido.",
+        "Points: science goal up to 500 (+200 if you beat it) · budget saved up to 200 · lifetime up to 100 · 50 for each secret goal met."))),
     h("div", { class: "grid2" },
       h("section", { class: "card" },
-        h("h2", null, "¿Por qué salió así?"),
+        h("h2", null, L("¿Por qué salió así?", "Why did it turn out this way?")),
         h("ul", { class: "why" }, o.why.map(w => h("li", { class: w.bad ? "bad" : "" }, w.text))),
         secrets),
       h("section", { class: "card stack" },
-        o.similar ? h("div", null, h("h2", null, "Tu misión se parece a…"),
+        o.similar ? h("div", null, h("h2", null, L("Tu misión se parece a…", "Your mission looks like…")),
           h("p", { style: "margin:0" }, h("b", null, o.similar.name), " — ", o.similar.text)) : null,
         h("div", null,
-          h("h2", null, "Tus intentos"),
+          h("h2", null, L("Tus intentos", "Your attempts")),
           h("table", null,
-            h("thead", null, h("tr", null, h("th", null, "Órbita"), h("th", { class: "n" }, "Masa"), h("th", { class: "n" }, "Costo"), h("th", { class: "n" }, "Ciencia"), h("th", { class: "n" }, "Puntos"))),
+            h("thead", null, h("tr", null, h("th", null, L("Órbita", "Orbit")), h("th", { class: "n" }, L("Masa", "Mass")), h("th", { class: "n" }, L("Costo", "Cost")), h("th", { class: "n" }, L("Ciencia", "Science")), h("th", { class: "n" }, L("Puntos", "Points")))),
             h("tbody", null, G.history.filter(x => x.scenario === d.scenario).slice(0, 8).map(x => h("tr", null,
               h("td", null, ORBITS[x.orbit].short), h("td", { class: "n" }, fmtN(x.mass) + " kg"), h("td", { class: "n" }, moneyS(x.cost)),
               h("td", { class: "n" }, x.science), h("td", { class: "n" }, fmtN(x.points))))))),
         h("div", null,
-          h("h2", null, "Ranking de este dispositivo"),
+          h("h2", null, L("Ranking de este dispositivo", "Leaderboard on this device")),
           board.length ? h("table", null,
-            h("thead", null, h("tr", null, h("th", null, "Equipo"), h("th", null, "Órbita"), h("th", { class: "n" }, "Puntos"))),
+            h("thead", null, h("tr", null, h("th", null, L("Equipo", "Team")), h("th", null, L("Órbita", "Orbit")), h("th", { class: "n" }, L("Puntos", "Points")))),
             h("tbody", null, board.map(b => h("tr", null, h("td", null, b.team), h("td", null, ORBITS[b.orbit].short), h("td", { class: "n" }, fmtN(b.points))))))
-            : h("p", { class: "muted small" }, "Todavía no hay misiones guardadas."),
+            : h("p", { class: "muted small" }, L("Todavía no hay misiones guardadas.", "No missions saved yet.")),
           h("div", { class: "row", style: "margin-top:8px" }, saveBtn)))),
     h("div", { class: "row" },
-      h("button", { type: "button", class: "primary big", onclick: () => show("design") }, "🔧 Mejorar el diseño y relanzar"),
-      h("button", { type: "button", class: "big", onclick: () => show("start") }, "Nueva misión")));
+      h("button", { type: "button", class: "primary big", onclick: () => show("design") }, L("🔧 Mejorar el diseño y relanzar", "🔧 Improve the design and relaunch")),
+      h("button", { type: "button", class: "big", onclick: () => show("start") }, L("Nueva misión", "New mission"))));
+}
+
+/* ---------------- Language ---------------- */
+const STATE_KEY = "mision-a-lo-loco-estado";
+function switchLanguage() {
+  // Texts are chosen when the page loads, so keep the game state and reload in the other language.
+  try {
+    sessionStorage.setItem(STATE_KEY, JSON.stringify({
+      screen: G.screen === "report" || G.screen === "sim" ? "design" : G.screen,
+      scenario: G.scenario, difficulty: G.difficulty, players: G.players, design: G.design, tab: G.tab, history: G.history
+    }));
+    localStorage.setItem("lang", LANG === "en" ? "es" : "en");
+  } catch (e) { /* storage blocked: the page just stays in its language */ }
+  location.reload();
+}
+function restoreState() {
+  try {
+    const raw = sessionStorage.getItem(STATE_KEY);
+    if (!raw) return false;
+    sessionStorage.removeItem(STATE_KEY);
+    const st = JSON.parse(raw);
+    if (!SCENARIOS[st.scenario] || !DIFFICULTY[st.difficulty]) return false;
+    Object.assign(G, { scenario: st.scenario, difficulty: st.difficulty, tab: ROLES[st.tab] ? st.tab : "dir",
+      players: Array.isArray(st.players) && st.players.length >= 1 && st.players.length <= 4 ? st.players.map(p => ({ name: String(p.name || "").slice(0, 20) })) : [{ name: "" }],
+      history: Array.isArray(st.history) ? st.history.filter(x => ORBITS[x.orbit]) : [] });
+    const d = cleanDesign(st.design);
+    if (d) G.design = d;
+    show(d && (st.screen === "design" || st.screen === "secrets") ? st.screen : "start");
+    return true;
+  } catch (e) { return false; }
 }
 
 /* ---------------- Boot ---------------- */
-document.getElementById("homeBtn").onclick = () => { if (confirm("¿Empezar una misión nueva? Se perderá el diseño actual.")) show("start"); };
+function cleanDesign(d) {
+  if (!d || !SCENARIOS[d.scenario] || !ORBITS[d.orbit] || !LAUNCHERS[d.launcher] || !NETWORKS[d.network] || !DIFFICULTY[d.difficulty]) return null;
+  d.parts = Object.fromEntries(Object.entries(d.parts || {}).filter(([id, n]) => PARTS[id] && Number.isInteger(n) && n > 0 && n <= PARTS[id].max));
+  d.years = Math.max(1, Math.min(10, d.years | 0));
+  return d;
+}
+
 (function boot() {
+  document.documentElement.lang = LANG;
+  document.title = L("Misión a lo Loco", "Crazy Mission");
+  document.getElementById("brand").textContent = L("🚀 Misión a lo Loco", "🚀 Crazy Mission");
+  document.getElementById("tagline").textContent = L("Diseña una misión espacial de verdad: cada decisión tiene un precio.", "Design a real space mission: every decision has a price.");
+  document.getElementById("learnLink").textContent = L("📚 Aprende con The Last Lap", "📚 Learn with The Last Lap");
+  document.getElementById("homeBtn").textContent = L("⟲ Nueva misión", "⟲ New mission");
+  document.getElementById("footText").textContent = L(
+    "Proyecto para NASA Space Apps 2026 · Reto «Space Mission Design Game». Los números están simplificados para jugar, pero siguen las compensaciones reales del diseño de misiones. Las explicaciones paso a paso están en ",
+    "A NASA Space Apps 2026 project · \"Space Mission Design Game\" challenge. The numbers are simplified for play, but follow the real trade-offs of mission design. Step-by-step explanations are in ");
+  const lb = document.getElementById("langBtn");
+  lb.textContent = L("EN", "ES");
+  lb.setAttribute("aria-label", L("Switch to English", "Cambiar a español"));
+  lb.onclick = switchLanguage;
+  document.getElementById("homeBtn").onclick = () => {
+    if (confirm(L("¿Empezar una misión nueva? Se perderá el diseño actual.", "Start a new mission? The current design will be lost."))) show("start");
+  };
+
+  if (restoreState()) return;
   const m = location.hash.match(/#d=([A-Za-z0-9+/=]+)/);
   if (m) {
     try {
-      const d = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
-      if (SCENARIOS[d.scenario] && ORBITS[d.orbit] && LAUNCHERS[d.launcher] && NETWORKS[d.network] && DIFFICULTY[d.difficulty]) {
-        d.parts = Object.fromEntries(Object.entries(d.parts || {}).filter(([id, n]) => PARTS[id] && Number.isInteger(n) && n > 0 && n <= PARTS[id].max));
-        d.years = Math.max(1, Math.min(10, d.years | 0));
+      const d = cleanDesign(JSON.parse(decodeURIComponent(escape(atob(m[1])))));
+      if (d) {
         G.scenario = d.scenario; G.difficulty = d.difficulty; G.design = d;
         history.replaceState(null, "", location.pathname);
         return show("design");
