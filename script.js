@@ -2916,7 +2916,7 @@
       const enter = key !== s.sceneKey;
       s.sceneKey = key;
       root.innerHTML = `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
-          <div class="adv-screen${shake ? ' shake' : ''}">${scene}${crewOverlay()}${banner()}</div>${hud()}</div>
+          <div class="adv-screen${shake ? ' shake' : ''}">${scene}${s.puzzle || s.mini ? '' : crewOverlay()}${banner()}</div>${hud()}</div>
         <div class="adv-panel">${panel}</div></div>`;
       diaryHost.innerHTML = s.diary ? diaryView() : s.achOpen ? achView() : '';
       document.documentElement.classList.toggle('dia-open', !!(s.diary || s.achOpen));
@@ -3519,6 +3519,15 @@
       s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull };
       const d = Object.assign({}, r.d);
       ['health', 'hull'].forEach((k) => { if (d[k] < 0) d[k] = Math.round(d[k] * LV.dmg); });
+      // El dinero no baja de 0: lo que falta se paga con salud (más trabajo y más nervios)
+      let broke = null;
+      if (d.budget < 0 && s.budget + d.budget < 0) {
+        const short = -(s.budget + d.budget);
+        d.budget = -Math.max(0, s.budget);
+        const hurt = Math.min(15, Math.ceil(short / 5));
+        d.health = (d.health || 0) - hurt;
+        broke = B(`💸 No había dinero suficiente: faltaban ${short} M€ y el equipo tuvo que apañárselas solo (−${hurt} % salud).`, `💸 There was not enough money: €${short}M short, so the crew had to manage on their own (−${hurt}% health).`);
+      }
       const cd = Object.assign({}, d);
       if (r.science) s.science = (s.science || 0) + r.science;
       if (r.landed) s.landed = e.id === 'land' ? c.fx : s.landed;
@@ -3538,6 +3547,7 @@
           extra = B(`⚠️ Se acaban las provisiones: ${days - eaten} días a media ración.`, `⚠️ Supplies run out: ${days - eaten} days on half rations.`);
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
+      if (broke) extra = extra ? B(`${broke.es} ${extra.es}`, `${broke.en} ${extra.en}`) : broke;
       s.outcome = { choice: c.title, text: r.text, d, cd, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad, mini: r.mini };
       s.log.push({ day: e.day, icon: e.icon, place: e.place, choice: c.title, text: r.text, d: Object.assign({}, d), tone: toneOf(s.outcome) });
       s.end = verdict(e);
