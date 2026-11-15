@@ -2,7 +2,7 @@
 
 Web educativa e interactiva sobre una misión hipotética a Marte que usa la Luna como honda gravitatoria. Incluye un juego en el que diriges la misión: eliges el objetivo científico, el cohete, el equipo, las provisiones y los instrumentos, y tomas decisiones desde el despegue hasta el aterrizaje en Marte.
 
-Abre `index.html` en el navegador para verla. No necesita instalación ni compilación. Está en español e inglés.
+Abre `index.html` en el navegador para verla. No necesita instalación ni compilación. Se abre en inglés y se puede cambiar a español con el botón de la bandera.
 
 ## Hecha con ayuda de Claude
 
