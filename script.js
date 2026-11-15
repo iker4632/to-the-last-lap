@@ -9,8 +9,9 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Idioma: 'es' (por defecto) o 'en'. L(es, en) devuelve el texto en el idioma activo.
-  let LANG = 'es';
-  try { if (localStorage.getItem('lang') === 'en') LANG = 'en'; } catch (e) { /* sin almacenamiento */ }
+  // La web se abre en inglés; si el visitante eligió español con el botón, se recuerda
+  let LANG = 'en';
+  try { if (localStorage.getItem('lang') === 'es') LANG = 'es'; } catch (e) { /* sin almacenamiento */ }
   const L = (es, en) => (LANG === 'en' ? en : es);
   const onLang = []; // funciones que refrescan textos generados por JS al cambiar de idioma
   let photoApi = null; // la rellena el Fotógrafo de Marte para poder jugarlo dentro de la misión
