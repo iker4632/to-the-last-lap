@@ -9,8 +9,8 @@ window.I18N_EN = {
   'Misión The Last Lap': 'Mission <span class="grad">The Last Lap</span>',
   '¿Cómo llegaríamos a Marte aprovechando el empujón de la Luna y el mejor momento de las órbitas? Te lo contamos paso a paso, con animaciones.':
     'How could we get to Mars using a push from the Moon and the best moment in the planets’ orbits? We explain it step by step, with animations.',
-  'Ver la misión ▶ 🎮 Jugar Empezar por lo básico':
-    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn accent" href="#juego">🎮 Play</a> <a class="btn ghost" href="#orbitas">Start with the basics</a>',
+  'Ver la misión ▶ Empezar por lo básico':
+    '<a class="btn primary" href="#mision">See the mission ▶</a> <a class="btn ghost" href="#orbitas">Start with the basics</a>',
   '384.000 kmde la Tierra a la Luna': '<strong>384,000 km</strong><span>from the Earth to the Moon</span>',
   '~26 mesesentre dos oposiciones de Marte': '<strong>~26 months</strong><span>between two oppositions of Mars</span>',
   '7–9 mesesde viaje hasta Marte': '<strong>7–9 months</strong><span>of travel to Mars</span>',
@@ -176,7 +176,6 @@ window.I18N_EN = {
 
   // Etiquetas de accesibilidad (aria-label)
   'Secciones': 'Sections',
-  'Menú de secciones': 'Sections menu',
   'Animación del Sol con la Tierra, la Luna y Marte girando en sus órbitas': 'Animation of the Sun with the Earth, the Moon and Mars moving along their orbits',
   'Esquema: el Sol, la Tierra y Marte alineados durante la oposición': 'Diagram: the Sun, the Earth and Mars lined up during opposition',
   'Animación: una nave pasa por detrás de la Luna en movimiento y sale con más velocidad': 'Animation: a spacecraft passes behind the moving Moon and leaves with more speed',
@@ -187,8 +186,8 @@ window.I18N_EN = {
   'Distancia Tierra–Marte': 'Earth–Mars distance',
 
   // ---------- Ampliación: magnetismo, 7 pasos, orientación, regreso y estación ----------
-  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar":
-    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a>",
+  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar Juegos":
+    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a> <a href=\"#juegos\">Games</a>",
   "Escudo invisible":
     "An invisible shield",
   "¿Marte tiene campo magnético?":
@@ -477,18 +476,36 @@ window.I18N_EN = {
     "<strong>Hint:</strong> aim at where the Moon <em>will be</em>, not where it is, and pass behind it (on the side it is coming from). Simplified and with no air: the Earth and the Moon are enlarged and the Moon’s gravity is exaggerated.",
   "Reto: lanza una pelota desde la Tierra para que pase junto a la Luna y salga impulsada por el efecto honda":
     "Challenge: throw a ball from the Earth so it passes the Moon and gets boosted by the slingshot effect",
-
-  // ---------- Juego: tú diriges la misión ----------
-  "🎮 Juego":
-    "🎮 Game",
-  "◀ Volver a la web":
-    "◀ Back to the website",
-  "Juego · Tú diriges la misión":
-    "Game · You run the mission",
-  "Del despegue a Marte: tus decisiones":
-    "From launch to Mars: your decisions",
-  "Eres la directora o el director de la misión. Tienes un presupuesto de 1.000 millones de euros para elegir el cohete, el equipo, las provisiones y las herramientas. Después, durante el viaje, cada decisión gasta dinero, combustible, provisiones o pone en juego la salud de la tripulación y la nave. ¿Llegaréis a Marte?":
-    "You are the mission director. You have a <strong>budget of 1,000 million euros</strong> to choose the rocket, the crew, the supplies and the tools. Then, during the journey, every decision costs <strong>money, fuel or supplies</strong>, or puts the <strong>crew’s health</strong> and the <strong>ship</strong> at risk. Will you make it to Mars?",
-  "Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.":
-    "A made-up story for learning purposes. Prices, odds and figures are simplified so the game is playable.",
+  "Juegos":
+    "Games",
+  "Ahora mandas tú":
+    "Now you’re in charge",
+  "Dos retos más: haz de cámara de la nave en órbita de Marte y toma las decisiones de la misión, desde la cuenta atrás hasta la última foto.":
+    "Two more challenges: be the spacecraft’s camera in orbit around Mars, and make the mission’s decisions, from the countdown to the very last photo.",
+  "📸 Fotógrafo de Marte":
+    "📸 Mars photographer",
+  "La nave da una vuelta a Marte a 400 km de altura y el suelo pasa a toda velocidad por debajo. Toca o haz clic donde quieras hacer cada foto. Tienes 8 fotos y una sola vuelta, así que no las gastes en la zona de noche.":
+    "The spacecraft circles Mars <strong>400 km up</strong> and the ground races past below. <strong>Tap or click</strong> wherever you want to take each photo. You have <strong>8 photos</strong> and a single orbit, so don’t waste them on the night side.",
+  "🧊Casquete polar":
+    "<span class=\"goal-stars\">🧊</span>Polar ice cap",
+  "🌋Monte Olimpo":
+    "<span class=\"goal-stars\">🌋</span>Olympus Mons",
+  "🥔Fobos":
+    "<span class=\"goal-stars\">🥔</span>Phobos",
+  "🏞️Valles Marineris":
+    "<span class=\"goal-stars\">🏞️</span>Valles Marineris",
+  "🤖Un rover":
+    "<span class=\"goal-stars\">🤖</span>A rover",
+  "🌪️Tormenta de polvo":
+    "<span class=\"goal-stars\">🌪️</span>Dust storm",
+  "▶ Empezar la vuelta":
+    "▶ Start the orbit",
+  "Cuanto más centrado esté el objetivo en el visor, más estrellas. Simplificado: el mapa no está a escala y en la realidad una vuelta dura casi 2 horas, no 50 segundos.":
+    "The more centred the target is in the viewfinder, the more stars you get. Simplified: the map is not to scale, and a real orbit takes almost 2 hours, not 50 seconds.",
+  "🧭 Tú decides: la misión":
+    "🧭 You decide: the mission",
+  "Eres quien dirige el vuelo. Tu equipo te dará su opinión, pero la última palabra es tuya, y cada decisión cambia lo que pasa después. Hay 5 finales distintos: ¿los encontrarás todos?":
+    "You are the flight director. Your team will give you their opinion, but <strong>the final word is yours</strong>, and every decision changes what happens next. There are <strong>5 different endings</strong>: can you find them all?",
+  "Juego: el suelo de Marte pasa por debajo de la nave; toca para hacer fotos de los lugares de la lista":
+    "Game: the surface of Mars slides beneath the spacecraft; tap to photograph the places on the list",
 };
