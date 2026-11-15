@@ -187,8 +187,8 @@ window.I18N_EN = {
   'Distancia Tierra–Marte': 'Earth–Mars distance',
 
   // ---------- Ampliación: magnetismo, 7 pasos, orientación, regreso y estación ----------
-  "Órbitas Oposición Magnetismo Efecto honda La misión Segmentos Visor 3D Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar Recursos Cómo se hizo":
-    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#segmentos\">Segments</a> <a href=\"#visor3d\">3D viewer</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a> <a href=\"#recursos\">Resources</a> <a href=\"#transparencia\">How it was made</a>",
+  "Órbitas Oposición Magnetismo Efecto honda La misión Segmentos Visor 3D Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar Recursos Impacto Cómo se hizo":
+    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#segmentos\">Segments</a> <a href=\"#visor3d\">3D viewer</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a> <a href=\"#recursos\">Resources</a> <a href=\"#impacto\">Impact</a> <a href=\"#transparencia\">How it was made</a>",
   "Escudo invisible":
     "An invisible shield",
   "¿Marte tiene campo magnético?":
@@ -801,4 +801,112 @@ window.I18N_EN = {
     "The more centred the target is in the viewfinder, the more stars you get. Simplified: the map is not to scale, and a real orbit takes almost 2 hours, not 50 seconds.",
   "Juego: el suelo de Marte pasa por debajo de la nave; toca para hacer fotos de los lugares de la lista":
     "Game: the surface of Mars slides beneath the spacecraft; tap to photograph the places on the list",
+
+  // ---------- Impacto ----------
+  "Impacto":
+    "Impact",
+  "¿Por qué importa The Last Lap?":
+    "Why does The Last Lap matter?",
+  "Los recursos de diseño de misiones de la NASA son muy potentes, pero están escritos para profesionales. The Last Lap los convierte en algo que cualquier estudiante puede entender jugando.":
+    "NASA’s mission design resources are very powerful, but they are written for professionals. <strong>The Last Lap turns them into something any student can understand by playing.</strong>",
+  "El problema":
+    "The problem",
+  "Un estudiante ve despegar un cohete, pero no sabe por qué se lanza ese día, cómo la Luna puede darle un empujón gratis ni cómo los ingenieros reparten el dinero, el riesgo y la ciencia. Los documentos que lo explican (segmentos de misión, niveles CML, estudios de alternativas, trayectorias de GMAT) son técnicos y casi siempre están en inglés.":
+    "A student watches a rocket launch, but does not know why it launches on that day, how the Moon can give it a free push, or how engineers balance money, risk and science. The documents that explain it (mission segments, CML levels, trade studies, GMAT trajectories) are technical and usually only in English.",
+  "A quién ayuda":
+    "Who it helps",
+  "Estudiantes de 12 a 18 años.":
+    "Students aged 12 to 18.",
+  "Docentes de ciencias y tecnología.":
+    "Science and technology teachers.",
+  "Equipos que preparan retos como el NASA Space Apps.":
+    "Teams preparing for challenges like NASA Space Apps.",
+  "Cualquier persona curiosa por el espacio.":
+    "Anyone curious about space.",
+  "Por qué puede llegar a mucha gente":
+    "Why it can reach many people",
+  "Es gratis y no pide registro.":
+    "It is free and needs no sign-up.",
+  "Funciona en móvil, tableta y ordenador, sin instalar nada.":
+    "It works on phones, tablets and computers, with nothing to install.",
+  "Está en inglés y en español.":
+    "It is in English and Spanish.",
+  "Se entiende jugando, sin conocimientos previos.":
+    "You learn by playing, with no prior knowledge.",
+  "Qué se aprende y dónde":
+    "What you learn and where",
+  "Concepto":
+    "Concept",
+  "Dónde se trabaja":
+    "Where it is covered",
+  "Para docentes: una clase de 45 minutos":
+    "For teachers: a 45-minute lesson",
+  "10 min":
+    "10 min",
+  "20 min":
+    "20 min",
+  "5 min":
+    "5 min",
+  "Introducción":
+    "Introduction",
+  "Ver juntos Órbitas, Oposición y Efecto honda. Pregunta inicial: ¿por qué no vamos a Marte en línea recta?":
+    "Look together at <a href=\"#orbitas\">Orbits</a>, <a href=\"#oposicion\">Opposition</a> and <a href=\"#honda\">Slingshot</a>. Opening question: why don’t we fly to Mars in a straight line?",
+  "Partida por parejas":
+    "Play in pairs",
+  "Jugar una partida de «Tú diriges la misión» en dificultad normal. Anotar qué objetivo eligieron, qué decisión fue la más difícil y por qué.":
+    "Play one game of <a href=\"#juego\">“You run the mission”</a> on normal difficulty. Write down which goal you chose, which decision was the hardest and why.",
+  "Puesta en común":
+    "Class discussion",
+  "Comparar los resultados y las misiones reales que salen al final. Relacionar las decisiones con los 4 segmentos y los niveles CML.":
+    "Compare results and the real missions shown at the end. Link the decisions to <a href=\"#segmentos\">the 4 segments</a> and the CML levels.",
+  "Cierre y evaluación":
+    "Wrap-up and assessment",
+  "Las preguntas del juego y el diario de a bordo sirven como evaluación rápida de lo aprendido.":
+    "The game’s questions and the logbook work as a quick check of what was learned.",
+  "Preguntas para el alumnado":
+    "Questions for students",
+  "¿Por qué se lanza la nave cerca de la oposición de Marte?":
+    "Why is the spacecraft launched near the opposition of Mars?",
+  "¿Qué gana la nave al pasar cerca de la Luna?":
+    "What does the spacecraft gain by passing close to the Moon?",
+  "¿Por qué no se puede hablar en directo con una nave en Marte?":
+    "Why can’t you talk live with a spacecraft at Mars?",
+  "¿Qué harías distinto en tu próxima partida y por qué?":
+    "What would you do differently in your next game, and why?",
+  "Siguientes pasos":
+    "Next steps",
+  "Todavía no hemos medido el impacto con estudiantes. Nuestro siguiente paso es probar la web en clases de nuestra región, usar las preguntas del juego para ver qué conceptos se aprenden y añadir más idiomas.":
+    "We have not yet measured the impact with students. Our next step is to try the website in classrooms in our region, use the game’s questions to see which concepts are learned, and add more languages.",
+  "🪐 Las órbitas y la oposición de Marte":
+    "<span aria-hidden=\"true\">🪐</span> Orbits and the opposition of Mars",
+  "Órbitas, Oposición y visor 3D":
+    "<a href=\"#orbitas\">Orbits</a>, <a href=\"#oposicion\">Opposition</a> and <a href=\"#visor3d\">3D viewer</a>",
+  "🚀 La ventana de lanzamiento":
+    "<span aria-hidden=\"true\">🚀</span> The launch window",
+  "El despegue del juego y la línea de tiempo":
+    "The launch in the <a href=\"#juego\">game</a> and the <a href=\"#cronologia\">timeline</a>",
+  "🌙 El efecto honda":
+    "<span aria-hidden=\"true\">🌙</span> The slingshot effect",
+  "Efecto honda, paso lunar y el minijuego de la Luna":
+    "<a href=\"#honda\">Slingshot</a>, <a href=\"#zoom-luna\">lunar flyby</a> and the Moon mini-game",
+  "🔥 El aerofrenado":
+    "<span aria-hidden=\"true\">🔥</span> Aerobraking",
+  "La misión y el minijuego del aerofrenado":
+    "<a href=\"#mision\">The mission</a> and the aerobraking mini-game",
+  "📡 El retraso de las comunicaciones":
+    "<span aria-hidden=\"true\">📡</span> Communication delays",
+  "Distancias y el minijuego de la antena":
+    "<a href=\"#distancias\">Distances</a> and the antenna mini-game",
+  "🧭 Cómo se diseña una misión: objetivo, niveles CML, segmentos, coste y riesgo":
+    "<span aria-hidden=\"true\">🧭</span> How a mission is designed: goal, CML levels, segments, cost and risk",
+  "La preparación del juego y los 4 segmentos":
+    "The <a href=\"#juego\">game</a> preparation and <a href=\"#segmentos\">the 4 segments</a>",
+  "🧲 Por qué Marte perdió su atmósfera":
+    "<span aria-hidden=\"true\">🧲</span> Why Mars lost its atmosphere",
+  "Magnetismo":
+    "<a href=\"#magnetismo\">Magnetism</a>",
+  "🎾 La gravedad en otros mundos":
+    "<span aria-hidden=\"true\">🎾</span> Gravity on other worlds",
+  "Simulador de gravedad":
+    "<a href=\"#gravedad\">Gravity simulator</a>",
 };
