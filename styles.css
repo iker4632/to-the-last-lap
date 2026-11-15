@@ -1238,3 +1238,34 @@ html.dia-open, html.dia-open body { overflow: hidden; }
 .pg-shot.miss { opacity: .75; }
 @keyframes pg-in { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
 
+
+/* Selector de dificultad separado de las tarjetas */
+.adv-level-title { margin-top: 16px; }
+.adv-level-title + .adv-level { margin-top: 6px; }
+
+/* Capítulo del Fotógrafo de Marte dentro de la misión */
+.adv-body.photo-mode { gap: 12px; }
+@media (min-width: 900px) { .adv-body.photo-mode { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
+.adv-body.photo-mode .adv-viz { position: static; }
+.adv-body.photo-mode .adv-panel { max-height: none; overflow: visible; }
+.adv-body.photo-mode .adv-panel .adv-text { margin-bottom: 4px; }
+#adv-photo-slot .game-card { margin: 0; padding: 12px; }
+#adv-photo-slot #pg-reset { display: none; }
+
+/* Escenas de las variantes */
+.adv-scene .wind-lines path { stroke: rgba(220,230,255,.5); stroke-width: 2; stroke-linecap: round; fill: none; animation: adv-wind 1.4s linear infinite; }
+@keyframes adv-wind { from { transform: translateX(0); opacity: 0; } 20% { opacity: 1; } to { transform: translateX(760px); opacity: 0; } }
+.adv-scene .vapor circle { fill: rgba(235,240,250,.6); animation: adv-rise 2s infinite ease-out; }
+.adv-scene .vapor circle:nth-child(2) { animation-delay: .6s; } .adv-scene .vapor circle:nth-child(3) { animation-delay: 1.2s; }
+.adv-scene .moon-shadow { fill: rgba(0,0,0,.55); }
+.adv-scene .dust-haze { fill: rgba(222,160,110,.35); animation: adv-blink 3s infinite ease-in-out; }
+.adv-scene .junk { transform: translate(600px, 68px); }
+.adv-scene .junk.pass { animation: adv-junk 2.4s .3s both linear; }
+@keyframes adv-junk { from { transform: translate(640px, 62px) rotate(0); } to { transform: translate(-40px, 182px) rotate(-260deg); } }
+.adv-scene .dodge { animation: adv-dodge 1.2s .4s both ease-in-out; }
+@keyframes adv-dodge { to { transform: translateY(-42px); } }
+#adv-photo-slot .game-card { max-width: min(100%, calc((100dvh - 330px) * 16 / 9 + 24px)); margin: 0 auto; }
+#adv-photo-slot .pg-goals { margin-bottom: 8px; }
+#adv-photo-slot .pg-goals li { padding: 5px 9px; font-size: .78rem; }
+#adv-photo-slot .pg-gallery { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+@media (max-width: 600px) { #adv-photo-slot .game-card { max-width: 100%; padding: 8px; } }

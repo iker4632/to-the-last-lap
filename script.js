@@ -13,6 +13,7 @@
   try { if (localStorage.getItem('lang') === 'en') LANG = 'en'; } catch (e) { /* sin almacenamiento */ }
   const L = (es, en) => (LANG === 'en' ? en : es);
   const onLang = []; // funciones que refrescan textos generados por JS al cambiar de idioma
+  let photoApi = null; // la rellena el Fotógrafo de Marte para poder jugarlo dentro de la misión
 
   // Periodos (días) y la oposición de Marte del 19 de febrero de 2027
   const P_EARTH = 365.256, P_MARS = 686.98, P_MOON = 27.32;
@@ -2079,7 +2080,7 @@
       ground: ['📡', B('Segmento terrestre', 'Ground segment')], user: ['🔬', B('Segmento de usuarios', 'User segment')] };
     const EV_SEG = { launch: 'launch', orbit: 'space', moon: 'space', storm: 'space', meteor: 'space', sick: 'space', nav: 'ground', arrive: 'space', land: 'user',
       signal: 'ground', cables: 'space', oxygen: 'space', water: 'space', asteroid: 'user', computer: 'ground', morale: 'ground', sponsor: 'user',
-      goal: 'user', rocket: 'launch', crew: 'space', supplies: 'space', tools: 'space' };
+      launch2: 'launch', launch3: 'launch', orbit2: 'space', moon2: 'space', arrive2: 'space', goal: 'user', rocket: 'launch', crew: 'space', supplies: 'space', tools: 'space' };
     const segChip = (id) => { const sg = SEGS[EV_SEG[id]]; return sg ? `<span class="seg-chip seg-${EV_SEG[id]}" title="${L('Los 4 segmentos de una misión', 'The 4 segments of a mission')}">${sg[0]} ${T(sg[1])}</span>` : ''; };
     const goalOf = () => byId(GOALS, s.goal);
 
@@ -2221,22 +2222,22 @@
         ] },
       { id: 'land', day: TRIP + 5, icon: '🛬', place: B('Aterrizaje', 'Landing'),
         title: B('¿Dónde aterrizáis?', 'Where do you land?'),
-        text: B('Ya estáis en órbita. Es la última decisión: elegir dónde baja el módulo de aterrizaje. Cuanto más interesante es el sitio para la ciencia, más difícil es llegar.',
-          'You are in orbit now. This is the last decision: choosing where the lander goes down. The more interesting the place is for science, the harder it is to reach.'),
+        text: (s) => B(`Ya estáis en órbita. Es la última decisión: elegir dónde baja el módulo de aterrizaje. Cuanto más interesante es el sitio para la ciencia, más difícil es llegar.${s.landDust ? ' ⚠️ Hoy hay polvo en el aire: el riesgo en Jezero y en el polo sube un 10 %.' : ''}`,
+          `You are in orbit now. This is the last decision: choosing where the lander goes down. The more interesting the place is for science, the harder it is to reach.${s.landDust ? ' ⚠️ There is dust in the air today: the risk at Jezero and the pole goes up by 10%.' : ''}`),
         fact: B('Aterrizar en Marte es dificilísimo: la atmósfera es muy fina para frenar solo con paracaídas, pero lo bastante densa para calentar la nave. Por eso se combinan escudo térmico, paracaídas y retrocohetes.',
           'Landing on Mars is extremely hard: the atmosphere is too thin to slow down with parachutes alone, but thick enough to heat the ship. That is why a heat shield, parachutes and retro-rockets are combined.'),
         choices: [
           { fx: 'utopia', title: B('Llanura de Utopía: lisa y segura', 'Utopia Planitia: flat and safe'), hint: B('−5 % combustible · −5 % nave · ciencia +60', '−5% fuel · −5% ship · science +60'), req: { fuel: 5 },
             run: () => ({ science: 60, landed: true, text: B('Un aterrizaje de manual en una llanura enorme. ¡Estáis en Marte!', 'A textbook landing on a huge plain. You are on Mars!'), d: { fuel: -5, hull: -5 } }) },
           { fx: 'jezero', title: B('Cráter Jezero, un antiguo lago', 'Jezero Crater, an ancient lake'), hint: (s) => B(`−6 % combustible · riesgo ${s.crew.includes('pilot') ? 8 : 20} % · ciencia +130`, `−6% fuel · ${s.crew.includes('pilot') ? 8 : 20}% risk · science +130`), req: { fuel: 6 },
-            run: (s) => (roll(s.crew.includes('pilot') ? 0.08 : 0.2)
+            run: (s) => (roll((s.crew.includes('pilot') ? 0.08 : 0.2) + (s.landDust ? 0.1 : 0))
               ? { bad: true, science: 130, landed: true, text: B('Bajáis junto a un antiguo delta de río, pero una roca rompe una pata del módulo.', 'You land next to an ancient river delta, but a rock breaks one of the lander’s legs.'), d: { fuel: -6, hull: -25 } }
               : { science: 130, landed: true, text: B('¡Aterrizaje junto al antiguo delta del río! Aquí trabaja el rover Perseverance buscando rastros de vida.', 'Landing next to the ancient river delta! This is where the Perseverance rover searches for signs of life.'), d: { fuel: -6 } }) },
           { fx: 'pole', title: B('Polo norte, con hielo de agua', 'North pole, with water ice'), hint: B('−8 % combustible · riesgo 35 % · ciencia +180', '−8% fuel · 35% risk · science +180'), req: { fuel: 8 },
-            run: () => (roll(0.35)
+            run: (s) => (roll(0.35 + (s.landDust ? 0.1 : 0))
               ? { bad: true, science: 180, landed: true, text: B('El hielo resbala y el módulo vuelca un poco. Pero habéis encontrado agua.', 'The ice is slippery and the lander tips over a little. But you have found water.'), d: { fuel: -8, hull: -30 } }
               : { science: 180, landed: true, text: B('¡Hielo de agua bajo vuestros pies! Un tesoro para futuras bases en Marte.', 'Water ice under your feet! A treasure for future bases on Mars.'), d: { fuel: -8 } }) },
-          { fx: 'stay', title: B('Quedarse en órbita y estudiar desde arriba', 'Stay in orbit and study from above'), hint: B('Sin riesgo · ciencia +30', 'No risk · science +30'),
+          { fx: 'stay', mini: 'photo', title: B('Quedarse en órbita y hacer fotos (minijuego)', 'Stay in orbit and take photos (mini-game)'), hint: B('Sin riesgo · la ciencia depende de tus fotos (hasta +180)', 'No risk · science depends on your photos (up to +180)'),
             run: () => ({ science: 30, text: B('Desde la órbita fotografiáis todo el planeta. Sin riesgos, aunque sin pisar Marte.', 'From orbit you photograph the whole planet. No risks, but no footsteps on Mars.'), d: {} }) },
         ] },
     ];
@@ -2355,16 +2356,89 @@
             run: () => ({ text: B('La misión es lo primero. Seguís con lo vuestro.', 'The mission comes first. You carry on.'), d: {} }) },
         ] },
     ];
-    const FIXED_IDS = ['launch', 'orbit', 'moon', 'arrive', 'land'];
+    // ---------- Variantes de los capítulos fijos: cada partida empieza y termina de forma distinta ----------
+    const VARIANTS = [
+      { id: 'launch2', scene: 'launch', weather: 'leak', day: 0, icon: '⛽', place: B('Despegue', 'Launch'),
+        title: B('Fuga en el depósito de combustible', 'Leak in the fuel tank'),
+        text: B('En plena cuenta atrás, un sensor detecta una pequeña fuga de combustible en la segunda etapa del cohete. El vapor blanco sale junto a la base.',
+          'In the middle of the countdown, a sensor detects a small fuel leak in the rocket’s second stage. White vapour is escaping near the base.'),
+        fact: B('Muchos lanzamientos se retrasan por fugas pequeñas: en 2022, el despegue de Artemis I se aplazó varias veces por fugas de hidrógeno.', 'Many launches are delayed by small leaks: in 2022, the Artemis I launch was postponed several times because of hydrogen leaks.'),
+        choices: [
+          { fx: 'wait', title: B('Parar y reparar (2 días)', 'Stop and repair (2 days)'), hint: B('−40 M€ · −3 % combustible', '−€40M · −3% fuel'), req: { budget: 40 },
+            run: () => ({ text: B('Los técnicos cambian la junta. Despegue limpio, aunque más caro y algo más tarde en la ventana.', 'The technicians replace the seal. A clean launch, though more expensive and a bit later in the window.'), d: { budget: -40, fuel: -3 } }) },
+          { fx: 'eng', title: B('El ingeniero aprieta la válvula a mano', 'The engineer tightens the valve by hand'), hint: B('−3 % salud · −2 % combustible', '−3% health · −2% fuel'), req: { crew: 'eng' },
+            run: () => ({ text: B('Tomás baja con el traje de protección y cierra la válvula. Frío y nervios, pero funciona.', 'Tomás goes down in a protective suit and closes the valve. Cold and nervous, but it works.'), d: { health: -3, fuel: -2 } }) },
+          { fx: 'now', title: B('Despegar igualmente', 'Launch anyway'), hint: (s) => B(`Gratis · riesgo ${Math.round((s.rocket.risk + 0.2) * 100)} %`, `Free · ${Math.round((s.rocket.risk + 0.2) * 100)}% risk`),
+            run: (s) => (roll(s.rocket.risk + 0.2)
+              ? { bad: true, text: B('La fuga crece durante el ascenso: llegáis a órbita, pero con mucho menos combustible y daños.', 'The leak grows during the climb: you reach orbit, but with much less fuel and some damage.'), d: { fuel: -18, hull: -10 } }
+              : { text: B('La fuga no empeora. Llegáis a órbita perdiendo solo un poco de combustible.', 'The leak does not get worse. You reach orbit losing only a little fuel.'), d: { fuel: -8 } }) },
+        ] },
+      { id: 'launch3', scene: 'launch', weather: 'wind', day: 0, icon: '🌬️', place: B('Despegue', 'Launch'),
+        title: B('Viento fuerte en altura', 'Strong winds aloft'),
+        text: B('Los globos meteorológicos detectan vientos de 200 km/h a 12 km de altura, justo donde el cohete sufre más esfuerzo.',
+          'Weather balloons detect 200 km/h winds 12 km up, exactly where the rocket is under the most stress.'),
+        fact: B('El momento de más esfuerzo del despegue se llama «Max Q»: la presión del aire sobre el cohete es máxima, alrededor de un minuto después de despegar.', 'The moment of greatest stress during launch is called “Max Q”: the air pressure on the rocket peaks about a minute after lift-off.'),
+        choices: [
+          { fx: 'wait', title: B('Esperar un día', 'Wait one day'), hint: B('−20 M€ · −3 % combustible', '−€20M · −3% fuel'), req: { budget: 20 },
+            run: () => ({ text: B('Al día siguiente el viento ha amainado. Despegue tranquilo.', 'The next day the wind has eased. A calm launch.'), d: { budget: -20, fuel: -3 } }) },
+          { fx: 'pilot', title: B('Ajustar la trayectoria de subida', 'Adjust the climb trajectory'), hint: B('−6 % combustible', '−6% fuel'), req: { crew: 'pilot' },
+            run: () => ({ text: B('Valeria programa una subida más suave para atravesar el viento con menos esfuerzo.', 'Valeria programmes a gentler climb to cross the wind with less stress.'), d: { fuel: -6 } }) },
+          { fx: 'now', title: B('Despegar ya', 'Launch now'), hint: (s) => B(`Gratis · riesgo ${Math.round((s.rocket.risk + 0.12) * 100)} %`, `Free · ${Math.round((s.rocket.risk + 0.12) * 100)}% risk`),
+            run: (s) => (roll(s.rocket.risk + 0.12)
+              ? { bad: true, text: B('Una ráfaga sacude el cohete en el Max Q. Llegáis a órbita, pero con la estructura dañada.', 'A gust shakes the rocket at Max Q. You reach orbit, but with a damaged structure.'), d: { hull: -25, fuel: -6 } }
+              : { text: B('El cohete atraviesa el viento sin problemas. ¡Buena decisión!', 'The rocket punches through the wind with no trouble. Good call!'), d: {} }) },
+        ] },
+      { id: 'orbit2', scene: 'debris', day: 1, icon: '🗑️', place: B('Órbita terrestre', 'Earth orbit'),
+        title: B('Basura espacial a la vista', 'Space debris ahead'),
+        text: B('El radar avisa: un trozo de un satélite viejo cruzará vuestra órbita en 40 minutos. La probabilidad de choque es de 1 entre 100… o algo más.',
+          'The radar warns you: a piece of an old satellite will cross your orbit in 40 minutes. The chance of a collision is 1 in 100… or a bit more.'),
+        fact: B('La Estación Espacial Internacional hace maniobras para esquivar basura espacial varias veces al año. Se vigilan decenas de miles de objetos en órbita.', 'The International Space Station manoeuvres to dodge space debris several times a year. Tens of thousands of objects in orbit are tracked.'),
+        choices: [
+          { fx: 'dodge', title: B('Maniobra de esquiva', 'Avoidance manoeuvre'), hint: B('−4 % combustible', '−4% fuel'),
+            run: () => ({ text: B('Un encendido corto y el trozo pasa a varios kilómetros. A salvo.', 'A short burn and the fragment passes several kilometres away. Safe.'), d: { fuel: -4 } }) },
+          { fx: 'ctl', title: B('Pedir un cálculo preciso a la Tierra', 'Ask Earth for a precise calculation'), hint: B('−30 M€ · quizá no haga falta esquivar', '−€30M · you may not need to dodge'), req: { budget: 30 },
+            run: () => (Math.random() < 0.5
+              ? { text: B('Con datos mejores se ve que el trozo pasará lejos. No hace falta gastar combustible.', 'With better data it turns out the fragment will pass far away. No fuel needed.'), d: { budget: -30 } }
+              : { text: B('El cálculo confirma el peligro: hay que esquivar de todas formas.', 'The calculation confirms the danger: you have to dodge anyway.'), d: { budget: -30, fuel: -4 } }) },
+          { fx: 'ignore', title: B('Arriesgarse', 'Take the risk'), hint: B('Gratis · riesgo 25 %', 'Free · 25% risk'),
+            run: () => (roll(0.25)
+              ? { bad: true, text: B('¡Impacto! Un trozo pequeño atraviesa un panel y abolla el casco.', 'Impact! A small piece goes through a panel and dents the hull.'), d: { hull: -30 } }
+              : { text: B('El trozo pasa rozando… pero pasa. Esta vez ha habido suerte.', 'The fragment whizzes past… but it passes. Lucky this time.'), d: {} }) },
+        ] },
+      { id: 'moon2', scene: 'moon', shadow: true, day: 4, icon: '🌑', place: B('Paso por la Luna', 'Lunar flyby'),
+        title: B('El efecto honda… en la sombra de la Luna', 'The slingshot… in the Moon’s shadow'),
+        text: B('Esta vez la trayectoria cruza la sombra de la Luna: durante la maniobra no habrá luz para los paneles y hará mucho frío. Si no llevas paneles de repuesto, la tripulación lo notará.',
+          'This time the path crosses the Moon’s shadow: during the manoeuvre there will be no light for the panels and it will be very cold. Without spare panels, the crew will feel it.'),
+        fact: B('En la sombra, la temperatura de una nave puede caer decenas de grados en minutos: por eso llevan calentadores y baterías.', 'In shadow, a spacecraft’s temperature can drop by tens of degrees in minutes: that is why they carry heaters and batteries.'),
+        choices: null },
+      { id: 'arrive2', scene: 'arrive', dust: true, day: TRIP, icon: '🌪️', place: B('Llegada a Marte', 'Arrival at Mars'),
+        title: B('Tormenta de polvo global', 'Global dust storm'),
+        text: B('Al llegar, una tormenta de polvo cubre medio planeta. La atmósfera se calienta y se hincha, así que el aerofrenado es más imprevisible.',
+          'As you arrive, a dust storm covers half the planet. The atmosphere heats up and swells, so aerobraking is less predictable.'),
+        fact: B('En 2018 una tormenta de polvo global cubrió Marte y dejó sin energía al rover Opportunity, que ya no volvió a despertar.', 'In 2018 a global dust storm covered Mars and cut off power to the Opportunity rover, which never woke up again.'),
+        choices: null },
+    ];
+    // La Luna en sombra y la llegada con tormenta usan las mismas decisiones que sus capítulos normales
+    byId(VARIANTS, 'moon2').choices = byId(EVENTS, 'moon').choices;
+    byId(VARIANTS, 'arrive2').choices = [
+      { fx: 'wait', title: B('Esperar en una órbita alta a que pase', 'Wait in a high orbit until it passes'), hint: B('−12 % combustible · −15 días de provisiones', '−12% fuel · −15 days of supplies'), req: { fuel: 12 },
+        run: () => ({ text: B('Quince días dando vueltas lejos del polvo. Cuando la atmósfera se calma, frenáis sin sustos.', 'Fifteen days circling far from the dust. When the atmosphere calms down, you brake with no scares.'), d: { fuel: -12, food: -15 } }) },
+    ].concat(byId(EVENTS, 'arrive').choices);
+    const FIXED_SLOTS = [['launch', 'launch2', 'launch3'], ['orbit', 'orbit2'], ['moon', 'moon2'], ['arrive', 'arrive2'], ['land']];
+    const FIXED_IDS = ['launch', 'orbit', 'moon', 'arrive', 'land', 'launch2', 'launch3', 'orbit2', 'moon2', 'arrive2'];
     const MID_DAYS = [30, 65, 100, 140, 175];
     function buildTrip() {
       const pool = EVENTS.filter((e) => !FIXED_IDS.includes(e.id)).concat(NEW_EVENTS.filter((e) => e.id !== 'cables'));
       const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       const mid = shuffle(shuffle(pool).slice(0, MID_DAYS.length - 1).concat(byId(NEW_EVENTS, 'cables')));
       const month = (d) => Math.max(1, Math.ceil(d / 30));
-      return [byId(EVENTS, 'launch'), byId(EVENTS, 'orbit'), byId(EVENTS, 'moon')]
+      const ALL = EVENTS.concat(VARIANTS);
+      const pick = (slot) => byId(ALL, slot[Math.floor(Math.random() * slot.length)]);
+      const [launch, orbit, moon, arrive, land] = FIXED_SLOTS.map(pick);
+      s.landDust = Math.random() < 0.3; // a veces hay polvo en el aire al aterrizar
+      return [launch, orbit, moon]
         .concat(mid.map((e, i) => Object.assign({}, e, { day: MID_DAYS[i], place: B(`Crucero · mes ${month(MID_DAYS[i])}`, `Cruise · month ${month(MID_DAYS[i])}`) })))
-        .concat(byId(EVENTS, 'arrive'), byId(EVENTS, 'land'));
+        .concat(arrive, land);
     }
     const stages = () => [B('Preparación', 'Preparation')].concat(s.events ? s.events.map((e) => e.place) : Array.from({ length: 10 }, () => B('…', '…')));
 
@@ -2510,21 +2584,32 @@
       const fx = o ? o.fx : '';
       const bad = o && o.bad ? ' bad' : '';
       const lbl = T(e.title);
-      switch (e.id) {
+      switch (e.scene || e.id) {
         case 'launch': {
           const h = { light: 120, reuse: 150, heavy: 175 }[s.rocket.id];
           return svgWrap('launch', state, fx, `<rect width="640" height="280" fill="url(#${p}-sky)" class="sky"/>${STARS}
             <circle class="sun-out" cx="560" cy="60" r="60" fill="url(#${p}-sun)"/>
-            <g class="clouds"><ellipse cx="120" cy="40" rx="110" ry="34" fill="#4a4f66"/><ellipse cx="260" cy="30" rx="120" ry="38" fill="#3e4359"/>
+            ${!e.weather ? `<g class="clouds"><ellipse cx="120" cy="40" rx="110" ry="34" fill="#4a4f66"/><ellipse cx="260" cy="30" rx="120" ry="38" fill="#3e4359"/>
               <ellipse cx="430" cy="44" rx="130" ry="36" fill="#4a4f66"/><ellipse cx="590" cy="30" rx="100" ry="34" fill="#3e4359"/></g>
-            <path class="bolt" d="M300 60 L285 105 L300 105 L282 150" stroke="#fff6b0" stroke-width="4" fill="none" stroke-linejoin="round"/>
+            <path class="bolt" d="M300 60 L285 105 L300 105 L282 150" stroke="#fff6b0" stroke-width="4" fill="none" stroke-linejoin="round"/>` : ''}
+            ${e.weather === 'wind' ? `<g class="wind-lines">${[40, 80, 120, 60, 100].map((y, i) => `<path d="M${-60 - i * 40} ${y} h120" style="animation-delay:${i * 0.35}s"/>`).join('')}</g>` : ''}
+
             <rect y="246" width="640" height="34" fill="#121828"/>
             <g class="tower"><rect x="372" y="${246 - h - 10}" width="12" height="${h + 10}" fill="#4a5470"/><path d="M372 ${246 - h} h-26" stroke="#4a5470" stroke-width="4"/></g>
             <g class="smoke"><circle cx="300" cy="246" r="20"/><circle cx="340" cy="250" r="24"/><circle cx="260" cy="250" r="18"/><circle cx="380" cy="248" r="16"/></g>
             <rect class="plume" x="302" y="-120" width="36" height="366" fill="url(#${p}-plume)"/>
             <g class="${bad.trim()}">${rocket(p, 320, 246, h, s.rocket.id)}</g>
+            ${e.weather === 'leak' && (state === 'idle' || fx === 'now') ? `<g class="vapor"><circle cx="352" cy="200" r="8"/><circle cx="362" cy="188" r="11"/><circle cx="374" cy="174" r="14"/></g>` : ''}
             ${state === 'out' ? `<g class="countdown">${['3', '2', '1'].map((n, i) => `<text x="160" y="160" class="cd" style="animation-delay:${i * 0.6}s">${n}</text>`).join('')}<text x="160" y="160" class="cd go" style="animation-delay:1.8s">${L('¡Despegue!', 'Liftoff!')}</text></g>` : ''}
             <rect class="flash" width="640" height="280" fill="#fff"/>`, lbl);
+        }
+        case 'debris': {
+          const hit = state === 'out' && o.bad, dodge = state === 'out' && (fx === 'dodge' || (fx === 'ctl' && (o.d.fuel || 0) < 0));
+          return svgWrap('debris', state, fx, `${planet(p, 'earth', 320, 600, 360)}
+            <g transform="translate(300 120) scale(1.3)"><g class="${dodge ? 'dodge' : ''}">${ship(p, `${hit ? ' hurt' : ''}${dodge ? ' burn' : ''}`)}</g></g>
+            <g class="junk${state === 'out' ? ' pass' : ''}"><rect x="-10" y="-6" width="20" height="12" rx="2" fill="#8a93a8" transform="rotate(25)"/><path d="M-22 -2 h-14 M10 8 l12 6" stroke="#aab3c8" stroke-width="3"/></g>
+            <path d="M640 60 L300 120" class="pred"/>
+            ${state === 'idle' ? `<text x="520" y="40" class="sc-label warn">⚠️ 1/100</text>` : ''}`, lbl);
         }
         case 'orbit':
           return svgWrap('orbit', state, fx, `${planet(p, 'earth', 320, 600, 360)}
@@ -2538,6 +2623,7 @@
           const P2 = 'M90 200 Q 320 70 640 60';
           const path = fx === 'direct' ? P2 : (bad ? P1b : P1);
           return svgWrap('moon', state, fx, `${planet(p, 'earth', 70, 210, 36)}${planet(p, 'moon', 360, 160, 44)}
+            ${e.shadow ? `<path d="M380 120 L640 60 L640 270 L380 200 Z" class="moon-shadow"/>` : ''}
             <text x="600" y="28" text-anchor="end" class="sc-label">${L('hacia Marte →', 'to Mars →')}</text>
             <path d="${P1}" class="pred" />
             <path id="mv-path" d="${path}" class="trail ${fx === 'direct' ? 'warn' : ''}" pathLength="1"/>
@@ -2584,7 +2670,7 @@
         }
         case 'arrive': {
           const path = 'M20 60 C 200 40, 300 70, 330 150';
-          return svgWrap('arrive', state, fx, `${planet(p, 'mars', 450, 150, 115)}
+          return svgWrap('arrive', state, fx, `${planet(p, 'mars', 450, 150, 115)}${e.dust ? `<circle class="dust-haze" cx="450" cy="150" r="118"/>` : ''}
             <circle class="atmo" cx="450" cy="150" r="124"/>
             <ellipse class="orbit-line" cx="450" cy="150" rx="150" ry="132" pathLength="1"/>
             <path id="mv-path" d="${path}" class="pred"/>
@@ -2746,7 +2832,7 @@
     // Efecto visual de cada opción (mismo orden que en EVENTS)
     const FX = { launch: ['wait', 'now'], orbit: ['panels', 'eva', 'patch', 'one'], moon: ['manual', 'manual', 'auto', 'direct'],
       storm: ['shield', 'shelter', 'ignore'], meteor: ['kit', 'print', 'eng', 'seal'], sick: ['medkit', 'med', 'kit', 'earth'],
-      nav: ['pilot', 'antenna', 'auto'], arrive: ['aero', 'engine', 'combo', 'aero'] };
+      nav: ['pilot', 'antenna', 'auto'], moon2: ['manual', 'manual', 'auto', 'direct'], arrive2: ['wait', 'aero', 'engine', 'combo', 'aero'], arrive: ['aero', 'engine', 'combo', 'aero'] };
 
     let s;
     function reset() {
@@ -2869,7 +2955,7 @@
         body = GOALS.map((g) => optCard(g, { on: s.goal === g.id, group: 'goal', value: g.id })).join('');
         const lv = `<div class="adv-level" role="radiogroup" aria-label="${L('Dificultad', 'Difficulty')}">${Object.entries(LEVELS).map(([k, v]) => `<button type="button" role="radio" aria-checked="${s.level === k}" data-level="${k}" class="${s.level === k ? 'on' : ''}"><b>${v.icon} ${T(v.name)}</b><small>${T(v.desc)}</small></button>`).join('')}</div>`;
         return head(L('¿Qué queréis descubrir en Marte?', 'What do you want to discover on Mars?'), L('Toda misión empieza con una pregunta científica. Tu objetivo decidirá qué instrumento sirve y dónde conviene aterrizar.', 'Every mission starts with a science question. Your goal will decide which instrument is useful and where it is best to land.'))
-          + `<div class="adv-opts">${body}</div>` + lv + nav(!!s.goal, L('Siguiente: el cohete ▶', 'Next: the rocket ▶'), false);
+          + `<div class="adv-opts">${body}</div><p class="adv-sub adv-level-title">🎚️ ${L('Dificultad', 'Difficulty')}</p>` + lv + nav(!!s.goal, L('Siguiente: el cohete ▶', 'Next: the rocket ▶'), false);
       }
       if (s.phase === 'rocket') {
         body = ROCKETS.map((r) => optCard(Object.assign({}, r, { stats: `<span title="${L('Combustible', 'Fuel')}">⛽ ${r.fuel} %</span><span title="${L('Nave', 'Ship')}">🛰️ ${r.hull} %</span><span title="${L('Riesgo en el despegue', 'Launch risk')}">⚠️ ${Math.round(r.risk * 100)} %</span>` }),
@@ -2918,6 +3004,7 @@
     function tripView() {
       const e = s.events[s.ev];
       if (s.quiz) return quizPanel();
+      if (s.photo) return photoPanel(e);
       if (s.puzzle) return puzzlePanel(e);
       if (s.mini) return miniPanel(e);
       const head = `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)} ${segChip(e.id)}</p><h3 class="adv-title"><span aria-hidden="true">${e.icon}</span> ${T(e.title)}</h3>`;
@@ -2978,9 +3065,13 @@
       const key = `${s.phase}-${s.ev}-${s.outcome ? 1 : 0}`;
       const enter = key !== s.sceneKey;
       s.sceneKey = key;
-      root.innerHTML = `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
+      if (photoApi) photoApi.giveBack();
+      root.innerHTML = s.photo
+        ? `${mapView()}<div class="adv-body photo-mode"><div class="adv-viz"><div id="adv-photo-slot"></div>${hud()}</div><div class="adv-panel">${panel}</div></div>`
+        : `${mapView()}<div class="adv-body${enter ? ' enter' : ''}"><div class="adv-viz">
           <div class="adv-screen${shake ? ' shake' : ''}">${scene}${s.puzzle || s.mini ? '' : crewOverlay()}${banner()}</div>${hud()}</div>
         <div class="adv-panel">${panel}</div></div>`;
+      if (s.photo && photoApi) photoApi.borrow(root.querySelector('#adv-photo-slot'));
       diaryHost.innerHTML = s.diary ? diaryView() : s.achOpen ? achView() : '';
       document.documentElement.classList.toggle('dia-open', !!(s.diary || s.achOpen));
       if (trip && !s.outcome && !s.quiz) markSeen(s.events[s.ev].id);
@@ -3133,7 +3224,7 @@
       const pilot = s.crew.includes('pilot');
       const m = { type, choice: i, t0: performance.now(), done: false };
       if (type === 'sling') Object.assign(m, { c: 0.62, w: Math.min(0.34, (pilot ? 0.24 : 0.17) * LV.time), speed: 0.9 / LV.time, x: 0, dur: 10000 });
-      if (type === 'aero') Object.assign(m, { y: 120, vy: 0, hold: false, inT: 0, lowT: 0, highT: 0, band: Math.round((pilot ? 66 : 54) * LV.time), dur: 8000, delay: 1200, trail: [] });
+      if (type === 'aero') Object.assign(m, { y: 120, vy: 0, hold: false, inT: 0, lowT: 0, highT: 0, band: Math.round((pilot ? 66 : 54) * LV.time * (s.events[s.ev].dust ? 0.8 : 1)), dur: 8000, delay: 1200, trail: [] });
       if (type === 'antenna') Object.assign(m, { a: 0, va: 0, dir: 0, aim: null, e: (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 70), lock: 0, tol: 7 * LV.time, dur: Math.round(14000 * LV.time) });
       s.mini = m;
       render(true);
@@ -3309,7 +3400,7 @@
       moon: ['#honda', B('El efecto honda', 'The slingshot effect')], storm: ['#magnetismo', B('¿Marte tiene campo magnético?', 'Does Mars have a magnetic field?')],
       sick: ['#distancias', B('Comparador de distancias', 'Distance comparison')], nav: ['#mision', B('La misión paso a paso', 'The mission step by step')],
       arrive: ['#mision', B('El aerofrenado (paso 5)', 'Aerobraking (step 5)')], signal: ['#orientacion', B('Apuntar la antena', 'Pointing the antenna')],
-      land: ['#gravedad', B('Simulador de gravedad', 'Gravity simulator')], meteor: ['#mision', B('La misión paso a paso', 'The mission step by step')] };
+      land: ['#gravedad', B('Simulador de gravedad', 'Gravity simulator')], moon2: ['#honda', B('El efecto honda', 'The slingshot effect')], arrive2: ['#magnetismo', B('¿Marte tiene campo magnético?', 'Does Mars have a magnetic field?')], launch2: ['#cronologia', B('Línea de tiempo (Artemis I)', 'Timeline (Artemis I)')], meteor: ['#mision', B('La misión paso a paso', 'The mission step by step')] };
     const learnMore = (id) => (LINKS[id] ? `<a class="adv-more" href="${LINKS[id][0]}">📖 ${L('Saber más', 'Learn more')}: ${T(LINKS[id][1])} →</a>` : '');
 
     // ---------- Preguntas rápidas entre capítulos ----------
@@ -3410,10 +3501,11 @@
       { id: 'antenna', icon: '📡', name: B('Buena señal', 'Strong signal'), desc: B('Recupera el contacto en 6 segundos o menos.', 'Restore contact in 6 seconds or less.') },
       { id: 'quiz', icon: '🧠', name: B('Sabelotodo', 'Know-it-all'), desc: B('Acierta las 3 preguntas de una partida.', 'Answer all 3 questions of a game correctly.') },
       { id: 'explorer', icon: '🧭', name: B('Explorador', 'Explorer'), desc: B('Vive las 12 situaciones posibles del crucero.', 'Live through all 12 possible cruise situations.') },
+      { id: 'photo', icon: '📸', name: B('Fotógrafo de Marte', 'Mars photographer'), desc: B('Fotografía los 6 objetivos desde la órbita en la misión.', 'Photograph all 6 targets from orbit during the mission.') },
       { id: 'oops', icon: '🧯', name: B('Se aprende fallando', 'Learning by failing'), desc: B('Pierde una misión. ¡Le pasa a cualquiera!', 'Lose a mission. It happens to everyone!') },
     ];
     const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } } };
-    const MINI_ACH = { 'sling-perfect': 'sling', 'aero-pro': 'aero', 'antenna-fast': 'antenna', 'wires-perfect': 'wires' };
+    const MINI_ACH = { 'photo-all': 'photo', 'sling-perfect': 'sling', 'aero-pro': 'aero', 'antenna-fast': 'antenna', 'wires-perfect': 'wires' };
     // ---------- Voces y personajes: alguien cuenta lo que pasa y el equipo habla ----------
     const CTL = { id: 'ctl', icon: '🎧', name: B('Control de misión', 'Mission Control') };
     const who2c = (id) => (id === 'ctl' ? CTL : byId(CREW, id));
@@ -3546,7 +3638,7 @@
     function talkHook() {
       const panel = root.querySelector('.adv-panel');
       let key = '', lines = [], card = '';
-      if (s.phase === 'trip' && !s.quiz && !s.puzzle && !s.mini) {
+      if (s.phase === 'trip' && !s.quiz && !s.puzzle && !s.mini && !s.photo) {
         const e = s.events[s.ev];
         if (!s.outcome) {
           const sp = eventSpeaker(e);
@@ -3665,10 +3757,10 @@
     // ---------- Guardar la partida en el navegador ----------
     function saveGame() {
       if (s.phase === 'end') { store.set('advSave', null); return; }
-      if (s.puzzle || s.mini || (s.phase === 'goal' && !s.goal)) return;
+      if (s.puzzle || s.mini || s.photo || (s.phase === 'goal' && !s.goal)) return;
       store.set('advSave', { v: 1, phase: s.phase, level: s.level, goal: s.goal, instr: s.instr, rocket: s.rocket && s.rocket.id, crew: s.crew, supplies: s.supplies && s.supplies.id, tools: s.tools,
         ev: s.ev, budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull, lowPower: s.lowPower, log: s.log, outcome: s.outcome, end: s.end,
-        events: s.events && s.events.map((e) => ({ id: e.id, day: e.day })), science: s.science, landed: s.landed, bonus: s.bonus, quizUsed: s.quizUsed, quizOk: s.quizOk, quizAsked: s.quizAsked, quiz: s.quiz });
+        events: s.events && s.events.map((e) => ({ id: e.id, day: e.day })), landDust: s.landDust, science: s.science, landed: s.landed, bonus: s.bonus, quizUsed: s.quizUsed, quizOk: s.quizOk, quizAsked: s.quizAsked, quiz: s.quiz });
     }
     function loadGame() {
       const g = store.get('advSave', null);
@@ -3678,12 +3770,12 @@
         s.level = g.level in LEVELS ? g.level : 'normal'; LV = LEVELS[s.level]; BUDGET0 = LV.budget;
         Object.assign(s, { phase: g.phase, goal: g.goal || null, instr: g.instr || null, crew: g.crew || [], tools: g.tools || [], ev: g.ev || 0, budget: g.budget, fuel: g.fuel, food: g.food, health: g.health, hull: g.hull,
           lowPower: g.lowPower, log: g.log || [], outcome: g.outcome, end: g.end, science: g.science || 0, landed: g.landed, bonus: g.bonus || 0,
-          quizUsed: g.quizUsed || [], quizOk: g.quizOk || 0, quizAsked: g.quizAsked || [], quiz: g.quiz });
+          landDust: !!g.landDust, quizUsed: g.quizUsed || [], quizOk: g.quizOk || 0, quizAsked: g.quizAsked || [], quiz: g.quiz });
         s.rocket = g.rocket ? byId(ROCKETS, g.rocket) : null;
         if (s.phase !== 'goal' && !s.goal) s.phase = 'goal'; // partidas guardadas antes de existir el objetivo
         s.supplies = g.supplies ? byId(SUPPLIES, g.supplies) : null;
         const month = (d) => Math.max(1, Math.ceil(d / 30));
-        s.events = g.events ? g.events.map((x) => { const base = byId(EVENTS.concat(NEW_EVENTS), x.id);
+        s.events = g.events ? g.events.map((x) => { const base = byId(EVENTS.concat(NEW_EVENTS, VARIANTS), x.id);
           return FIXED_IDS.includes(x.id) ? base : Object.assign({}, base, { day: x.day, place: B(`Crucero · mes ${month(x.day)}`, `Cruise · month ${month(x.day)}`) }); }) : null;
         if (s.events && s.events.some((e) => !e)) throw new Error('evento desconocido');
         return s.phase !== 'goal' || !!s.goal;
@@ -3737,6 +3829,32 @@
       c.fillText(line, x, y);
     }
 
+    // ---------- Capítulo: Fotógrafo de Marte dentro de la misión ----------
+    function startPhoto(i) {
+      const e = s.events[s.ev], c = e.choices[i];
+      if (!photoApi) return resolve(e, c, i, c.run(s)); // por si el minijuego no está en la página
+      s.photo = { choice: i };
+      render(true);
+      photoApi.play(finishPhoto);
+    }
+    function finishPhoto(res) {
+      setTimeout(() => {
+        if (!s.photo) return;
+        const i = s.photo.choice, e = s.events[s.ev], c = e.choices[i];
+        s.photo = null;
+        const science = 20 + Math.round(160 * res.score / res.max);
+        resolve(e, c, i, { science, mini: res.got === 6 ? 'photo-all' : null, d: {},
+          text: B(`Fotografiáis ${res.got} de 6 objetivos (${res.score}/${res.max} puntos) y enviáis ${res.good === 1 ? '1 foto buena' : `${res.good} fotos buenas`} a la Tierra. Ciencia de las fotos: +${science} (antes de multiplicar).`,
+            `You photograph ${res.got} of 6 targets (${res.score}/${res.max} points) and send ${res.good === 1 ? '1 good photo' : `${res.good} good photos`} to Earth. Photo science: +${science} (before multipliers).`) });
+      }, 1400);
+    }
+    function photoPanel(e) {
+      const g = goalOf(), ideal = g && g.site === 'stay', inst = g && s.instr === g.instr;
+      return `<p class="kicker">${L('Día', 'Day')} ${e.day} · ${T(e.place)} · ${L('Minijuego', 'Mini-game')} ${segChip('land')}</p><h3 class="adv-title">📸 ${L('Fotógrafo de Marte', 'Mars photographer')}</h3>
+        <p class="adv-text">${L('Una vuelta a Marte a 400 km de altura y 8 fotos. Toca los objetivos cuando pasen por el visor y no gastes fotos en la zona de noche. <strong>Cuantos más puntos, más ciencia</strong>', 'One orbit of Mars 400 km up and 8 photos. Tap the targets as they pass through the viewfinder and don’t waste photos on the night side. <strong>The more points, the more science</strong>')}${ideal ? L(' · ⭐ ideal para tu objetivo (×2)', ' · ⭐ ideal for your goal (×2)') : ''}${inst ? L(' · instrumento ×1,5', ' · instrument ×1.5') : ''}.</p>
+        <div class="controls adv-nav"><button type="button" class="btn small ghost" data-act="photo-skip">⏭ ${L('Terminar la vuelta', 'End the orbit')}</button></div>`;
+    }
+
     // --- Lógica ---
     function startTrip() {
       s.budget = BUDGET0 - spentPrep();
@@ -3757,15 +3875,19 @@
     function choose(i) {
       const e = s.events[s.ev];
       const c = e.choices[i];
-      if (check(c.req) || s.puzzle || s.mini) return;
+      if (check(c.req) || s.puzzle || s.mini || s.photo) return;
       sfx('click');
       if (c.puzzle) return startPuzzle(i);
+      if (c.mini === 'photo') return startPhoto(i);
       if (c.mini) return startMini(c.mini, i);
       resolve(e, c, i, c.run(s));
     }
     function resolve(e, c, i, r) {
       s.prev = { budget: s.budget, fuel: s.fuel, food: s.food, health: s.health, hull: s.hull };
       const d = Object.assign({}, r.d);
+      let cold = null;
+      if (e.shadow && !s.tools.includes('panels')) { d.health = (d.health || 0) - 4; cold = B('🥶 En la sombra de la Luna hizo mucho frío (−4 % salud).', '🥶 It was very cold in the Moon’s shadow (−4% health).'); }
+      if (e.dust && (c.fx || (FX[e.id] || [])[i]) === 'aero' && !c.mini && !r.bad && roll(0.2)) { d.hull = (d.hull || 0) - 15; cold = B('🌪️ El polvo hinchó la atmósfera y el roce fue mayor (−15 % nave).', '🌪️ The dust swelled the atmosphere and there was more friction (−15% ship).'); }
       ['health', 'hull'].forEach((k) => { if (d[k] < 0) d[k] = Math.round(d[k] * LV.dmg); });
       // El dinero no baja de 0: lo que falta se paga con salud (más trabajo y más nervios)
       let broke = null;
@@ -3800,6 +3922,7 @@
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
       if (broke) extra = extra ? B(`${broke.es} ${extra.es}`, `${broke.en} ${extra.en}`) : broke;
+      if (cold) extra = extra ? B(`${cold.es} ${extra.es}`, `${cold.en} ${extra.en}`) : cold;
       s.outcome = { choice: c.title, text: r.text, d, cd, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad, mini: r.mini,
         who: (c.req && typeof c.req === 'object' && c.req.crew) || (['pilot', 'eng', 'med', 'geo', 'com'].includes(c.fx) ? c.fx : null) };
       s.log.push({ day: e.day, icon: e.icon, place: e.place, choice: c.title, text: r.text, d: Object.assign({}, d), tone: toneOf(s.outcome) });
@@ -3862,6 +3985,7 @@
       if (d.pl) { if (s.puzzle && !s.puzzle.links.includes(+d.pl)) { s.puzzle.sel = +d.pl; s.puzzle.wrong = null; render(false); } return; }
       if (d.pr) { if (s.puzzle && s.puzzle.sel != null) connect(s.puzzle.sel, +d.pr); return; }
       if (d.act === 'giveup') return finishPuzzle(false);
+      if (d.act === 'photo-skip') { if (photoApi) photoApi.stop(); return; }
       if (d.goal && s.phase === 'goal') { s.goal = d.goal; if (s.instr && byId(INSTR, s.instr).id !== goalOf().instr) s.instr = null; }
       else if (d.instr && s.phase === 'tools') { s.instr = s.instr === d.instr ? null : d.instr; }
       else if (d.level && s.phase === 'goal') {
@@ -4460,10 +4584,12 @@
         `<span class="pg-chip${lit ? '' : ' night'}">${lit ? L('☀️ Debajo es de día', '☀️ Daytime below') : L('🌙 Debajo es de noche', '🌙 Night-time below')}</span>`;
     }
 
+    let onDone = null; // si se juega dentro de la misión, avisa al terminar
     function finish(why) {
       game.state = 'done'; game.endWhy = why;
       startBtn.disabled = false;
       setResult();
+      if (onDone) { const cb = onDone; onDone = null; cb({ score: game.score, max: maxScore, got: Object.keys(game.got).length, good: game.photos.filter((ph) => ph.hits.length).length }); }
     }
 
     function reset() {
@@ -4559,6 +4685,16 @@
       draw();
     });
     reset();
+
+    // Para jugarlo como capítulo de «Tú diriges la misión»: se lleva el minijuego dentro del juego y luego vuelve a su sitio
+    const box = canvas.closest('.game-card'), block = canvas.closest('#foto-marte'), home = box.parentNode, mark = document.createComment('fotografo');
+    home.insertBefore(mark, box);
+    photoApi = {
+      borrow(slot) { if (box.parentNode !== slot) slot.appendChild(box); if (block) block.hidden = true; },
+      giveBack() { if (box.parentNode !== home) home.insertBefore(box, mark.nextSibling); if (block) block.hidden = false; },
+      play(cb) { reset(); onDone = cb; start(); },
+      stop() { if (game.state === 'run') { game.t = T_ORBIT; finish('time'); } },
+    };
   })();
 
   /* ---------- Cambio de idioma (botón con bandera) ---------- */
