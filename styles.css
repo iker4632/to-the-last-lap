@@ -1170,3 +1170,7 @@ html.dia-open, html.dia-open body { overflow: hidden; }
 .nasa-note h3 { color: #ffe08a; font-size: 1rem; }
 .nasa-note p { color: var(--muted); font-size: .9rem; }
 .nasa-orig { font-style: italic; font-size: .84rem !important; }
+.res-data { font-size: .86rem !important; color: var(--text) !important; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.04); border-left: 3px solid var(--accent); }
+.res-data b, .res-use b { color: #ffe08a; }
+.res-srcp { margin: 0; }
+.res-src { font-size: .82rem; font-weight: 600; }

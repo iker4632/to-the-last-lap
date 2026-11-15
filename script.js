@@ -2071,8 +2071,9 @@
       { id: 'seis', icon: '📈', cost: 60, name: B('Sismómetro', 'Seismometer'), desc: B('Escucha los «martemotos».', 'Listens for “marsquakes”.') },
     ];
     // Niveles de madurez del concepto (CML, del JPL de la NASA) para cada paso de la preparación
-    const CML = { goal: [1, B('Idea de misión', 'Mission idea')], rocket: [2, B('Viabilidad: ¿podemos llegar?', 'Feasibility: can we get there?')],
-      crew: [3, B('Comparar opciones', 'Trade studies')], supplies: [3, B('Comparar opciones', 'Trade studies')], tools: [4, B('Diseño detallado', 'Point design')] };
+    // Niveles de madurez del concepto (CML) con los nombres del JPL (Wessen y otros, 2013)
+    const CML = { goal: [1, B('Idea «en una servilleta»', '“Cocktail napkin” idea')], rocket: [2, B('Viabilidad inicial', 'Initial feasibility')],
+      crew: [3, B('Espacio de opciones', 'Trade space')], supplies: [3, B('Espacio de opciones', 'Trade space')], tools: [4, B('Diseño puntual', 'Point design')] };
     // Los 4 segmentos de una misión
     const SEGS = { launch: ['🚀', B('Segmento de lanzamiento', 'Launch segment')], space: ['🛰️', B('Segmento espacial', 'Space segment')],
       ground: ['📡', B('Segmento terrestre', 'Ground segment')], user: ['🔬', B('Segmento de usuarios', 'User segment')] };
@@ -2859,7 +2860,7 @@
     function prepView() {
       const left = BUDGET0 - spentPrep();
       const cml = CML[s.phase];
-      const stepper = `<ol class="cml-steps" aria-label="${L('Niveles de madurez del concepto (CML)', 'Concept maturity levels (CML)')}">${[[1, B('Idea', 'Idea')], [2, B('Viabilidad', 'Feasibility')], [3, B('Opciones', 'Trades')], [4, B('Diseño', 'Design')], [5, B('Lanzar', 'Launch')]]
+      const stepper = `<ol class="cml-steps" aria-label="${L('Niveles de madurez del concepto (CML)', 'Concept maturity levels (CML)')}">${[[1, B('Servilleta', 'Napkin')], [2, B('Viabilidad', 'Feasibility')], [3, B('Opciones', 'Trade space')], [4, B('Diseño puntual', 'Point design')], [5, B('Lanzar', 'Launch')]]
         .map(([k, nm]) => `<li class="${k < cml[0] ? 'done' : k === cml[0] ? 'now' : ''}"><b>${k < 5 ? `CML ${k}` : '🚀'}</b><span>${T(nm)}</span></li>`).join('')}</ol>`;
       const head = (title, lead) => `${stepper}<p class="kicker">CML ${cml[0]} · ${T(cml[1])} ${segChip(s.phase)}</p><h3 class="adv-title">${title}</h3><p class="adv-text">${lead}</p>`;
       let body = '', ok = false;
@@ -2950,7 +2951,7 @@
       if (!e.win) {
         return `<div class="adv-end fail"><p class="kicker">${L('Fin de la misión', 'Mission over')}</p><h3 class="adv-title">${e.icon} ${T(e.title)}</h3><p class="adv-text">${T(e.text)}</p>
           <p class="adv-text">${L('Revisa el diario de a bordo: ¿qué cambiarías en la preparación?', 'Look back at the logbook: what would you change in the preparation?')}</p>
-          ${realMissions()}<div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button></div>${newAchView()}</div>`;
+          ${realMissions()}<div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Intentarlo otra vez', 'Try again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button><a class="btn small ghost" href="#recursos">📚 ${L('Fuentes de la NASA', 'NASA sources')}</a></div>${newAchView()}</div>`;
       }
       const rows = e.parts.map((p) => `<li><span>${T(p[0])}</span><b>${p[1] < 0 ? '−' : '+'}${num(Math.abs(p[1]))}</b></li>`).join('');
       let best = 0;
@@ -2959,7 +2960,7 @@
         <p class="adv-stars" aria-label="${e.stars} / 3">${[0, 1, 2].map((i) => `<span class="${i < e.stars ? 'on' : 'off'}" style="animation-delay:${0.3 + i * 0.35}s">⭐</span>`).join('')}</p>
         <p class="adv-text">${T(e.text)}</p><ul class="adv-score">${rows}<li class="total"><span>${L('Puntuación', 'Score')}</span><b>${num(e.score)}</b></li></ul>
         ${best && e.score <= best ? `<p class="fine">${L('Tu récord', 'Your best')}: ${num(Math.max(best, e.score))}</p>` : (best ? `<p class="fine">🏆 ${L('¡Nuevo récord!', 'New record!')}</p>` : '')}
-        ${realMissions()}<div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button></div>${newAchView()}</div>`;
+        ${realMissions()}<div class="controls adv-nav"><button type="button" class="btn small primary" data-act="restart">↺ ${L('Jugar otra vez', 'Play again')}</button><button type="button" class="btn small ghost" data-act="diary">📓 ${L('Ver el diario', 'See the logbook')}</button><button type="button" class="btn small ghost" data-act="share">📤 ${L('Compartir', 'Share')}</button><a class="btn small ghost" href="#recursos">📚 ${L('Fuentes de la NASA', 'NASA sources')}</a></div>${newAchView()}</div>`;
     }
 
     function logView() {
@@ -3339,6 +3340,20 @@
         o: [B('Con ruedas de reacción y pequeños propulsores', 'With reaction wheels and small thrusters'), B('Con un timón, como un barco', 'With a rudder, like a boat'), B('No puede girar', 'It cannot turn')],
         x: B('Las ruedas internas giran en un sentido y la nave gira en el contrario. Los propulsores ayudan.', 'Internal wheels spin one way and the ship turns the other way. Thrusters help.') },
     ];
+    QUIZ.push(
+      { q: B('¿Qué segmento de una misión recibe los datos de la nave y le envía órdenes?', 'Which segment of a mission receives the spacecraft’s data and sends it commands?'), link: '#segmentos',
+        o: [B('El segmento terrestre', 'The ground segment'), B('El segmento de lanzamiento', 'The launch segment'), B('El segmento de usuarios', 'The user segment')],
+        x: B('El segmento terrestre son las antenas y el centro de control. Fuente: «Design and Develop Science Missions» (NASA, 2025).', 'The ground segment is the antennas and the control centre. Source: “Design and Develop Science Missions” (NASA, 2025).') },
+      { q: B('En la escala CML del JPL, ¿qué es un concepto de nivel 1?', 'On JPL’s CML scale, what is a level-1 concept?'), link: '#recursos',
+        o: [B('Una idea inicial, «dibujada en una servilleta»', 'An early idea, “drawn on a cocktail napkin”'), B('Una nave ya construida', 'A spacecraft that is already built'), B('Una misión que ya ha despegado', 'A mission that has already launched')],
+        x: B('CML 1 es la idea; CML 2, la viabilidad inicial; CML 3, el espacio de opciones; CML 4, el diseño puntual.', 'CML 1 is the idea; CML 2, initial feasibility; CML 3, the trade space; CML 4, the point design.') },
+      { q: B('¿Para qué sirve GMAT, el programa libre de la NASA?', 'What is GMAT, NASA’s open-source software, used for?'), link: '#recursos',
+        o: [B('Para diseñar trayectorias, maniobras y ventanas de lanzamiento', 'To design trajectories, manoeuvres and launch windows'), B('Para construir cohetes', 'To build rockets'), B('Para hacer fotos de Marte', 'To take photos of Mars')],
+        x: B('GMAT modela órbitas de todo tipo, desde la órbita baja hasta los viajes interplanetarios.', 'GMAT models all kinds of orbits, from low Earth orbit to interplanetary trips.') },
+      { q: B('En un estudio de diseño como los del Mission Design Lab de la NASA, ¿qué se hace al «comparar opciones»?', 'In a design study like those at NASA’s Mission Design Lab, what does a “trade study” do?'), link: '#recursos',
+        o: [B('Comparar alternativas por su coste, riesgo y beneficio', 'Compare alternatives by cost, risk and benefit'), B('Elegir la opción más barata siempre', 'Always pick the cheapest option'), B('Lanzar varias naves a la vez', 'Launch several spacecraft at once')],
+        x: B('Igual que en este juego: cada opción tiene su coste, su riesgo y su beneficio.', 'Just like in this game: every option has its cost, its risk and its benefit.') },
+    );
     const QUIZ_AT = [1, 4, 6]; // tras la órbita y tras el 2.º y 4.º capítulo del crucero
     function makeQuiz() {
       const used = s.quizUsed || (s.quizUsed = []);
