@@ -187,8 +187,8 @@ window.I18N_EN = {
   'Distancia Tierra–Marte': 'Earth–Mars distance',
 
   // ---------- Ampliación: magnetismo, 7 pasos, orientación, regreso y estación ----------
-  "Órbitas Oposición Magnetismo Efecto honda La misión Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar":
-    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a>",
+  "Órbitas Oposición Magnetismo Efecto honda La misión Segmentos Visor 3D Paso lunar Orientación Regreso Distancias Cronología Estación Simulador de gravedad Reto lunar Recursos Cómo se hizo":
+    "<a href=\"#orbitas\">Orbits</a> <a href=\"#oposicion\">Opposition</a> <a href=\"#magnetismo\">Magnetism</a> <a href=\"#honda\">Slingshot</a> <a href=\"#mision\">The mission</a> <a href=\"#segmentos\">Segments</a> <a href=\"#visor3d\">3D viewer</a> <a href=\"#zoom-luna\">Lunar flyby</a> <a href=\"#orientacion\">Pointing</a> <a href=\"#regreso\">Return</a> <a href=\"#distancias\">Distances</a> <a href=\"#cronologia\">Timeline</a> <a href=\"#estacion\">Station</a> <a href=\"#gravedad\">Gravity simulator</a> <a href=\"#reto-luna\">Moon challenge</a> <a href=\"#recursos\">Resources</a> <a href=\"#transparencia\">How it was made</a>",
   "Escudo invisible":
     "An invisible shield",
   "¿Marte tiene campo magnético?":
@@ -491,6 +491,294 @@ window.I18N_EN = {
     "You are the mission director. You have a <strong>budget of 1,000 million euros</strong> to choose the rocket, the crew, the supplies and the tools. Then, during the journey, every decision costs <strong>money, fuel or supplies</strong>, or puts the <strong>crew’s health</strong> and the <strong>ship</strong> at risk. Will you make it to Mars?",
   "Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.":
     "A made-up story for learning purposes. Prices, odds and figures are simplified so the game is playable.",
+
+  // ---------- Segmentos, visor 3D y recursos ----------
+  "Cómo se organiza una misión":
+    "How a mission is organised",
+  "Los 4 segmentos de una misión":
+    "The 4 segments of a mission",
+  "Los ingenieros de la NASA dividen cada misión en cuatro partes, llamadas segmentos. Cada una tiene sus propios equipos, presupuesto y riesgos. Así se reparte nuestra Misión The Last Lap:":
+    "NASA engineers split every mission into <strong>four parts, called segments</strong>. Each one has its own teams, budget and risks. This is how our Mission The Last Lap is divided:",
+  "Lanzamiento":
+    "Launch",
+  "Espacio":
+    "Space",
+  "Usuarios":
+    "Users",
+  "pone en el espacio":
+    "puts it in space",
+  "datos":
+    "data",
+  "órdenes":
+    "commands",
+  "ciencia":
+    "science",
+  "Segmento de lanzamiento":
+    "Launch segment",
+  "El cohete y los servicios que ponen la nave en el espacio.":
+    "The rocket and the services that put the spacecraft into space.",
+  "En The Last Lap: el cohete que despega a finales de 2026, en la ventana de lanzamiento.":
+    "<b>In The Last Lap:</b> the rocket that lifts off in late 2026, in the launch window.",
+  "Segmento espacial":
+    "Space segment",
+  "La nave, sus instrumentos y, si los hay, el módulo de aterrizaje o el rover.":
+    "The spacecraft, its instruments and, if there are any, the lander or the rover.",
+  "En The Last Lap: la nave con su cámara, antena, paneles y motor, que pasa por la Luna y frena en Marte.":
+    "<b>In The Last Lap:</b> the spacecraft with its camera, antenna, panels and engine, which swings past the Moon and brakes at Mars.",
+  "Segmento terrestre":
+    "Ground segment",
+  "Las antenas y el centro de control que hablan con la nave, reciben los datos y dirigen la misión.":
+    "The antennas and the control centre that talk to the spacecraft, receive the data and run the mission.",
+  "En The Last Lap: la Red de Espacio Profundo recibe las fotos tras 3–22 minutos de viaje.":
+    "<b>In The Last Lap:</b> the Deep Space Network receives the photos after a 3–22 minute trip.",
+  "Segmento de usuarios":
+    "User segment",
+  "Los científicos y el público que analizan y usan los datos de la misión.":
+    "The scientists and the public who analyse and use the mission’s data.",
+  "En The Last Lap: los científicos que estudian las fotos de Marte… ¡y tú!":
+    "<b>In The Last Lap:</b> the scientists who study the photos of Mars… and you!",
+  "En el juego, cada capítulo lleva una etiqueta de color con su segmento. Basado en el enfoque de ingeniería de sistemas que describe la NASA en «Design and Develop Science Missions».":
+    "In the game, every chapter has a coloured label with its segment. Based on the systems-engineering approach NASA describes in “Design and Develop Science Missions”.",
+  "Visor 3D":
+    "3D viewer",
+  "La misión en tres dimensiones":
+    "The mission in three dimensions",
+  "Arrastra para girar la vista, usa la rueda o pellizca para acercarte y mueve la línea de tiempo para ver dónde están los planetas y la nave cada día.":
+    "<strong>Drag</strong> to turn the view, use the <strong>wheel</strong> or <strong>pinch</strong> to zoom, and move the <strong>timeline</strong> to see where the planets and the spacecraft are on each day.",
+  "Fecha":
+    "Date",
+  "Fase":
+    "Phase",
+  "🚀 Despegue":
+    "🚀 Launch",
+  "🌙 Paso por la Luna":
+    "🌙 Lunar flyby",
+  "🔭 Oposición":
+    "🔭 Opposition",
+  "🔴 Llegada":
+    "🔴 Arrival",
+  "↺ Vista inicial":
+    "↺ Reset view",
+  "No está a escala: los planetas, la Luna y la inclinación de la órbita de Marte están exagerados para que se vean. Inspirado en NASA Mission Viz.":
+    "Not to scale: the planets, the Moon and the tilt of Mars’ orbit are exaggerated so they can be seen. Inspired by NASA Mission Viz.",
+  "Para saber más":
+    "Learn more",
+  "Recursos y créditos":
+    "Resources and credits",
+  "Esta web se ha creado para el NASA Space Apps Challenge a partir de recursos públicos de la NASA y de otras agencias espaciales. Así hemos usado cada uno:":
+    "This website was created for the <strong>NASA Space Apps Challenge</strong> using public resources from NASA and other space agencies. This is how we used each one:",
+  "🧭 Design and Develop Science Missions":
+    "🧭 Design and Develop Science Missions",
+  "Cómo pasa una misión de una pregunta científica a un diseño real. De aquí salen los 4 segmentos de una misión.":
+    "How a mission goes from a science question to a real design. This is where the 4 segments of a mission come from.",
+  "Usado en: Los 4 segmentos y el juego.":
+    "Used in: <a href=\"#segmentos\">The 4 segments</a> and the game.",
+  "🛰️ GMAT (General Mission Analysis Tool)":
+    "🛰️ GMAT (General Mission Analysis Tool)",
+  "Programa libre de la NASA para diseñar trayectorias, ventanas de lanzamiento y maniobras.":
+    "NASA’s open-source software for designing trajectories, launch windows and manoeuvres.",
+  "Usado en: las órbitas, la oposición y la ruta de la misión.":
+    "Used in: <a href=\"#orbitas\">the orbits</a>, <a href=\"#oposicion\">the opposition</a> and <a href=\"#mision\">the mission route</a>.",
+  "📈 Concept Maturity Levels (CML)":
+    "📈 Concept Maturity Levels (CML)",
+  "Escala del JPL para medir lo maduro que está un concepto de misión: de la idea (CML 1) al diseño detallado.":
+    "A JPL scale for measuring how mature a mission concept is: from the idea (CML 1) to the detailed design.",
+  "Usado en: los pasos de la preparación del juego.":
+    "Used in: the preparation steps of the <a href=\"#juego\">game</a>.",
+  "🏗️ Mission Design Lab (MDL)":
+    "🏗️ Mission Design Lab (MDL)",
+  "Laboratorio de la NASA donde ingenieros y científicos comparan opciones y estudian costes y riesgos.":
+    "A NASA lab where engineers and scientists compare options and study costs and risks.",
+  "Usado en: las decisiones del juego, cada una con su coste, riesgo y beneficio.":
+    "Used in: the decisions in the <a href=\"#juego\">game</a>, each with its cost, risk and benefit.",
+  "🌐 NASA Mission Viz":
+    "🌐 NASA Mission Viz",
+  "Visor web en 3D de trayectorias y misiones espaciales.":
+    "A 3D web viewer for trajectories and space missions.",
+  "Usado en: el visor 3D.":
+    "Used in: the <a href=\"#visor3d\">3D viewer</a>.",
+  "🔭 Juego de diseño de telescopios":
+    "🔭 Telescope design game",
+  "Juego educativo de la NASA en el que el objetivo científico decide los instrumentos.":
+    "A NASA learning game in which the science goal decides the instruments.",
+  "Usado en: el objetivo científico y los instrumentos del juego.":
+    "Used in: the science goal and the instruments in the <a href=\"#juego\">game</a>.",
+  "📦 CubeSat 101":
+    "📦 CubeSat 101",
+  "Guía de la NASA con todas las fases de una misión, del concepto de operaciones al lanzamiento.":
+    "A NASA guide to every phase of a mission, from the concept of operations to launch.",
+  "Usado en: la línea de tiempo.":
+    "Used in: the <a href=\"#cronologia\">timeline</a>.",
+  "🥽 Visualize a Space Mission Using VR":
+    "🥽 Visualize a Space Mission Using VR",
+  "Reto del Space Apps 2023 para explicar misiones completas de forma interactiva.":
+    "A Space Apps 2023 challenge to explain whole missions interactively.",
+  "Usado en: el visor 3D y la misión paso a paso.":
+    "Used in: the <a href=\"#visor3d\">3D viewer</a> and <a href=\"#mision\">the mission step by step</a>.",
+  "🍁 Agencia Espacial Canadiense (CSA)":
+    "🍁 Canadian Space Agency (CSA)",
+  "Juegos, libros digitales y actividades sobre el espacio para todas las edades.":
+    "Games, e-books and space activities for all ages.",
+  "Inspiración para el juego y los retos. Web de la CSA ↗":
+    "Inspiration for the <a href=\"#juego\">game</a> and the <a href=\"#reto-luna\">challenges</a>. <a href=\"https://www.asc-csa.gc.ca/eng/\" target=\"_blank\" rel=\"noopener\">CSA website ↗</a>",
+  "Más información: NASA Space Apps Challenge ↗ · NASA ↗ · JPL ↗ · NASA’s Eyes ↗":
+    "More information: <a href=\"https://www.spaceappschallenge.org/\" target=\"_blank\" rel=\"noopener\">NASA Space Apps Challenge ↗</a> · <a href=\"https://www.nasa.gov/\" target=\"_blank\" rel=\"noopener\">NASA ↗</a> · <a href=\"https://www.jpl.nasa.gov/\" target=\"_blank\" rel=\"noopener\">JPL ↗</a> · <a href=\"https://eyes.nasa.gov/\" target=\"_blank\" rel=\"noopener\">NASA’s Eyes ↗</a>",
+  "Aviso":
+    "Disclaimer",
+  "The Last Lap es un proyecto educativo independiente. La NASA no respalda a ninguna entidad que no pertenezca al Gobierno de EE. UU. y no es responsable de la información de los sitios web ajenos a él. Las fotos de la NASA se usan como material de dominio público, sin que eso implique su respaldo. Al usar datos de otros sitios web, se respetan sus condiciones de uso.":
+    "<strong>The Last Lap is an independent educational project.</strong> NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites. NASA photos are used as public-domain material, which does not imply NASA’s endorsement. When using data from other websites, their data use terms are respected.",
+  "“NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites.”":
+    "“NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites.”",
+  "Proyecto para el NASA Space Apps Challenge. La NASA no respalda este proyecto. Recursos y créditos":
+    "A project for the NASA Space Apps Challenge. NASA does not endorse this project. <a href=\"#recursos\">Resources and credits</a>",
+  "Esquema: el segmento de lanzamiento pone la nave en el espacio, la nave y el segmento terrestre intercambian datos y órdenes, y los datos llegan a los científicos":
+    "Diagram: the launch segment puts the spacecraft into space, the spacecraft and the ground segment exchange data and commands, and the data reach the scientists",
+  "Visor 3D: el Sol, las órbitas de la Tierra y Marte y la trayectoria de la nave, que se puede girar y recorrer en el tiempo":
+    "3D viewer: the Sun, the orbits of Earth and Mars and the spacecraft’s path, which you can rotate and move through in time",
+
+  // ---------- Recursos: datos usados y fuentes ----------
+  "🧭 Design and Develop Science Missions":
+    "🧭 Design and Develop Science Missions",
+  "Presentación de la NASA (marzo de 2025, serie de seminarios «Access to Space for All»).":
+    "NASA slide deck (March 2025, “Access to Space for All” webinar series).",
+  "Dato que usamos: Una misión se divide en 4 segmentos (lanzamiento, espacio, tierra y usuarios) y avanza por fases desde la Pre-Fase A hasta la Fase E.":
+    "<b>Data we used:</b> A mission is split into 4 segments (launch, space, ground and user) and moves through phases from Pre-Phase A to Phase E.",
+  "Dónde: Los 4 segmentos y la etiqueta de cada capítulo del juego":
+    "<b>Where:</b> <a href=\"#segmentos\">The 4 segments</a> and the label on every chapter of the <a href=\"#juego\">game</a>",
+  "Ver la fuente oficial ↗":
+    "<a class=\"res-src\" href=\"https://www.asc-csa.gc.ca/eng/youth-educators/digital-games-and-activities.asp\" target=\"_blank\" rel=\"noopener\">See the official source ↗</a>",
+  "🛰️ GMAT (General Mission Analysis Tool)":
+    "🛰️ GMAT (General Mission Analysis Tool)",
+  "Programa libre de la NASA (Goddard) para diseñar y optimizar misiones.":
+    "NASA’s open-source software (Goddard) for designing and optimising missions.",
+  "Dato que usamos: Modela órbitas bajas, geoestacionarias, lunares e interplanetarias, ventanas de lanzamiento y maniobras; se usa con interfaz gráfica o con su propio lenguaje de guiones.":
+    "<b>Data we used:</b> Models low Earth, geostationary, lunar and interplanetary orbits, launch windows and manoeuvres; driven from a GUI or its own script language.",
+  "Dónde: La transferencia de Hohmann de 259 días del visor 3D, la ventana de lanzamiento y la asistencia gravitatoria":
+    "<b>Where:</b> The 259-day Hohmann transfer in the <a href=\"#visor3d\">3D viewer</a>, the <a href=\"#oposicion\">launch window</a> and the <a href=\"#honda\">gravity assist</a>",
+  "📈 Concept Maturity Levels (CML)":
+    "📈 Concept Maturity Levels (CML)",
+  "Escala del JPL (Wessen y otros, 2013) para medir lo maduro que está un concepto de misión.":
+    "A JPL scale (Wessen et al., 2013) for measuring how mature a mission concept is.",
+  "Dato que usamos: CML 1: idea «en una servilleta»; CML 2: viabilidad inicial; CML 3: espacio de opciones; CML 4: diseño puntual. Los niveles 1–4 se trabajan antes de la Fase A.":
+    "<b>Data we used:</b> CML 1: “cocktail napkin” idea; CML 2: initial feasibility; CML 3: trade space; CML 4: point design. Levels 1–4 happen before Phase A.",
+  "Dónde: Los 4 pasos de la preparación del juego, con esos mismos nombres":
+    "<b>Where:</b> The 4 preparation steps of the <a href=\"#juego\">game</a>, with those same names",
+  "🏗️ Mission Design Lab (MDL)":
+    "🏗️ Mission Design Lab (MDL)",
+  "Laboratorio de diseño colaborativo del Centro Goddard de la NASA.":
+    "The collaborative design lab at NASA’s Goddard Space Flight Center.",
+  "Dato que usamos: Ofrece estudios cada vez más profundos: «office hours» (~1 hora, lluvia de ideas y grandes retos), desarrollo del concepto (unas medias jornadas: viabilidad y riesgos), estudios de alternativas y diseño puntual.":
+    "<b>Data we used:</b> Offers deeper and deeper studies: office hours (~1 hour, brainstorming and big challenges), concept development (a few half days: feasibility and risk), trade studies and point design.",
+  "Dónde: Cada decisión del juego compara opciones con su coste, riesgo y beneficio, como un estudio de alternativas":
+    "<b>Where:</b> Every decision in the <a href=\"#juego\">game</a> compares options by cost, risk and benefit, like a trade study",
+  "🌐 NASA Mission Viz":
+    "🌐 NASA Mission Viz",
+  "«Web-based Space Mission Visualization», proyecto de software libre de la NASA.":
+    "“Web-based Space Mission Visualization”, a NASA open-source project.",
+  "Dato que usamos: Simulaciones 3D de astros, naves y trayectorias que funcionan en el navegador sin complementos (WebGL), con trayectorias que pueden venir de GMAT.":
+    "<b>Data we used:</b> 3D simulations of planets, spacecraft and trajectories that run in the browser with no plug-ins (WebGL), with trajectories that can come from GMAT.",
+  "Dónde: El visor 3D: también funciona en el navegador sin complementos y recorre la trayectoria en el tiempo":
+    "<b>Where:</b> The <a href=\"#visor3d\">3D viewer</a>: it also runs in the browser with no plug-ins and moves along the trajectory in time",
+  "🔭 Build It Yourself: Satellite!":
+    "🔭 Build It Yourself: Satellite!",
+  "Juego educativo de la NASA (Goddard, 2012), inspirado en el telescopio James Webb.":
+    "A NASA learning game (Goddard, 2012) inspired by the James Webb Space Telescope.",
+  "Dato que usamos: El objetivo científico decide las longitudes de onda, los instrumentos y la óptica; las opciones que no encajan salen en gris; tiene 3 niveles y, tras el lanzamiento, muestra misiones reales con datos parecidos.":
+    "<b>Data we used:</b> The science goal decides the wavelengths, instruments and optics; options that do not fit are greyed out; it has 3 levels and, after launch, shows real missions with similar data.",
+  "Dónde: El objetivo científico del juego: solo un instrumento encaja (los demás salen apagados) y al final se muestran misiones reales parecidas":
+    "<b>Where:</b> The science goal in the <a href=\"#juego\">game</a>: only one instrument fits (the others are greyed out) and real similar missions are shown at the end",
+  "📦 CubeSat 101":
+    "📦 CubeSat 101",
+  "Guía de la Iniciativa de Lanzamiento de CubeSats de la NASA (revisión de octubre de 2017, elaborada por Cal Poly).":
+    "A guide from NASA’s CubeSat Launch Initiative (October 2017 revision, prepared by Cal Poly).",
+  "Dato que usamos: Recorre todas las fases de una misión para quien la hace por primera vez: concepto de operaciones, lanzadores, modelos de misión, licencias, lanzamiento y operación.":
+    "<b>Data we used:</b> Walks first-time developers through every mission phase: concept of operations, launch vehicles, mission models, licensing, launch and operations.",
+  "Dónde: La línea de tiempo y el orden de la preparación del juego (concepto → lanzador → operación)":
+    "<b>Where:</b> The <a href=\"#cronologia\">timeline</a> and the order of the <a href=\"#juego\">game</a> preparation (concept → launcher → operations)",
+  "🥽 Visualize a Space Mission Using VR":
+    "🥽 Visualize a Space Mission Using VR",
+  "Reto del NASA Space Apps Challenge 2023.":
+    "A NASA Space Apps Challenge 2023 challenge.",
+  "Dato que usamos: Pide mostrar una misión completa: concepto, trayectorias (órbita terrestre, paso Tierra–Luna, órbitas planetarias), cronología de eventos y visión en 3D.":
+    "<b>Data we used:</b> Asks to show a whole mission: concept, trajectories (Earth orbit, Earth–Moon transfer, planetary orbits), event timeline and 3D view.",
+  "Dónde: El visor 3D con su línea de tiempo, la misión paso a paso y la cronología":
+    "<b>Where:</b> The <a href=\"#visor3d\">3D viewer</a> with its timeline, <a href=\"#mision\">the mission step by step</a> and the <a href=\"#cronologia\">timeline</a>",
+  "🍁 Agencia Espacial Canadiense (CSA)":
+    "🍁 Canadian Space Agency (CSA)",
+  "Juegos y actividades digitales para jóvenes y docentes.":
+    "Digital games and activities for young people and educators.",
+  "Dato que usamos: Incluye el juego educativo gratuito «Mission: Astronaut» y «Tomatosphere Adventure», en el que se cultivan tomates en Marte.":
+    "<b>Data we used:</b> Includes the free learning game “Mission: Astronaut” and “Tomatosphere Adventure”, where you grow tomatoes on Mars.",
+  "Dónde: La idea de aprender jugando del juego y los retos, con minijuegos dentro de la misión":
+    "<b>Where:</b> The learn-by-playing idea of the <a href=\"#juego\">game</a> and the <a href=\"#reto-luna\">challenges</a>, with mini-games inside the mission",
+  "Esta web se ha creado para el NASA Space Apps Challenge a partir de recursos públicos de la NASA y de otras agencias espaciales. En cada tarjeta indicamos el dato concreto que hemos usado de cada recurso, dónde aparece en la web y el enlace a la fuente oficial:":
+    "This website was created for the <strong>NASA Space Apps Challenge</strong> using public resources from NASA and other space agencies. Each card shows the specific data we used from each resource, where it appears on the website and the link to the official source:",
+
+  // ---------- Transparencia: hecha con Claude ----------
+  "Esta web se hizo con ayuda de Claude, la inteligencia artificial de Anthropic, y usa datos de recursos públicos de la NASA. Cómo la hicimos y qué datos de la NASA usamos →":
+    "<strong>This website was made with the help of Claude</strong>, Anthropic’s artificial intelligence, and uses data from public NASA resources. <a href=\"#transparencia\">How we made it and which NASA data we used →</a>",
+  "Transparencia":
+    "Transparency",
+  "Cómo hicimos esta web":
+    "How we made this website",
+  "Esta web y su juego se hicieron con ayuda de Claude, la inteligencia artificial de Anthropic.":
+    "<strong>This website and its game were made with the help of Claude, Anthropic’s artificial intelligence.</strong>",
+  "El equipo decidió la idea de la misión, qué se cuenta, cómo es el juego y qué mejoras hacer, y revisó el resultado.":
+    "<b>The team</b> decided the idea of the mission, what is explained, what the game is like and which improvements to make, and reviewed the result.",
+  "Claude ayudó a programar la web, el juego, los minijuegos, las animaciones y el visor 3D, a escribir y traducir los textos al inglés, y a buscar y resumir los recursos de la NASA.":
+    "<b>Claude</b> helped to program the website, the game, the mini-games, the animations and the 3D viewer, to write the texts and translate them into English, and to find and summarise the NASA resources.",
+  "Los datos científicos salen de los recursos públicos de la NASA y de otras agencias de esta tabla. Las misiones reales que se citan (Phoenix, Perseverance, Curiosity, MAVEN, InSight, Viking…) y las cifras de la web (distancias, periodos, fechas) son datos públicos conocidos.":
+    "<b>The science data</b> come from the public NASA and other agency resources in this table. The real missions mentioned (Phoenix, Perseverance, Curiosity, MAVEN, InSight, Viking…) and the figures on the website (distances, periods, dates) are well-known public data.",
+  "Enlaces de la NASA y otras agencias de los que usamos datos":
+    "NASA and other agency links whose data we used",
+  "Recurso (enlace oficial)":
+    "Resource (official link)",
+  "Dato que usamos":
+    "Data we used",
+  "Fotos de la Tierra (Apollo 17), la Luna (Lunar Reconnaissance Orbiter) y Marte (telescopio espacial Hubble), de la NASA":
+    "NASA photos of Earth (Apollo 17), the Moon (Lunar Reconnaissance Orbiter) and Mars (Hubble Space Telescope)",
+  "Imágenes de dominio público de los planetas en la web y el juego":
+    "Public-domain images of the planets on the website and in the game",
+  "Los enlaces y los datos se comprobaron con el buscador; si alguno cambia, avísanos. La NASA no respalda este proyecto. Más detalle en Recursos y créditos.":
+    "The links and data were checked with a search engine; if any of them changes, let us know. NASA does not endorse this project. More detail in <a href=\"#recursos\">Resources and credits</a>.",
+  "🤖 Hecha con ayuda de Claude (Anthropic). Cómo hicimos esta web":
+    "🤖 Made with the help of Claude (Anthropic). <a href=\"#transparencia\">How we made this website</a>",
+  "Design and Develop Science Missions (NASA, 2025) ↗":
+    "<a href=\"https://ntrs.nasa.gov/api/citations/20250002492/downloads/Design%20and%20Develop%20Science%20Mission_03262025.pdf\" target=\"_blank\" rel=\"noopener\">Design and Develop Science Missions (NASA, 2025) ↗</a>",
+  "Los 4 segmentos de una misión y las fases de la Pre-Fase A a la Fase E":
+    "The 4 segments of a mission and the phases from Pre-Phase A to Phase E",
+  "GMAT – General Mission Analysis Tool (NASA Goddard) ↗":
+    "<a href=\"https://etd.gsfc.nasa.gov/capabilities/capabilities-listing/general-mission-analysis-tool-gmat/\" target=\"_blank\" rel=\"noopener\">GMAT – General Mission Analysis Tool (NASA Goddard) ↗</a>",
+  "Tipos de órbita y trayectoria, ventanas de lanzamiento y maniobras":
+    "Types of orbit and trajectory, launch windows and manoeuvres",
+  "Concept Maturity Levels (JPL, 2013) ↗":
+    "<a href=\"https://ntrs.nasa.gov/citations/20150007816\" target=\"_blank\" rel=\"noopener\">Concept Maturity Levels (JPL, 2013) ↗</a>",
+  "Nombres de los niveles CML 1–4 que se usan en la preparación del juego":
+    "Names of CML levels 1–4 used in the game preparation",
+  "Mission Design Lab (NASA Goddard) ↗":
+    "<a href=\"https://etd.gsfc.nasa.gov/capabilities/integrated-design-center/mission-design-lab\" target=\"_blank\" rel=\"noopener\">Mission Design Lab (NASA Goddard) ↗</a>",
+  "Niveles de estudio: office hours, desarrollo del concepto, estudios de alternativas y diseño puntual":
+    "Study levels: office hours, concept development, trade studies and point design",
+  "NASA Mission Viz ↗":
+    "<a href=\"https://nasa.github.io/mission-viz\" target=\"_blank\" rel=\"noopener\">NASA Mission Viz ↗</a>",
+  "Idea de visualizar trayectorias en 3D en el navegador, sin complementos":
+    "The idea of showing trajectories in 3D in the browser, with no plug-ins",
+  "A Learning Game About Telescopes – Build It Yourself: Satellite! (NASA) ↗":
+    "<a href=\"https://science.nasa.gov/mission/webb/game-build-it-yourself/\" target=\"_blank\" rel=\"noopener\">A Learning Game About Telescopes – Build It Yourself: Satellite! (NASA) ↗</a>",
+  "El objetivo científico decide los instrumentos, las opciones que no encajan salen en gris y al final se muestran misiones reales parecidas":
+    "The science goal decides the instruments, options that do not fit are greyed out and real similar missions are shown at the end",
+  "CubeSat 101 (NASA, 2017) ↗":
+    "<a href=\"https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf\" target=\"_blank\" rel=\"noopener\">CubeSat 101 (NASA, 2017) ↗</a>",
+  "Fases de una misión, del concepto de operaciones al lanzamiento y la operación":
+    "Mission phases, from the concept of operations to launch and operations",
+  "Visualize a Space Mission Using Virtual Reality (NASA Space Apps, 2023) ↗":
+    "<a href=\"https://www.spaceappschallenge.org/\" target=\"_blank\" rel=\"noopener\">Visualize a Space Mission Using Virtual Reality (NASA Space Apps, 2023) ↗</a>",
+  "Mostrar el concepto, las trayectorias, la cronología y la vista 3D de una misión completa":
+    "Show the concept, trajectories, timeline and 3D view of a whole mission",
+  "Juegos y actividades digitales de la Agencia Espacial Canadiense ↗":
+    "<a href=\"https://www.asc-csa.gc.ca/eng/youth-educators/digital-games-and-activities.asp\" target=\"_blank\" rel=\"noopener\">Canadian Space Agency digital games and activities ↗</a>",
+  "Aprender jugando («Mission: Astronaut», «Tomatosphere Adventure»)":
+    "Learning by playing (“Mission: Astronaut”, “Tomatosphere Adventure”)",
   "📸 Fotógrafo de Marte":
     "📸 Mars photographer",
   "La nave da una vuelta a Marte a 400 km de altura y el suelo pasa a toda velocidad por debajo. Toca o haz clic donde quieras hacer cada foto. Tienes 8 fotos y una sola vuelta, así que no las gastes en la zona de noche.":
