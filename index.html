@@ -17,7 +17,8 @@
   <header class="nav">
     <div class="container nav-inner">
       <a class="brand" href="#inicio"><span class="brand-dot" aria-hidden="true"></span>The Last Lap</a>
-      <nav aria-label="Secciones">
+      <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menú de secciones"></button>
+      <nav id="site-nav" aria-label="Secciones">
         <a href="#orbitas">Órbitas</a>
         <a href="#oposicion">Oposición</a>
         <a href="#magnetismo">Magnetismo</a>
@@ -31,8 +32,8 @@
         <a href="#estacion">Estación</a>
         <a href="#gravedad">Simulador de gravedad</a>
         <a href="#reto-luna">Reto lunar</a>
-        <a href="#juegos">Juegos</a>
       </nav>
+      <a class="game-btn" href="#juego">🎮 Juego</a>
       <button class="lang-btn" id="lang-btn" type="button" aria-label="Switch to English" title="English">
         <svg class="flag flag-uk" viewBox="0 0 60 30" aria-hidden="true">
           <clipPath id="uk-s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
@@ -70,6 +71,7 @@
         <p class="lead">¿Cómo llegaríamos a Marte aprovechando el empujón de la Luna y el mejor momento de las órbitas? Te lo contamos paso a paso, con animaciones.</p>
         <div class="hero-cta">
           <a class="btn primary" href="#mision">Ver la misión ▶</a>
+          <a class="btn accent" href="#juego">🎮 Jugar</a>
           <a class="btn ghost" href="#orbitas">Empezar por lo básico</a>
         </div>
         <ul class="hero-stats">
@@ -868,44 +870,19 @@
       </div>
     </section>
 
-    <section id="juegos" class="section">
+    <section id="juego" class="section">
       <div class="container">
+        <a class="btn small ghost game-back" href="#inicio">◀ Volver a la web</a>
         <header class="section-head">
-          <p class="kicker">Juegos</p>
-          <h2>Ahora mandas tú</h2>
-          <p class="section-lead">Dos retos más: haz de cámara de la nave en órbita de Marte y toma las decisiones de la misión, desde la cuenta atrás hasta la última foto.</p>
+          <p class="kicker">Juego · Tú diriges la misión</p>
+          <h2>Del despegue a Marte: tus decisiones</h2>
+          <p class="section-lead">Eres la directora o el director de la misión. Tienes un <strong>presupuesto de 1.000 millones de euros</strong> para elegir el cohete, el equipo, las provisiones y las herramientas. Después, durante el viaje, cada decisión gasta <strong>dinero, combustible, provisiones</strong> o pone en juego la <strong>salud de la tripulación</strong> y la <strong>nave</strong>. ¿Llegaréis a Marte?</p>
         </header>
 
-        <div id="foto-marte" class="reto">
-          <h3 class="sub-head">📸 Fotógrafo de Marte</h3>
-          <p class="reto-lead">La nave da una vuelta a Marte a <strong>400 km de altura</strong> y el suelo pasa a toda velocidad por debajo. <strong>Toca o haz clic</strong> donde quieras hacer cada foto. Tienes <strong>8 fotos</strong> y una sola vuelta, así que no las gastes en la zona de noche.</p>
-
-          <figure class="viz card game-card">
-            <ul class="game-goals pg-goals">
-              <li data-t="cap"><span class="goal-stars">🧊</span>Casquete polar</li>
-              <li data-t="olympus"><span class="goal-stars">🌋</span>Monte Olimpo</li>
-              <li data-t="phobos"><span class="goal-stars">🥔</span>Fobos</li>
-              <li data-t="valles"><span class="goal-stars">🏞️</span>Valles Marineris</li>
-              <li data-t="rover"><span class="goal-stars">🤖</span>Un rover</li>
-              <li data-t="storm"><span class="goal-stars">🌪️</span>Tormenta de polvo</li>
-            </ul>
-            <canvas id="pgame" class="canvas-game canvas-photo" tabindex="0" role="img" aria-label="Juego: el suelo de Marte pasa por debajo de la nave; toca para hacer fotos de los lugares de la lista"></canvas>
-            <div class="pg-hud" id="pg-hud" aria-live="off"></div>
-            <div class="game-result" id="pg-result" aria-live="polite"></div>
-            <div class="pg-gallery" id="pg-gallery"></div>
-            <div class="controls">
-              <button class="btn small primary" id="pg-start" type="button">▶ Empezar la vuelta</button>
-              <button class="btn small ghost" id="pg-reset" type="button">↺ Otra vez</button>
-            </div>
-            <p class="fine">Cuanto más centrado esté el objetivo en el visor, más estrellas. Simplificado: el mapa no está a escala y en la realidad una vuelta dura casi 2 horas, no 50 segundos.</p>
-          </figure>
+        <div class="card adv" id="adv-game">
+          <noscript><p>Este juego necesita JavaScript.</p></noscript>
         </div>
-
-        <div id="decisiones" class="reto">
-          <h3 class="sub-head">🧭 Tú decides: la misión</h3>
-          <p class="reto-lead">Eres quien dirige el vuelo. Tu equipo te dará su opinión, pero <strong>la última palabra es tuya</strong>, y cada decisión cambia lo que pasa después. Hay <strong>5 finales</strong> distintos: ¿los encontrarás todos?</p>
-          <div class="card story" id="st-root" aria-live="polite"></div>
-        </div>
+        <p class="fine">Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.</p>
       </div>
     </section>
   </main>
