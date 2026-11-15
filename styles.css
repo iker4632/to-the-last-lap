@@ -1080,3 +1080,93 @@ html.dia-open, html.dia-open body { overflow: hidden; }
    algunos navegadores lo dibujaban mal (imagen ampliada y con ruido). */
 .card.adv { backdrop-filter: none; -webkit-backdrop-filter: none; background: #0d1326; }
 .adv-screen, .adv-scene { contain: paint; }
+
+/* Objetivo científico, CML y segmentos */
+.adv-scene .goal-pick { cursor: pointer; transition: opacity .3s; }
+.adv-scene .goal-pick.off { opacity: .4; }
+.adv-scene .gp-ring { fill: #0d1428; stroke: #3a4566; stroke-width: 3; }
+.adv-scene .goal-pick:hover .gp-ring { stroke: #ffb36b; }
+.adv-scene .goal-pick.on .gp-ring { stroke: #ffc857; stroke-width: 5; fill: rgba(255,200,87,.15); }
+.adv-scene .gp-line { stroke: rgba(255,200,87,.0); stroke-width: 2; stroke-dasharray: 4 5; fill: none; }
+.adv-scene .goal-pick.on .gp-line { stroke: rgba(255,200,87,.8); }
+.cml-steps { list-style: none; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.cml-steps li { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px; border-radius: 8px; font-size: .66rem; color: var(--faint); background: rgba(255,255,255,.03); border: 1px solid var(--border); text-align: center; line-height: 1.2; }
+.cml-steps li b { font: 700 .7rem var(--display); color: var(--muted); }
+.cml-steps li.done { border-color: rgba(107,227,181,.4); color: #8ff0c8; }
+.cml-steps li.done b { color: #8ff0c8; }
+.cml-steps li.now { border-color: #ffc857; background: rgba(255,200,87,.12); color: var(--text); }
+.cml-steps li.now b { color: #ffe08a; }
+.seg-chip { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 999px; font: 600 .66rem var(--font); letter-spacing: .02em; text-transform: none; vertical-align: 1px; border: 1px solid; }
+.seg-launch { color: #ffb36b; border-color: rgba(255,179,107,.5); background: rgba(255,122,69,.1); }
+.seg-space { color: #9fd3ff; border-color: rgba(159,211,255,.45); background: rgba(78,163,255,.1); }
+.seg-ground { color: #8ff0c8; border-color: rgba(143,240,200,.45); background: rgba(107,227,181,.08); }
+.seg-user { color: #e0b8ff; border-color: rgba(224,184,255,.45); background: rgba(197,139,255,.1); }
+.adv-sub { margin: 10px 0 0; font: 600 .78rem var(--font); color: var(--muted); }
+.adv-sub + .adv-opts { margin-top: 6px; }
+.adv-real { margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: rgba(197,139,255,.08); border: 1px solid rgba(197,139,255,.3); }
+.adv-real .adv-sub { margin: 0 0 4px; color: #e0b8ff; }
+.adv-real ul { margin: 0; padding-left: 18px; font-size: .8rem; color: var(--muted); line-height: 1.45; }
+.adv-real b { color: var(--text); }
+@media (max-width: 600px) { .cml-steps li span { display: none; } .cml-steps { margin-bottom: 6px; } }
+.adv-sub-note { font-weight: 500; color: var(--faint); }
+.adv-opts.instr-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.instr-row .adv-opt { padding: 7px 6px; align-items: center; text-align: center; }
+.instr-row .adv-opt-head { flex-direction: column; gap: 2px; }
+.instr-row .adv-opt-name { font-size: .74rem; justify-content: center; }
+.instr-row .adv-cost { margin: 0; font-size: .68rem; }
+.instr-row .adv-opt-desc, .instr-row .adv-why { display: none; }
+.adv-opts.tools3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tools3 .adv-opt { padding: 7px 9px; }
+.tools3 .adv-opt-desc { -webkit-line-clamp: 1; }
+.tools3 .adv-opt-head { flex-wrap: wrap; }
+.tools3 .adv-opt-name { font-size: .8rem; }
+.tools3 .adv-cost { font-size: .7rem; }
+@media (max-width: 600px) { .adv-opts.tools3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .instr-row .adv-opt-name { font-size: .66rem; } }
+@media (max-width: 600px) {
+  .adv-opts.tools3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tools3 .adv-opt { padding: 6px 5px; align-items: center; text-align: center; }
+  .tools3 .adv-opt-head { flex-direction: column; gap: 1px; }
+  .tools3 .adv-opt-name { font-size: .66rem; justify-content: center; }
+  .tools3 .adv-cost { margin: 0; }
+  .tools3 .adv-opt-desc, .tools3 .adv-why { display: none; }
+  .adv-sub-note { display: block; font-size: .7rem; }
+}
+@media (max-width: 600px) { .cml-steps { display: none; } }
+@media (max-width: 600px) { .adv-sub-note { display: none; } }
+
+/* Los 4 segmentos */
+.seg-flow { padding: 14px 10px 4px; margin: 0 0 18px; }
+.seg-flow svg { display: block; width: 100%; height: auto; max-height: 210px; }
+.seg-node circle { fill: #10172b; stroke-width: 3; }
+.seg-node.launch circle { stroke: #ffb36b; } .seg-node.space circle { stroke: #9fd3ff; } .seg-node.ground circle { stroke: #8ff0c8; } .seg-node.user circle { stroke: #e0b8ff; }
+.seg-ic { font-size: 38px; }
+.seg-name { fill: var(--text); font: 700 15px var(--display); }
+.seg-link { stroke: #a3acc4; stroke-width: 2.5; fill: none; color: #a3acc4; stroke-dasharray: 6 5; animation: seg-flow 1.2s linear infinite; }
+@keyframes seg-flow { to { stroke-dashoffset: -11; } }
+.seg-lbl { fill: var(--muted); font: 500 12px var(--font); }
+.seg-cards .seg-card { border-top: 3px solid; }
+.seg-card.launch { border-top-color: #ffb36b; } .seg-card.space { border-top-color: #9fd3ff; } .seg-card.ground { border-top-color: #8ff0c8; } .seg-card.user { border-top-color: #e0b8ff; }
+.seg-ex { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-strong); font-size: .86rem; }
+@media (prefers-reduced-motion: reduce) { .seg-link { animation: none; } }
+
+/* Visor 3D */
+.canvas-v3d { display: block; width: 100%; aspect-ratio: 16 / 9; touch-action: none; cursor: grab; border-radius: var(--radius-sm); background: radial-gradient(ellipse at center, #0f1630 0%, #05070f 75%); outline: none; }
+.canvas-v3d:active { cursor: grabbing; }
+.canvas-v3d:focus-visible { box-shadow: 0 0 0 2px var(--earth); }
+@media (max-width: 600px) { .canvas-v3d { aspect-ratio: 1 / 1; } }
+.v3d-time { display: flex; align-items: center; gap: 12px; padding: 12px 4px 0; }
+.v3d-time input[type="range"] { flex: 1; accent-color: var(--accent); }
+.v3d-events { padding-top: 8px; }
+
+/* Recursos y aviso */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.res-card { padding: 18px; }
+.res-card h3 { font-size: 1.02rem; }
+.res-card p { color: var(--muted); font-size: .92rem; }
+.res-use { font-size: .84rem !important; }
+.res-card a, .res-links a, .nasa-note a, .footer a { color: #9fd3ff; }
+.res-links { margin-top: 18px; color: var(--muted); font-size: .92rem; }
+.nasa-note { margin-top: 18px; padding: 18px 20px; border-color: rgba(255,200,87,.4); background: rgba(255,200,87,.06); }
+.nasa-note h3 { color: #ffe08a; font-size: 1rem; }
+.nasa-note p { color: var(--muted); font-size: .9rem; }
+.nasa-orig { font-style: italic; font-size: .84rem !important; }

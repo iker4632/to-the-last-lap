@@ -24,6 +24,8 @@
         <a href="#magnetismo">Magnetismo</a>
         <a href="#honda">Efecto honda</a>
         <a href="#mision">La misión</a>
+        <a href="#segmentos">Segmentos</a>
+        <a href="#visor3d">Visor 3D</a>
         <a href="#zoom-luna">Paso lunar</a>
         <a href="#orientacion">Orientación</a>
         <a href="#regreso">Regreso</a>
@@ -32,6 +34,7 @@
         <a href="#estacion">Estación</a>
         <a href="#gravedad">Simulador de gravedad</a>
         <a href="#reto-luna">Reto lunar</a>
+        <a href="#recursos">Recursos</a>
       </nav>
       <a class="game-btn" href="#juego">🎮 Juego</a>
       <button class="lang-btn" id="lang-btn" type="button" aria-label="Switch to English" title="English">
@@ -463,6 +466,71 @@
       </div>
     </section>
 
+    <!-- LOS 4 SEGMENTOS DE UNA MISIÓN -->
+    <section id="segmentos" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Cómo se organiza una misión</p>
+          <h2>Los 4 segmentos de una misión</h2>
+          <p class="section-lead">Los ingenieros de la NASA dividen cada misión en <strong>cuatro partes, llamadas segmentos</strong>. Cada una tiene sus propios equipos, presupuesto y riesgos. Así se reparte nuestra Misión The Last Lap:</p>
+        </header>
+
+        <figure class="card seg-flow">
+          <svg viewBox="0 0 760 170" role="img" aria-label="Esquema: el segmento de lanzamiento pone la nave en el espacio, la nave y el segmento terrestre intercambian datos y órdenes, y los datos llegan a los científicos">
+            <defs><marker id="seg-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="currentColor"/></marker></defs>
+            <g class="seg-node launch"><circle cx="80" cy="70" r="46"/><text x="80" y="84" text-anchor="middle" class="seg-ic">🚀</text><text x="80" y="140" text-anchor="middle" class="seg-name">Lanzamiento</text></g>
+            <g class="seg-node space"><circle cx="290" cy="70" r="46"/><text x="290" y="84" text-anchor="middle" class="seg-ic">🛰️</text><text x="290" y="140" text-anchor="middle" class="seg-name">Espacio</text></g>
+            <g class="seg-node ground"><circle cx="490" cy="70" r="46"/><text x="490" y="84" text-anchor="middle" class="seg-ic">📡</text><text x="490" y="140" text-anchor="middle" class="seg-name">Tierra</text></g>
+            <g class="seg-node user"><circle cx="680" cy="70" r="46"/><text x="680" y="84" text-anchor="middle" class="seg-ic">🔬</text><text x="680" y="140" text-anchor="middle" class="seg-name">Usuarios</text></g>
+            <path d="M130 70 H236" class="seg-link" marker-end="url(#seg-arrow)"/><text x="183" y="58" text-anchor="middle" class="seg-lbl">pone en el espacio</text>
+            <path d="M340 60 H436" class="seg-link" marker-end="url(#seg-arrow)"/><path d="M436 82 H344" class="seg-link" marker-end="url(#seg-arrow)"/>
+            <text x="390" y="48" text-anchor="middle" class="seg-lbl">datos</text><text x="390" y="104" text-anchor="middle" class="seg-lbl">órdenes</text>
+            <path d="M540 70 H626" class="seg-link" marker-end="url(#seg-arrow)"/><text x="583" y="58" text-anchor="middle" class="seg-lbl">ciencia</text>
+          </svg>
+        </figure>
+
+        <div class="facts seg-cards">
+          <div class="fact card seg-card launch"><span class="fact-icon" aria-hidden="true">🚀</span><h4>Segmento de lanzamiento</h4><p>El cohete y los servicios que ponen la nave en el espacio.</p><p class="seg-ex"><b>En The Last Lap:</b> el cohete que despega a finales de 2026, en la ventana de lanzamiento.</p></div>
+          <div class="fact card seg-card space"><span class="fact-icon" aria-hidden="true">🛰️</span><h4>Segmento espacial</h4><p>La nave, sus instrumentos y, si los hay, el módulo de aterrizaje o el rover.</p><p class="seg-ex"><b>En The Last Lap:</b> la nave con su cámara, antena, paneles y motor, que pasa por la Luna y frena en Marte.</p></div>
+          <div class="fact card seg-card ground"><span class="fact-icon" aria-hidden="true">📡</span><h4>Segmento terrestre</h4><p>Las antenas y el centro de control que hablan con la nave, reciben los datos y dirigen la misión.</p><p class="seg-ex"><b>En The Last Lap:</b> la Red de Espacio Profundo recibe las fotos tras 3–22 minutos de viaje.</p></div>
+          <div class="fact card seg-card user"><span class="fact-icon" aria-hidden="true">🔬</span><h4>Segmento de usuarios</h4><p>Los científicos y el público que analizan y usan los datos de la misión.</p><p class="seg-ex"><b>En The Last Lap:</b> los científicos que estudian las fotos de Marte… ¡y tú!</p></div>
+        </div>
+        <p class="fine">En el juego, cada capítulo lleva una etiqueta de color con su segmento. Basado en el enfoque de ingeniería de sistemas que describe la NASA en «Design and Develop Science Missions».</p>
+      </div>
+    </section>
+
+    <!-- VISOR 3D -->
+    <section id="visor3d" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Visor 3D</p>
+          <h2>La misión en tres dimensiones</h2>
+          <p class="section-lead"><strong>Arrastra</strong> para girar la vista, usa la <strong>rueda</strong> o <strong>pellizca</strong> para acercarte y mueve la <strong>línea de tiempo</strong> para ver dónde están los planetas y la nave cada día.</p>
+        </header>
+        <figure class="viz card v3d-card">
+          <canvas id="v3d" class="canvas-v3d" tabindex="0" role="img" aria-label="Visor 3D: el Sol, las órbitas de la Tierra y Marte y la trayectoria de la nave, que se puede girar y recorrer en el tiempo"></canvas>
+          <figcaption class="viz-bar">
+            <div class="readout"><span class="readout-label">Fecha</span><span class="readout-value" id="v3d-date">—</span></div>
+            <div class="readout"><span class="readout-label">Día de misión</span><span class="readout-value" id="v3d-day">0</span></div>
+            <div class="readout"><span class="readout-label">Distancia a la Tierra</span><span class="readout-value" id="v3d-dist">—</span></div>
+            <div class="readout"><span class="readout-label">Fase</span><span class="readout-value" id="v3d-phase">—</span></div>
+          </figcaption>
+          <div class="v3d-time">
+            <button class="btn small accent" id="v3d-play" type="button">▶ Reproducir</button>
+            <input type="range" id="v3d-slider" min="0" max="320" step="1" value="0" aria-label="Día de misión">
+          </div>
+          <div class="controls v3d-events">
+            <button class="btn small" type="button" data-v3d-day="0">🚀 Despegue</button>
+            <button class="btn small" type="button" data-v3d-day="3">🌙 Paso por la Luna</button>
+            <button class="btn small" type="button" data-v3d-day="96">🔭 Oposición</button>
+            <button class="btn small" type="button" data-v3d-day="259">🔴 Llegada</button>
+            <button class="btn small ghost" type="button" id="v3d-reset">↺ Vista inicial</button>
+          </div>
+          <p class="fine">No está a escala: los planetas, la Luna y la inclinación de la órbita de Marte están exagerados para que se vean. Inspirado en NASA Mission Viz.</p>
+        </figure>
+      </div>
+    </section>
+
     <!-- ZOOM: PASO POR LA LUNA -->
     <section id="zoom-luna" class="section">
       <div class="container">
@@ -885,12 +953,41 @@
         <p class="fine">Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.</p>
       </div>
     </section>
+
+    <!-- RECURSOS Y CRÉDITOS -->
+    <section id="recursos" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Para saber más</p>
+          <h2>Recursos y créditos</h2>
+          <p class="section-lead">Esta web se ha creado para el <strong>NASA Space Apps Challenge</strong> a partir de recursos públicos de la NASA y de otras agencias espaciales. Así hemos usado cada uno:</p>
+        </header>
+        <div class="res-grid">
+          <article class="card res-card"><h3>🧭 Design and Develop Science Missions</h3><p>Cómo pasa una misión de una pregunta científica a un diseño real. De aquí salen los 4 segmentos de una misión.</p><p class="res-use">Usado en: <a href="#segmentos">Los 4 segmentos</a> y el juego.</p></article>
+          <article class="card res-card"><h3>🛰️ GMAT (General Mission Analysis Tool)</h3><p>Programa libre de la NASA para diseñar trayectorias, ventanas de lanzamiento y maniobras.</p><p class="res-use">Usado en: <a href="#orbitas">las órbitas</a>, <a href="#oposicion">la oposición</a> y <a href="#mision">la ruta de la misión</a>.</p></article>
+          <article class="card res-card"><h3>📈 Concept Maturity Levels (CML)</h3><p>Escala del JPL para medir lo maduro que está un concepto de misión: de la idea (CML 1) al diseño detallado.</p><p class="res-use">Usado en: los pasos de la preparación del <a href="#juego">juego</a>.</p></article>
+          <article class="card res-card"><h3>🏗️ Mission Design Lab (MDL)</h3><p>Laboratorio de la NASA donde ingenieros y científicos comparan opciones y estudian costes y riesgos.</p><p class="res-use">Usado en: las decisiones del <a href="#juego">juego</a>, cada una con su coste, riesgo y beneficio.</p></article>
+          <article class="card res-card"><h3>🌐 NASA Mission Viz</h3><p>Visor web en 3D de trayectorias y misiones espaciales.</p><p class="res-use">Usado en: el <a href="#visor3d">visor 3D</a>.</p></article>
+          <article class="card res-card"><h3>🔭 Juego de diseño de telescopios</h3><p>Juego educativo de la NASA en el que el objetivo científico decide los instrumentos.</p><p class="res-use">Usado en: el objetivo científico y los instrumentos del <a href="#juego">juego</a>.</p></article>
+          <article class="card res-card"><h3>📦 CubeSat 101</h3><p>Guía de la NASA con todas las fases de una misión, del concepto de operaciones al lanzamiento.</p><p class="res-use">Usado en: la <a href="#cronologia">línea de tiempo</a>.</p></article>
+          <article class="card res-card"><h3>🥽 Visualize a Space Mission Using VR</h3><p>Reto del Space Apps 2023 para explicar misiones completas de forma interactiva.</p><p class="res-use">Usado en: el <a href="#visor3d">visor 3D</a> y la <a href="#mision">misión paso a paso</a>.</p></article>
+          <article class="card res-card"><h3>🍁 Agencia Espacial Canadiense (CSA)</h3><p>Juegos, libros digitales y actividades sobre el espacio para todas las edades.</p><p class="res-use">Inspiración para el <a href="#juego">juego</a> y los <a href="#reto-luna">retos</a>. <a href="https://www.asc-csa.gc.ca/eng/" target="_blank" rel="noopener">Web de la CSA ↗</a></p></article>
+        </div>
+        <p class="res-links">Más información: <a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">NASA Space Apps Challenge ↗</a> · <a href="https://www.nasa.gov/" target="_blank" rel="noopener">NASA ↗</a> · <a href="https://www.jpl.nasa.gov/" target="_blank" rel="noopener">JPL ↗</a> · <a href="https://eyes.nasa.gov/" target="_blank" rel="noopener">NASA’s Eyes ↗</a></p>
+        <aside class="card nasa-note" role="note">
+          <h3>Aviso</h3>
+          <p><strong>The Last Lap es un proyecto educativo independiente.</strong> La NASA no respalda a ninguna entidad que no pertenezca al Gobierno de EE. UU. y no es responsable de la información de los sitios web ajenos a él. Las fotos de la NASA se usan como material de dominio público, sin que eso implique su respaldo. Al usar datos de otros sitios web, se respetan sus condiciones de uso.</p>
+          <p class="nasa-orig" lang="en">“NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites.”</p>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <footer class="footer" id="pie">
     <div class="container">
       <p><strong>Misión The Last Lap</strong> es una misión hipotética con fines educativos. Datos aproximados; las animaciones no están a escala real.</p>
       <p class="photo-credit">📷 Fotos: la Tierra, tripulación del Apollo 17 (NASA); la Luna, sonda Lunar Reconnaissance Orbiter (NASA); Marte, telescopio espacial Hubble (NASA).</p>
+      <p class="photo-credit">Proyecto para el NASA Space Apps Challenge. La NASA no respalda este proyecto. <a href="#recursos">Recursos y créditos</a></p>
     </div>
   </footer>
 
