@@ -35,6 +35,7 @@
         <a href="#gravedad">Simulador de gravedad</a>
         <a href="#reto-luna">Reto lunar</a>
         <a href="#recursos">Recursos</a>
+        <a href="#transparencia">Cómo se hizo</a>
       </nav>
       <a class="game-btn" href="#juego">🎮 Juego</a>
       <button class="lang-btn" id="lang-btn" type="button" aria-label="Switch to English" title="English">
@@ -77,6 +78,10 @@
           <a class="btn accent" href="#juego">🎮 Jugar</a>
           <a class="btn ghost" href="#orbitas">Empezar por lo básico</a>
         </div>
+        <aside class="ai-banner" role="note">
+          <span class="ai-banner-icon" aria-hidden="true">🤖</span>
+          <p><strong>Esta web se hizo con ayuda de Claude</strong>, la inteligencia artificial de Anthropic, y usa datos de recursos públicos de la NASA. <a href="#transparencia">Cómo la hicimos y qué datos de la NASA usamos →</a></p>
+        </aside>
         <ul class="hero-stats">
           <li><strong>384.000 km</strong><span>de la Tierra a la Luna</span></li>
           <li><strong>~26 meses</strong><span>entre dos oposiciones de Marte</span></li>
@@ -954,6 +959,43 @@
       </div>
     </section>
 
+    <!-- CÓMO HICIMOS ESTA WEB (TRANSPARENCIA) -->
+    <section id="transparencia" class="section">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Transparencia</p>
+          <h2>Cómo hicimos esta web</h2>
+        </header>
+        <div class="card ai-card">
+          <div class="ai-card-head"><span class="ai-big" aria-hidden="true">🤖</span><p><strong>Esta web y su juego se hicieron con ayuda de Claude, la inteligencia artificial de Anthropic.</strong></p></div>
+          <ul class="ai-list">
+            <li><b>El equipo</b> decidió la idea de la misión, qué se cuenta, cómo es el juego y qué mejoras hacer, y revisó el resultado.</li>
+            <li><b>Claude</b> ayudó a programar la web, el juego, los minijuegos, las animaciones y el visor 3D, a escribir y traducir los textos al inglés, y a buscar y resumir los recursos de la NASA.</li>
+            <li><b>Los datos científicos</b> salen de los recursos públicos de la NASA y de otras agencias de esta tabla. Las misiones reales que se citan (Phoenix, Perseverance, Curiosity, MAVEN, InSight, Viking…) y las cifras de la web (distancias, periodos, fechas) son datos públicos conocidos.</li>
+          </ul>
+        </div>
+        <h3 class="sub-head">Enlaces de la NASA y otras agencias de los que usamos datos</h3>
+        <div class="card ai-table-wrap">
+          <table class="ai-table">
+            <thead><tr><th>Recurso (enlace oficial)</th><th>Dato que usamos</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://ntrs.nasa.gov/api/citations/20250002492/downloads/Design%20and%20Develop%20Science%20Mission_03262025.pdf" target="_blank" rel="noopener">Design and Develop Science Missions (NASA, 2025) ↗</a></td><td>Los 4 segmentos de una misión y las fases de la Pre-Fase A a la Fase E</td></tr>
+              <tr><td><a href="https://etd.gsfc.nasa.gov/capabilities/capabilities-listing/general-mission-analysis-tool-gmat/" target="_blank" rel="noopener">GMAT – General Mission Analysis Tool (NASA Goddard) ↗</a></td><td>Tipos de órbita y trayectoria, ventanas de lanzamiento y maniobras</td></tr>
+              <tr><td><a href="https://ntrs.nasa.gov/citations/20150007816" target="_blank" rel="noopener">Concept Maturity Levels (JPL, 2013) ↗</a></td><td>Nombres de los niveles CML 1–4 que se usan en la preparación del juego</td></tr>
+              <tr><td><a href="https://etd.gsfc.nasa.gov/capabilities/integrated-design-center/mission-design-lab" target="_blank" rel="noopener">Mission Design Lab (NASA Goddard) ↗</a></td><td>Niveles de estudio: office hours, desarrollo del concepto, estudios de alternativas y diseño puntual</td></tr>
+              <tr><td><a href="https://nasa.github.io/mission-viz" target="_blank" rel="noopener">NASA Mission Viz ↗</a></td><td>Idea de visualizar trayectorias en 3D en el navegador, sin complementos</td></tr>
+              <tr><td><a href="https://science.nasa.gov/mission/webb/game-build-it-yourself/" target="_blank" rel="noopener">A Learning Game About Telescopes – Build It Yourself: Satellite! (NASA) ↗</a></td><td>El objetivo científico decide los instrumentos, las opciones que no encajan salen en gris y al final se muestran misiones reales parecidas</td></tr>
+              <tr><td><a href="https://www.nasa.gov/wp-content/uploads/2017/03/nasa_csli_cubesat_101_508.pdf" target="_blank" rel="noopener">CubeSat 101 (NASA, 2017) ↗</a></td><td>Fases de una misión, del concepto de operaciones al lanzamiento y la operación</td></tr>
+              <tr><td><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Visualize a Space Mission Using Virtual Reality (NASA Space Apps, 2023) ↗</a></td><td>Mostrar el concepto, las trayectorias, la cronología y la vista 3D de una misión completa</td></tr>
+              <tr><td><a href="https://www.asc-csa.gc.ca/eng/youth-educators/digital-games-and-activities.asp" target="_blank" rel="noopener">Juegos y actividades digitales de la Agencia Espacial Canadiense ↗</a></td><td>Aprender jugando («Mission: Astronaut», «Tomatosphere Adventure»)</td></tr>
+              <tr><td>Fotos de la Tierra (Apollo 17), la Luna (Lunar Reconnaissance Orbiter) y Marte (telescopio espacial Hubble), de la NASA</td><td>Imágenes de dominio público de los planetas en la web y el juego</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="fine">Los enlaces y los datos se comprobaron con el buscador; si alguno cambia, avísanos. La NASA no respalda este proyecto. Más detalle en <a href="#recursos">Recursos y créditos</a>.</p>
+      </div>
+    </section>
+
     <!-- RECURSOS Y CRÉDITOS -->
     <section id="recursos" class="section">
       <div class="container">
@@ -988,6 +1030,7 @@
       <p><strong>Misión The Last Lap</strong> es una misión hipotética con fines educativos. Datos aproximados; las animaciones no están a escala real.</p>
       <p class="photo-credit">📷 Fotos: la Tierra, tripulación del Apollo 17 (NASA); la Luna, sonda Lunar Reconnaissance Orbiter (NASA); Marte, telescopio espacial Hubble (NASA).</p>
       <p class="photo-credit">Proyecto para el NASA Space Apps Challenge. La NASA no respalda este proyecto. <a href="#recursos">Recursos y créditos</a></p>
+      <p class="photo-credit">🤖 Hecha con ayuda de Claude (Anthropic). <a href="#transparencia">Cómo hicimos esta web</a></p>
     </div>
   </footer>
 

@@ -1174,3 +1174,27 @@ html.dia-open, html.dia-open body { overflow: hidden; }
 .res-data b, .res-use b { color: #ffe08a; }
 .res-srcp { margin: 0; }
 .res-src { font-size: .82rem; font-weight: 600; }
+
+/* Hecha con Claude: aviso y apartado de transparencia */
+.ai-banner { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 12px; padding: 14px 18px; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(197,139,255,.16), rgba(78,163,255,.12)); border: 1px solid rgba(197,139,255,.55); }
+.ai-banner-icon { font-size: 1.6rem; line-height: 1; }
+.ai-banner p { margin: 0; color: var(--text); }
+.ai-banner a { color: #e0b8ff; font-weight: 600; }
+.ai-card { padding: 20px 22px; border-color: rgba(197,139,255,.55); background: linear-gradient(135deg, rgba(197,139,255,.10), rgba(18,24,44,.8)); }
+.ai-card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.ai-card-head p { margin: 0; font-size: 1.08rem; }
+.ai-big { font-size: 2.4rem; line-height: 1; }
+.ai-list { margin: 0; padding-left: 20px; color: var(--muted); display: grid; gap: 6px; }
+.ai-list b { color: var(--text); }
+.ai-table-wrap { padding: 0; overflow-x: auto; }
+.ai-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.ai-table th { text-align: left; padding: 12px 16px; font: 600 .78rem var(--font); text-transform: uppercase; letter-spacing: .08em; color: var(--mars-2); border-bottom: 1px solid var(--border-strong); }
+.ai-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+.ai-table tr:last-child td { border-bottom: 0; }
+.ai-table td:first-child { width: 42%; }
+.ai-table a { color: #9fd3ff; font-weight: 600; }
+.footer a, #transparencia .fine a { color: #9fd3ff; }
+@media (max-width: 600px) { .ai-table, .ai-table tbody, .ai-table tr, .ai-table td { display: block; width: 100% !important; } .ai-table thead { display: none; } .ai-table tr { padding: 8px 0; border-bottom: 1px solid var(--border); } .ai-table td { border: 0; padding: 4px 14px; } }
+.hero .ai-banner { margin: 18px 0 0; max-width: 640px; padding: 10px 14px; font-size: .92rem; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.hero .ai-banner { margin-bottom: 16px; }

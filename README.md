@@ -4,6 +4,16 @@ Web educativa e interactiva sobre una misión hipotética a Marte que usa la Lun
 
 Abre `index.html` en el navegador para verla. No necesita instalación ni compilación. Está en español e inglés.
 
+## Hecha con ayuda de Claude
+
+Esta web y su juego se hicieron con ayuda de **Claude**, la inteligencia artificial de Anthropic:
+
+- **El equipo** decidió la idea de la misión, qué se cuenta, cómo es el juego y qué mejoras hacer, y revisó el resultado.
+- **Claude** ayudó a programar la web, el juego, los minijuegos, las animaciones y el visor 3D, a escribir y traducir los textos al inglés, y a buscar y resumir los recursos de la NASA.
+- **Los datos científicos** salen de los recursos públicos de la NASA y de otras agencias que se listan abajo.
+
+La web lo indica en la portada y en el apartado «Cómo hicimos esta web».
+
 ## Recursos de la NASA y otras agencias que hemos usado
 
 Proyecto para el **NASA Space Apps Challenge**. Esta tabla resume qué dato hemos usado de cada recurso y dónde aparece. La web tiene el mismo detalle en el apartado **Recursos y créditos**.
