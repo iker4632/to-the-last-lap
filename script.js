@@ -2772,7 +2772,7 @@
         ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}
         <button type="button" class="adv-icon-btn" data-act="ach" aria-label="${L('Ver las medallas', 'See the medals')}" title="${L('Medallas', 'Medals')}">🏅<small>${store.get('advAch', []).length}/${ACH.length}</small></button>
         <button type="button" class="adv-icon-btn" data-act="sound" aria-pressed="${SND.on}" aria-label="${SND.on ? L('Silenciar', 'Mute') : L('Activar el sonido', 'Turn sound on')}" title="${L('Sonido', 'Sound')}">${SND.on ? '🔊' : '🔇'}</button>
-        ${VOICE.ok || Object.keys(CLIPS.files).length ? `<button type="button" class="adv-icon-btn${VOICE.on ? '' : ' off'}" data-act="voice" aria-pressed="${VOICE.on}" aria-label="${VOICE.on ? L('Quitar las voces', 'Turn voices off') : L('Poner las voces', 'Turn voices on')}" title="${L('Voces', 'Voices')}">🗣️<small>${VOICE.on ? 'ON' : 'OFF'}</small></button>` : ''}
+        ${VOICE.ok || Object.keys(CLIPS.files).length || Object.keys(window.VOICE_FILES_EN || {}).length ? `<button type="button" class="adv-icon-btn${VOICE.on ? '' : ' off'}" data-act="voice" aria-pressed="${VOICE.on}" aria-label="${VOICE.on ? L('Quitar las voces', 'Turn voices off') : L('Poner las voces', 'Turn voices on')}" title="${L('Voces', 'Voices')}">🗣️<small>${VOICE.on ? 'ON' : 'OFF'}</small></button>` : ''}
         <a class="adv-icon-btn" href="estudio.html" aria-label="${L('Grabar vuestras voces para los personajes', 'Record your own voices for the characters')}" title="${L('Estudio de grabación', 'Recording studio')}">🎙️</a>
         ${s.phase !== 'goal' ? `<button type="button" class="adv-icon-btn" data-act="newgame" aria-label="${L('Empezar una partida nueva', 'Start a new game')}" title="${L('Nueva partida', 'New game')}">↺</button>` : ''}</div></div>`;
     }
@@ -3586,7 +3586,8 @@
     loadLocalClips();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) loadLocalClips(); });
     const clipUrl = (id) => {
-      if (!id || LANG !== 'es') return null;
+      if (!id) return null;
+      if (LANG === 'en') { const en = window.VOICE_FILES_EN || {}; return en[id] ? `voces/en/${id}.${en[id]}` : null; }
       const l = CLIPS.local.get(id);
       if (l) return l.url;
       return CLIPS.files[id] ? `voces/${id}.${CLIPS.files[id]}` : null;
