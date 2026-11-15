@@ -956,6 +956,31 @@
           <noscript><p>Este juego necesita JavaScript.</p></noscript>
         </div>
         <p class="fine">Historia inventada con fines educativos. Los precios, las probabilidades y las cifras están simplificados para que el juego sea jugable.</p>
+
+        <div id="foto-marte" class="reto">
+          <h3 class="sub-head">📸 Fotógrafo de Marte</h3>
+          <p class="reto-lead">La nave da una vuelta a Marte a <strong>400 km de altura</strong> y el suelo pasa a toda velocidad por debajo. <strong>Toca o haz clic</strong> donde quieras hacer cada foto. Tienes <strong>8 fotos</strong> y una sola vuelta, así que no las gastes en la zona de noche.</p>
+
+          <figure class="viz card game-card">
+            <ul class="game-goals pg-goals">
+              <li data-t="cap"><span class="goal-stars">🧊</span>Casquete polar</li>
+              <li data-t="olympus"><span class="goal-stars">🌋</span>Monte Olimpo</li>
+              <li data-t="phobos"><span class="goal-stars">🥔</span>Fobos</li>
+              <li data-t="valles"><span class="goal-stars">🏞️</span>Valles Marineris</li>
+              <li data-t="rover"><span class="goal-stars">🤖</span>Un rover</li>
+              <li data-t="storm"><span class="goal-stars">🌪️</span>Tormenta de polvo</li>
+            </ul>
+            <canvas id="pgame" class="canvas-game canvas-photo" tabindex="0" role="img" aria-label="Juego: el suelo de Marte pasa por debajo de la nave; toca para hacer fotos de los lugares de la lista"></canvas>
+            <div class="pg-hud" id="pg-hud" aria-live="off"></div>
+            <div class="game-result" id="pg-result" aria-live="polite"></div>
+            <div class="pg-gallery" id="pg-gallery"></div>
+            <div class="controls">
+              <button class="btn small primary" id="pg-start" type="button">▶ Empezar la vuelta</button>
+              <button class="btn small ghost" id="pg-reset" type="button">↺ Otra vez</button>
+            </div>
+            <p class="fine">Cuanto más centrado esté el objetivo en el visor, más estrellas. Simplificado: el mapa no está a escala y en la realidad una vuelta dura casi 2 horas, no 50 segundos.</p>
+          </figure>
+        </div>
       </div>
     </section>
 

@@ -2685,6 +2685,7 @@
         ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}
         <button type="button" class="adv-icon-btn" data-act="ach" aria-label="${L('Ver las medallas', 'See the medals')}" title="${L('Medallas', 'Medals')}">🏅<small>${store.get('advAch', []).length}/${ACH.length}</small></button>
         <button type="button" class="adv-icon-btn" data-act="sound" aria-pressed="${SND.on}" aria-label="${SND.on ? L('Silenciar', 'Mute') : L('Activar el sonido', 'Turn sound on')}" title="${L('Sonido', 'Sound')}">${SND.on ? '🔊' : '🔇'}</button>
+        ${VOICE.ok ? `<button type="button" class="adv-icon-btn${VOICE.on ? '' : ' off'}" data-act="voice" aria-pressed="${VOICE.on}" aria-label="${VOICE.on ? L('Quitar las voces', 'Turn voices off') : L('Poner las voces', 'Turn voices on')}" title="${L('Voces', 'Voices')}">🗣️<small>${VOICE.on ? 'ON' : 'OFF'}</small></button>` : ''}
         ${s.phase !== 'goal' ? `<button type="button" class="adv-icon-btn" data-act="newgame" aria-label="${L('Empezar una partida nueva', 'Start a new game')}" title="${L('Nueva partida', 'New game')}">↺</button>` : ''}</div></div>`;
     }
 
@@ -2807,7 +2808,7 @@
     // Tripulación y herramientas encima de la ilustración
     function crewOverlay() {
       if (!s.crew.length && !s.tools.length) return '';
-      const crew = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="ov-ava" title="${T(c.name)}">${avatar(c, 28)}</span>`; }).join('');
+      const crew = s.crew.map((id) => { const c = byId(CREW, id); return `<span class="ov-ava" data-who="${id}" title="${T(c.name)}">${avatar(c, 28)}</span>`; }).join('');
       const tools = s.tools.map((id) => { const t = byId(TOOLS, id); return `<span class="ov-tool" title="${T(t.name)}">${t.icon}</span>`; }).join('');
       return `<div class="adv-ov">${crew ? `<div class="ov-crew">${crew}</div>` : ''}${tools ? `<div class="ov-tools">${tools}</div>` : ''}</div>`;
     }
@@ -2986,6 +2987,7 @@
       saveGame();
       s.prev = null;
       animate();
+      talkHook();
       if (focus) {
         const h = root.querySelector('.adv-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
         const top = root.getBoundingClientRect().top;
@@ -3412,6 +3414,174 @@
     ];
     const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } } };
     const MINI_ACH = { 'sling-perfect': 'sling', 'aero-pro': 'aero', 'antenna-fast': 'antenna', 'wires-perfect': 'wires' };
+    // ---------- Voces y personajes: alguien cuenta lo que pasa y el equipo habla ----------
+    const CTL = { id: 'ctl', icon: '🎧', name: B('Control de misión', 'Mission Control') };
+    const who2c = (id) => (id === 'ctl' ? CTL : byId(CREW, id));
+    // Lo que dice el equipo al empezar cada capítulo (el primero que vaya a bordo; si no, Control de misión)
+    const SAYS = {
+      launch: [['pilot', B('He despegado con peor tiempo… aunque no mucho peor.', 'I’ve launched in worse weather… though not much worse.')],
+        ['com', B('Los rayos meten ruido en la radio. Estaré atenta a todo.', 'The lightning is crackling on the radio. I’ll keep an ear on everything.')],
+        ['ctl', B('Aquí Control: la ventana de lanzamiento se cierra en pocos días. Tú decides.', 'Mission Control here: the launch window closes in a few days. Your call.')]],
+      orbit: [['eng', B('Puedo salir y darle un par de golpes a ese panel. Confía en mí.', 'I can go outside and give that panel a couple of taps. Trust me.')],
+        ['ctl', B('Sin ese panel, la nave irá justa de energía todo el viaje.', 'Without that panel, the ship will be short of power the whole way.')]],
+      moon: [['pilot', B('Dame los mandos y clavo el encendido detrás de la Luna.', 'Give me the controls and I’ll nail the burn behind the Moon.')],
+        ['ctl', B('El encendido es detrás de la Luna, justo cuando no podremos hablar por radio.', 'The burn happens behind the Moon, just when we can’t talk by radio.')]],
+      storm: [['com', B('¡La he visto venir! Tenemos unas horas para prepararnos.', 'I saw it coming! We have a few hours to get ready.')],
+        ['med', B('La radiación es lo que más me preocupa de todo el viaje.', 'Radiation is what worries me most on this whole trip.')],
+        ['ctl', B('¡Tormenta solar en camino! Protegeos como podáis.', 'Solar storm incoming! Protect yourselves however you can.')]],
+      meteor: [['eng', B('¡Oigo silbar el aire! Hay que tapar ese agujero ya.', 'I can hear the air hissing! We need to plug that hole now.')],
+        ['ctl', B('La presión baja despacio. Tenéis tiempo, pero no mucho.', 'The pressure is dropping slowly. You have time, but not much.')]],
+      sick: [['med', B('Dejadme examinarla. Mantened la calma, por favor.', 'Let me examine her. Stay calm, please.')],
+        ['ctl', B('Os pasamos con nuestros médicos, pero cada mensaje tarda minutos.', 'We’re putting you through to our doctors, but every message takes minutes.')]],
+      nav: [['pilot', B('Doce segundos de motor y lo dejo perfecto.', 'Twelve seconds of engine and I’ll have it perfect.')],
+        ['ctl', B('Los números no mienten: os estáis desviando de Marte.', 'The numbers don’t lie: you’re drifting away from Mars.')]],
+      arrive: [['pilot', B('Marte, allá vamos. Agarraos fuerte.', 'Mars, here we come. Hold on tight.')],
+        ['geo', B('¡Mirad esos cañones! Qué ganas de estudiarlos.', 'Look at those canyons! I can’t wait to study them.')],
+        ['ctl', B('Es el momento más delicado del viaje. Mucha suerte.', 'This is the trickiest moment of the trip. Good luck.')]],
+      land: [['geo', B('El hielo del polo norte sería un tesoro para la ciencia.', 'The ice at the north pole would be a treasure for science.')],
+        ['pilot', B('Bajar es lo difícil. Tú eliges dónde y yo os llevo.', 'Going down is the hard part. You pick the spot and I’ll take us there.')],
+        ['ctl', B('Siete minutos de terror: la bajada hasta el suelo.', 'Seven minutes of terror: the descent to the ground.')]],
+      cables: [['eng', B('Huele a quemado… ¡Cuidado con esos cables!', 'Something smells burnt… Careful with those cables!')],
+        ['ctl', B('El panel eléctrico ha saltado. Hay que reconectarlo.', 'The electrical panel has tripped. It needs reconnecting.')]],
+      signal: [['com', B('Dadme un momento: recalculo hacia dónde tiene que apuntar la antena.', 'Give me a moment: I’ll work out where the antenna needs to point.')],
+        ['pilot', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
+        ['eng', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
+        ['med', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
+        ['geo', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')]],
+      oxygen: [['eng', B('Lo desmonto y lo limpio pieza a pieza.', 'I’ll take it apart and clean it piece by piece.')],
+        ['med', B('Si sube el CO₂, nos dolerá la cabeza y nos costará pensar.', 'If the CO₂ goes up, we’ll get headaches and struggle to think.')],
+        ['ctl', B('El aire de la nave necesita ese filtro. No hay tiempo que perder.', 'The ship’s air needs that filter. There’s no time to lose.')]],
+      water: [['eng', B('Una tubería rota. Tengo repuestos.', 'A broken pipe. I’ve got spares.')],
+        ['ctl', B('El agua es vida: no la dejéis escapar.', 'Water is life: don’t let it leak away.')]],
+      asteroid: [['geo', B('¡Un asteroide de cerca! Esas fotos valdrían oro.', 'An asteroid up close! Those photos would be worth gold.')],
+        ['ctl', B('Tenéis permiso para mirar… pero nada de riesgos.', 'You have permission to look… but no risks.')]],
+      computer: [['pilot', B('Si el ordenador falla, piloto yo.', 'If the computer fails, I’ll fly it.')],
+        ['eng', B('Apagar y volver a encender… a veces funciona.', 'Turn it off and on again… sometimes it works.')],
+        ['ctl', B('La nave gira sin control. Hay que actuar.', 'The ship is spinning out of control. You need to act.')]],
+      morale: [['med', B('Están tristes. El ánimo también es salud.', 'They’re feeling low. Morale is health too.')],
+        ['com', B('Puedo montar una videollamada con las familias.', 'I can set up a video call with the families.')],
+        ['ctl', B('Siete meses lejos de casa pesan a cualquiera.', 'Seven months away from home weighs on anyone.')]],
+      sponsor: [['com', B('Una empresa quiere grabar un anuncio aquí arriba…', 'A company wants to film an advert up here…')],
+        ['ctl', B('El dinero vendría bien, pero el equipo está cansado.', 'The money would help, but the crew is tired.')]],
+    };
+    // Cómo reacciona cada uno según cómo haya salido
+    const REACT = {
+      pilot: { ok: B('¡Perfecto! Así se vuela.', 'Perfect! That’s how you fly.'), mid: B('No ha sido bonito, pero seguimos en rumbo.', 'Not pretty, but we’re still on course.'), bad: B('Uf… eso ha dolido.', 'Ouch… that hurt.') },
+      eng: { ok: B('Arreglado. ¿Alguien más tiene algo roto?', 'Fixed. Anyone else got something broken?'), mid: B('Aguantará… creo.', 'It’ll hold… I think.'), bad: B('Esto me va a dar trabajo para semanas.', 'This is going to keep me busy for weeks.') },
+      med: { ok: B('Todos bien. Buen trabajo.', 'Everyone’s fine. Good job.'), mid: B('Algún rasguño, nada grave.', 'A few scrapes, nothing serious.'), bad: B('Tengo que revisar a todo el mundo, ya.', 'I need to check everyone over, right now.') },
+      geo: { ok: B('¡Fantástico! Lo apunto en mi cuaderno.', 'Fantastic! I’m writing that down.'), mid: B('Podría haber sido peor.', 'It could have been worse.'), bad: B('Mal asunto. Tenemos que tener más cuidado.', 'Bad business. We need to be more careful.') },
+      com: { ok: B('Se lo cuento a la Tierra: ¡todo en orden!', 'I’ll tell Earth: all good!'), mid: B('Informo a la Tierra: superado, con pérdidas.', 'Reporting to Earth: made it, with losses.'), bad: B('Tierra, tenemos un problema.', 'Earth, we have a problem.') },
+      ctl: { ok: B('Buen trabajo, equipo. Seguimos.', 'Good work, team. Carry on.'), mid: B('Superado, aunque nos ha costado.', 'We got through it, though it cost us.'), bad: B('Esto se complica. Mucho ánimo.', 'This is getting tricky. Hang in there.') },
+    };
+    const NAME2ID = { Valeria: 'pilot', Tomás: 'eng', Nuria: 'med', Kenji: 'geo', Amara: 'com' };
+
+    function eventSpeaker(e) {
+      const list = SAYS[e.id] || [];
+      return list.find(([id]) => id === 'ctl' || s.crew.includes(id)) || null;
+    }
+    function outcomeSpeaker(e, o) {
+      if (o.who && (o.who === 'ctl' || s.crew.includes(o.who))) return o.who;
+      const txt = (o.text && (o.text.es || o.text)) || '';
+      const named = Object.keys(NAME2ID).find((n) => txt.includes(n) && s.crew.includes(NAME2ID[n]));
+      if (named) return NAME2ID[named];
+      const sp = eventSpeaker(e);
+      return sp ? sp[0] : 'ctl';
+    }
+
+    // Voz del navegador (sin archivos). Cada personaje tiene su tono y, si hay varias voces, una distinta.
+    const VOICE = { on: store.get('advVoice', true), ok: 'speechSynthesis' in window, key: '', first: true, token: 0 };
+    const TONE = { nar: [1, 1], ctl: [0.95, 1.05], pilot: [1.22, 1.07], eng: [0.72, 0.97], med: [1.1, 0.98], geo: [0.88, 1], com: [1.38, 1.06] };
+    const FEM = /(female|mujer|monica|mónica|paulina|flo |flo$|sandy|shelley|marisol|helena|laura|lucia|lucía|elvira|esperanza|sabina|ximena|carmen|kate|serena|samantha|karen|moira|tessa|fiona|victoria|susan|zira|hazel|libby|sonia)/i;
+    const MAL = /(male|hombre|eddy|reed|rocko|jorge|diego|pablo|juan|enrique|alvaro|álvaro|carlos|raul|raúl|daniel|oliver|george|ryan|thomas|arthur|alex|fred|rishi)/i;
+    function pickVoices() {
+      if (!VOICE.ok) return {};
+      const all = speechSynthesis.getVoices();
+      const lang = LANG === 'en' ? 'en' : 'es';
+      const mine = all.filter((v) => v.lang && v.lang.toLowerCase().startsWith(lang));
+      const pref = mine.filter((v) => /^(es-ES|en-GB)$/i.test(v.lang.replace('_', '-'))).concat(mine);
+      const uniq = [...new Set(pref)].filter((v) => !/grand(ma|pa)|bells|bubbles|boing|whisper|zarvox|trinoids|jester|organ|albert|bad news|good news|wobble|cellos|superstar/i.test(v.name));
+      const fem = uniq.filter((v) => FEM.test(v.name));
+      const mal = uniq.filter((v) => MAL.test(v.name) && !FEM.test(v.name));
+      const any = uniq[0] || null;
+      const at = (arr, i) => (arr.length ? arr[i % arr.length] : any);
+      return { nar: any, ctl: at(mal.length ? mal : uniq, 0), pilot: at(fem, 0), med: at(fem, 1), com: at(fem, 2), eng: at(mal, 0), geo: at(mal, 1) };
+    }
+    const plain = (h) => String(h).replace(/<[^>]+>/g, ' ').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
+    function hush() {
+      VOICE.token++;
+      if (VOICE.ok) speechSynthesis.cancel();
+      root.querySelectorAll('.speaking').forEach((el) => el.classList.remove('speaking'));
+    }
+    function setSpeaking(who, on) {
+      root.querySelectorAll(`[data-who="${who}"]`).forEach((el) => el.classList.toggle('speaking', on));
+    }
+    function speak(lines) {
+      hush();
+      if (!VOICE.on || !VOICE.ok || !lines.length) return;
+      const token = VOICE.token, V = pickVoices();
+      lines.forEach(({ who, text }) => {
+        const u = new SpeechSynthesisUtterance(plain(text));
+        u.lang = LANG === 'en' ? 'en-GB' : 'es-ES';
+        if (V[who]) u.voice = V[who];
+        const [pitch, rate] = TONE[who] || TONE.nar;
+        u.pitch = pitch; u.rate = rate;
+        u.onstart = () => { if (token === VOICE.token) setSpeaking(who, true); };
+        u.onend = u.onerror = () => setSpeaking(who, false);
+        speechSynthesis.speak(u);
+      });
+    }
+
+    // Tarjeta con el personaje que habla (retrato grande y bocadillo)
+    function talkCard(id, line) {
+      const c = who2c(id);
+      const ava = id === 'ctl'
+        ? `<svg class="adv-ava" viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#2b6a8c" opacity=".35"/><path d="M6 46 Q24 28 42 46Z" fill="#2b6a8c"/><circle cx="24" cy="21" r="10" fill="#c98f6b"/><path d="M14 19 Q15 10 24 10 Q33 10 34 19 Q30 13 22 14 Q17 15 14 19Z" fill="#3b2416"/><circle cx="20.5" cy="22" r="1.4" fill="#1a1a1a"/><circle cx="27.5" cy="22" r="1.4" fill="#1a1a1a"/><path d="M20.5 26.5 Q24 29 27.5 26.5" stroke="#1a1a1a" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12 22 Q12 8 24 8 Q36 8 36 22" stroke="#cfd6e6" stroke-width="2.4" fill="none"/><rect x="9.5" y="19" width="5" height="8" rx="2" fill="#4ea3ff"/><rect x="33.5" y="19" width="5" height="8" rx="2" fill="#4ea3ff"/><path d="M36 26 Q36 32 29 31" stroke="#cfd6e6" stroke-width="1.6" fill="none"/><circle cx="28.5" cy="31" r="1.6" fill="#ff7a45"/></svg>`
+        : avatar(c, 56);
+      return `<div class="adv-talk" data-who="${id}"><span class="talk-ava">${ava}<i class="talk-wave" aria-hidden="true"></i></span>
+        <div class="talk-bubble"><b>${T(c.name)}</b><p>«${T(line)}»</p></div>
+        ${VOICE.ok ? `<button type="button" class="talk-replay" data-act="voice-replay" aria-label="${L('Volver a escuchar', 'Listen again')}" title="${L('Volver a escuchar', 'Listen again')}">🔁</button>` : ''}</div>`;
+    }
+
+    // Se llama después de cada render: pone la tarjeta y, si la escena es nueva, lo cuenta en voz alta
+    function talkHook() {
+      const panel = root.querySelector('.adv-panel');
+      let key = '', lines = [], card = '';
+      if (s.phase === 'trip' && !s.quiz && !s.puzzle && !s.mini) {
+        const e = s.events[s.ev];
+        if (!s.outcome) {
+          const sp = eventSpeaker(e);
+          key = `ev-${s.ev}-${e.id}`;
+          lines.push({ who: 'nar', text: `${T(e.title)}. ${T(typeof e.text === 'function' ? e.text(s) : e.text)}` });
+          if (sp) { card = talkCard(sp[0], sp[1]); lines.push({ who: sp[0], text: T(sp[1]) }); }
+        } else {
+          const o = s.outcome, id = outcomeSpeaker(e, o), react = REACT[id][toneOf(o)];
+          key = `out-${s.ev}-${e.id}`;
+          card = talkCard(id, react);
+          lines.push({ who: 'nar', text: T(o.text) }, { who: id, text: T(react) });
+        }
+      } else if (s.phase === 'end' && s.end) {
+        const win = s.end.win, line = win ? B('¡Enhorabuena, equipo! Toda la Tierra os está mirando.', 'Congratulations, team! The whole Earth is watching you.') : B('Lo siento mucho, equipo. Aprenderemos y lo intentaremos otra vez.', 'I’m so sorry, team. We’ll learn from this and try again.');
+        key = `end-${win}`;
+        card = talkCard('ctl', line);
+        lines.push({ who: 'nar', text: `${s.end.title ? T(s.end.title) + '. ' : ''}${T(s.end.text)}` }, { who: 'ctl', text: T(line) });
+      }
+      if (card && panel) {
+        const anchor = panel.querySelector('.adv-title');
+        const box = document.createElement('div');
+        box.innerHTML = card;
+        const el = box.firstElementChild;
+        if (anchor && anchor.nextSibling) anchor.parentNode.insertBefore(el, anchor.nextSibling); else panel.prepend(el);
+      }
+      VOICE.lines = lines;
+      if (key !== VOICE.key) {
+        VOICE.key = key;
+        if (VOICE.first) { VOICE.first = false; return; } // al cargar la página no habla solo
+        if (key) speak(lines); else hush();
+      }
+    }
+    if (VOICE.ok) speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => {});
+    window.addEventListener('pagehide', () => { if (VOICE.ok) speechSynthesis.cancel(); });
+
     function unlock(id) {
       const have = store.get('advAch', []);
       if (have.includes(id)) return;
@@ -3630,7 +3800,8 @@
         } else extra = B(`Viajáis ${days} días hasta el siguiente capítulo.`, `You travel ${days} days to the next chapter.`);
       }
       if (broke) extra = extra ? B(`${broke.es} ${extra.es}`, `${broke.en} ${extra.en}`) : broke;
-      s.outcome = { choice: c.title, text: r.text, d, cd, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad, mini: r.mini };
+      s.outcome = { choice: c.title, text: r.text, d, cd, extra, fx: c.fx || (FX[e.id] || [])[i] || '', bad: !!r.bad, mini: r.mini,
+        who: (c.req && typeof c.req === 'object' && c.req.crew) || (['pilot', 'eng', 'med', 'geo', 'com'].includes(c.fx) ? c.fx : null) };
       s.log.push({ day: e.day, icon: e.icon, place: e.place, choice: c.title, text: r.text, d: Object.assign({}, d), tone: toneOf(s.outcome) });
       s.end = verdict(e);
       if (r.mini && MINI_ACH[r.mini]) unlock(MINI_ACH[r.mini]);
@@ -3681,6 +3852,8 @@
       if (d.act === 'diary') { s.diary = true; render(false); const x = diaryHost.querySelector('.dia-close'); if (x) x.focus(); return; }
       if (d.act === 'ach') { s.achOpen = true; render(false); const x = diaryHost.querySelector('.dia-close'); if (x) x.focus(); return; }
       if (d.act === 'ach-close') { s.achOpen = false; render(false); const x = root.querySelector('[data-act="ach"]'); if (x) x.focus(); return; }
+      if (d.act === 'voice') { VOICE.on = !VOICE.on; store.set('advVoice', VOICE.on); if (VOICE.on) speak(VOICE.lines || []); else hush(); render(false); return; }
+      if (d.act === 'voice-replay') { const was = VOICE.on; VOICE.on = true; speak(VOICE.lines || []); VOICE.on = was; return; }
       if (d.act === 'sound') { SND.on = !SND.on; store.set('advSound', SND.on); if (SND.on) sfx('plink'); render(false); return; }
       if (d.act === 'share') return shareResult();
       if (d.act === 'newgame') { if (s.phase === 'end' || window.confirm(L('¿Empezar una partida nueva? Se perderá la actual.', 'Start a new game? The current one will be lost.'))) { reset(); store.set('advSave', null); render(true); } return; }
@@ -3760,7 +3933,7 @@
     reset();
     if (loadGame()) setTimeout(() => toast(`<span class="tt-ic">💾</span><span><b>${L('Partida recuperada', 'Game restored')}</b><small>${L('Pulsa ↺ para empezar otra', 'Press ↺ to start another')}</small></span>`), 600);
     render(false);
-    onLang.push(() => render(false));
+    onLang.push(() => { hush(); render(false); });
   })();
 
   /* ---------- Visor 3D de la misión (inspirado en NASA Mission Viz) ---------- */
@@ -3930,6 +4103,464 @@
     route(true);
   })();
 
+  /* ---------- Juego: Fotógrafo de Marte ---------- */
+  (function photoGame() {
+    const canvas = $('#pgame');
+    if (!canvas) return;
+    const hud = $('#pg-hud'), result = $('#pg-result'), gallery = $('#pg-gallery');
+    const startBtn = $('#pg-start'), resetBtn = $('#pg-reset');
+    const goalEls = $$('.pg-goals li');
+
+    const WORLD = 4200;         // longitud de una vuelta (unidades de mapa)
+    const VH = 400;             // alto visible (unidades)
+    const T_ORBIT = 50;         // segundos que dura la vuelta en el juego
+    const SPEED = WORLD / T_ORBIT;
+    const FW = 112, FH = 84;    // tamaño del visor (unidades)
+    const SHOTS = 8;
+    const RES = 1.5;            // píxeles del mapa pregenerado por unidad
+
+    const NAMES = {
+      cap: ['Casquete polar', 'Polar ice cap'], olympus: ['Monte Olimpo', 'Olympus Mons'], phobos: ['Fobos', 'Phobos'],
+      valles: ['Valles Marineris', 'Valles Marineris'], rover: ['Un rover', 'A rover'], storm: ['Tormenta de polvo', 'Dust storm'],
+    };
+    const FACTS = {
+      cap: ['Hielo de agua y de CO₂ congelado.', 'Frozen water and CO₂ ice.'],
+      olympus: ['El volcán más alto del sistema solar: unos 22 km.', 'The tallest volcano in the solar system: about 22 km.'],
+      phobos: ['La luna más grande de Marte, de unos 22 km.', 'Mars’ biggest moon, about 22 km across.'],
+      valles: ['Un cañón de 4.000 km de largo.', 'A canyon 4,000 km long.'],
+      rover: ['¡Desde 400 km se ven hasta sus huellas!', 'From 400 km you can even see its tracks!'],
+      storm: ['Algunas tormentas cubren todo el planeta.', 'Some storms cover the whole planet.'],
+    };
+    // Objetivos: posición en el mapa (x, y), tolerancia r y puntos
+    const TARGETS = [
+      { id: 'cap', x: 230, y: 200, r: 150, pts: 1 },
+      { id: 'olympus', x: 700, y: 205, r: 70, pts: 2 },
+      { id: 'phobos', x: 0, y: 115, r: 18, pts: 3, sky: true },
+      { id: 'valles', x: 1530, y: 238, r: 60, pts: 2 },
+      { id: 'rover', x: 2000, y: 168, r: 6, pts: 3 },
+      { id: 'storm', x: 2360, y: 285, r: 55, pts: 2 },
+    ];
+    const byId = Object.fromEntries(TARGETS.map((t) => [t.id, t]));
+
+    // Luz según la posición en la vuelta: día, atardecer, noche y amanecer
+    function light(x) {
+      x = ((x % WORLD) + WORLD) % WORLD;
+      if (x < 2700) return 1;
+      if (x < 3050) return lerp(1, 0.04, smooth((x - 2700) / 350));
+      if (x < 3850) return 0.04;
+      return lerp(0.04, 1, smooth((x - 3850) / 350));
+    }
+
+    // Generador aleatorio con semilla (el mapa sale siempre igual)
+    function rng(seed) {
+      return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    }
+
+    let map = null;
+    function buildMap() {
+      const c = document.createElement('canvas');
+      c.width = Math.round(WORLD * RES); c.height = Math.round(VH * RES);
+      const g = c.getContext('2d');
+      g.scale(RES, RES);
+      const R = rng(7);
+      // Dibuja una figura también desplazada una vuelta, para que el mapa empalme sin cortes
+      const wrap = (fn) => { fn(0); fn(-WORLD); fn(WORLD); };
+      const bg = g.createLinearGradient(0, 0, 0, VH);
+      bg.addColorStop(0, '#b0552d'); bg.addColorStop(0.5, '#bd6236'); bg.addColorStop(1, '#a94f29');
+      g.fillStyle = bg; g.fillRect(0, 0, WORLD, VH);
+      // Zonas más oscuras y más claras
+      for (let i = 0; i < 240; i++) {
+        const x = R() * WORLD, y = R() * VH, r = 30 + R() * 150, dark = R() < 0.55;
+        wrap((o) => {
+          const gr = g.createRadialGradient(x + o, y, 0, x + o, y, r);
+          gr.addColorStop(0, dark ? 'rgba(70,24,10,0.2)' : 'rgba(235,160,110,0.13)');
+          gr.addColorStop(1, 'rgba(0,0,0,0)');
+          g.fillStyle = gr; g.fillRect(x + o - r, y - r, 2 * r, 2 * r);
+        });
+      }
+      // Granulado
+      for (let i = 0; i < 14000; i++) {
+        g.fillStyle = R() < 0.5 ? `rgba(60,20,8,${0.05 + R() * 0.12})` : `rgba(240,170,120,${0.04 + R() * 0.1})`;
+        g.fillRect(R() * WORLD, R() * VH, 1 + R() * 2, 1 + R() * 2);
+      }
+      // Cráteres: sombra abajo a la derecha y borde iluminado arriba a la izquierda (el Sol viene de la izquierda)
+      const crater = (x, y, r) => wrap((o) => {
+        g.fillStyle = 'rgba(55,18,6,0.4)'; g.beginPath(); g.arc(x + o + r * 0.12, y + r * 0.12, r, 0, TAU); g.fill();
+        g.fillStyle = 'rgba(232,150,100,0.32)'; g.beginPath(); g.arc(x + o - r * 0.1, y - r * 0.1, r, 0, TAU); g.fill();
+        g.fillStyle = 'rgba(128,52,24,0.6)'; g.beginPath(); g.arc(x + o, y, r * 0.82, 0, TAU); g.fill();
+        if (r > 14) { g.fillStyle = 'rgba(210,130,85,0.35)'; g.beginPath(); g.arc(x + o, y, r * 0.18, 0, TAU); g.fill(); }
+      });
+      for (let i = 0; i < 420; i++) crater(R() * WORLD, R() * VH, 2.5 + Math.pow(R(), 4) * 32);
+      // Casquetes polares (norte al principio de la vuelta, sur hacia el final del día)
+      const cap = (cx, cy, sx, sy) => {
+        for (let i = 0; i < 70; i++) {
+          const a = R() * TAU, d = Math.sqrt(R());
+          const x = cx + Math.cos(a) * d * sx, y = cy + Math.sin(a) * d * sy, r = 30 + R() * 60;
+          wrap((o) => {
+            const gr = g.createRadialGradient(x + o, y, 0, x + o, y, r);
+            gr.addColorStop(0, 'rgba(248,250,255,0.85)'); gr.addColorStop(0.6, 'rgba(236,240,250,0.5)'); gr.addColorStop(1, 'rgba(236,240,250,0)');
+            g.fillStyle = gr; g.fillRect(x + o - r, y - r, 2 * r, 2 * r);
+          });
+        }
+        g.strokeStyle = 'rgba(150,110,95,0.2)'; g.lineWidth = 3; g.lineCap = 'round';
+        for (let k = 0; k < 5; k++) wrap((o) => {
+          g.beginPath();
+          for (let a = 0; a < 3.2; a += 0.15) {
+            const rr = 25 + a * 32 + k * 9, x = cx + o + Math.cos(a + k * 1.25) * rr * sx / 140, y = cy + Math.sin(a + k * 1.25) * rr * sy / 140;
+            a === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+          }
+          g.stroke();
+        });
+      };
+      cap(230, 200, 175, 215);
+      cap(2880, 200, 150, 200);
+      // Monte Olimpo: escudo enorme con un acantilado alrededor y calderas en la cima
+      wrap((o) => {
+        const x = 700 + o, y = 205;
+        let gr = g.createRadialGradient(x, y, 60, x, y, 170);
+        gr.addColorStop(0, 'rgba(225,140,90,0.25)'); gr.addColorStop(1, 'rgba(225,140,90,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(x, y, 170, 0, TAU); g.fill();
+        g.fillStyle = 'rgba(45,14,5,0.55)'; g.beginPath(); g.arc(x + 7, y + 7, 96, 0, TAU); g.fill();
+        gr = g.createRadialGradient(x - 18, y - 18, 8, x, y, 96);
+        gr.addColorStop(0, '#e59a68'); gr.addColorStop(0.7, '#c46d3d'); gr.addColorStop(1, '#a8532a');
+        g.fillStyle = gr; g.beginPath(); g.arc(x, y, 94, 0, TAU); g.fill();
+        g.strokeStyle = 'rgba(250,190,140,0.5)'; g.lineWidth = 3; g.beginPath(); g.arc(x, y, 93, Math.PI * 0.85, Math.PI * 1.65); g.stroke();
+        g.strokeStyle = 'rgba(150,70,35,0.35)'; g.lineWidth = 1.5;
+        for (let k = 0; k < 26; k++) { const a = k / 26 * TAU; g.beginPath(); g.moveTo(x + Math.cos(a) * 26, y + Math.sin(a) * 26); g.lineTo(x + Math.cos(a) * 88, y + Math.sin(a) * 88); g.stroke(); }
+        [[0, 0, 15], [9, -6, 10], [-8, 7, 9], [6, 9, 7]].forEach(([dx, dy, r]) => {
+          g.fillStyle = 'rgba(70,24,10,0.75)'; g.beginPath(); g.arc(x + dx + 1.5, y + dy + 1.5, r, 0, TAU); g.fill();
+          g.fillStyle = 'rgba(140,60,28,0.95)'; g.beginPath(); g.arc(x + dx, y + dy, r * 0.88, 0, TAU); g.fill();
+        });
+      });
+      // Valles Marineris: un cañón larguísimo con ramales al oeste
+      const canyon = (pts, w) => {
+        [[w + 10, 'rgba(60,20,8,0.55)'], [w, '#5a200d'], [w * 0.45, '#3a1206']].forEach(([lw, col]) => {
+          g.strokeStyle = col; g.lineWidth = lw; g.lineCap = 'round'; g.lineJoin = 'round';
+          g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+        });
+        g.strokeStyle = 'rgba(245,175,125,0.55)'; g.lineWidth = 2;
+        g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y - w / 2 - 2) : g.moveTo(x, y - w / 2 - 2))); g.stroke();
+      };
+      const valles = [[1320, 214], [1380, 222], [1440, 232], [1500, 236], [1560, 240], [1620, 246], [1690, 252], [1750, 262]];
+      canyon(valles, 22);
+      canyon([[1380, 222], [1420, 200], [1470, 192]], 9);
+      canyon([[1500, 236], [1540, 262], [1600, 276]], 10);
+      canyon([[1320, 214], [1290, 196], [1270, 204], [1250, 186]], 7);
+      canyon([[1300, 215], [1275, 232], [1252, 228]], 6);
+      // Huellas del rover
+      g.strokeStyle = 'rgba(80,28,12,0.55)'; g.lineWidth = 0.9;
+      [-1.6, 1.6].forEach((d) => { g.beginPath(); g.moveTo(1925, 205 + d); g.bezierCurveTo(1950, 196 + d, 1965, 168 + d, 1997, 168 + d); g.stroke(); });
+      return c;
+    }
+
+    const S = makeCanvas(canvas, () => draw());
+    const game = { state: 'ready', t: 0, shots: SHOTS, got: {}, photos: [], score: 0, flash: 0, aim: null, pending: null, msg: null };
+
+    const scale = () => S.h / VH;                          // px por unidad
+    const camX = (t) => -40 + t * SPEED;                   // borde izquierdo de la vista
+    const phobosPos = (t) => {                              // Fobos cruza la vista por delante, más rápido que el suelo
+      const vw = S.w / scale();
+      const p = (t - 13) / 6;
+      return p < 0 || p > 1 ? null : { x: vw + 50 - p * (vw + 100), y: 115 };
+    };
+    const stormPos = (t) => ({ x: 2360 + Math.sin(t * 0.35) * 14 + t * 0.6, y: 285 });
+
+    // Posición de un objetivo en la vista (unidades de pantalla)
+    function targetScreen(tg, t) {
+      if (tg.id === 'phobos') return phobosPos(t);
+      const vw = S.w / scale();
+      const place = (pos) => {
+        let dx = pos.x - camX(t);
+        dx = ((dx % WORLD) + WORLD) % WORLD;
+        if (dx > vw + 200) dx -= WORLD;
+        return { x: dx, y: pos.y };
+      };
+      if (tg.id === 'cap') { // hay dos casquetes: el norte y el sur; vale cualquiera
+        const a = place(tg), b = place({ x: 2880, y: 200 });
+        return Math.abs(a.x - vw / 2) < Math.abs(b.x - vw / 2) ? a : b;
+      }
+      return place(tg.id === 'storm' ? stormPos(t) : tg);
+    }
+
+    function drawScene(ctx, t) {
+      const k = scale(), vw = S.w / k, cx = camX(t);
+      if (!map) map = buildMap();
+      // Mapa (con empalme al dar la vuelta)
+      let x0 = ((cx % WORLD) + WORLD) % WORLD, drawn = 0;
+      while (drawn < vw) {
+        const part = Math.min(WORLD - x0, vw - drawn);
+        ctx.drawImage(map, x0 * RES, 0, part * RES, VH * RES, Math.floor(drawn * k), 0, Math.ceil(part * k) + 1, S.h);
+        drawn += part; x0 = 0;
+      }
+      ctx.save(); ctx.scale(k, k);
+      // Rover (con una luz que parpadea)
+      const rv = targetScreen(byId.rover, t);
+      if (rv.x > -20 && rv.x < vw + 20) {
+        ctx.fillStyle = 'rgba(40,14,6,0.6)'; ctx.fillRect(rv.x - 2.5, rv.y - 1.3, 6.5, 4.4);
+        ctx.fillStyle = '#e8ecf3'; ctx.fillRect(rv.x - 3.2, rv.y - 2, 6.4, 4);
+        ctx.fillStyle = '#7d8597'; ctx.fillRect(rv.x - 3.6, rv.y - 2.6, 1.6, 5.2); ctx.fillRect(rv.x + 2, rv.y - 2.6, 1.6, 5.2);
+        if (Math.sin(t * 6) > 0) { ctx.fillStyle = '#7fd8ff'; ctx.beginPath(); ctx.arc(rv.x + 1, rv.y - 0.4, 0.9, 0, TAU); ctx.fill(); }
+      }
+      // Tormenta de polvo que gira
+      const st = targetScreen(byId.storm, t);
+      if (st.x > -160 && st.x < vw + 160) {
+        for (let i = 0; i < 9; i++) {
+          const a = t * 0.8 + i * 0.7, rr = 12 + i * 7;
+          const x = st.x + Math.cos(a) * rr * 0.9, y = st.y + Math.sin(a) * rr * 0.55, r = 42 - i * 2.5;
+          const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+          gr.addColorStop(0, 'rgba(222,170,120,0.42)'); gr.addColorStop(1, 'rgba(222,170,120,0)');
+          ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+        }
+        ctx.strokeStyle = 'rgba(240,200,160,0.35)'; ctx.lineWidth = 3;
+        for (let j = 0; j < 3; j++) {
+          ctx.beginPath();
+          for (let a = 0; a < 4.5; a += 0.2) {
+            const rr = 6 + a * 13, x = st.x + Math.cos(a + t * 1.1 + j * 2.1) * rr, y = st.y + Math.sin(a + t * 1.1 + j * 2.1) * rr * 0.6;
+            a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+      // Noche: se oscurece por columnas según la luz de cada zona
+      for (let sx = 0; sx < vw; sx += 8) {
+        const a = 1 - light(cx + sx + 4);
+        if (a > 0.01) { ctx.fillStyle = `rgba(4,6,18,${(a * 0.94).toFixed(3)})`; ctx.fillRect(sx, 0, 8.5, VH); }
+      }
+      // Fobos pasando por delante (va en el cielo, por encima del suelo)
+      const ph = phobosPos(t);
+      if (ph) {
+        ctx.fillStyle = 'rgba(20,8,4,0.35)'; ctx.beginPath(); ctx.ellipse(ph.x + 30, ph.y + 70, 15, 10, 0.3, 0, TAU); ctx.fill();
+        const gr = ctx.createRadialGradient(ph.x - 6, ph.y - 5, 2, ph.x, ph.y, 20);
+        gr.addColorStop(0, '#b3a69b'); gr.addColorStop(1, '#4e443d');
+        ctx.fillStyle = gr; ctx.beginPath();
+        for (let a = 0; a <= TAU + 0.01; a += TAU / 14) { const rr = 17 + Math.sin(a * 3) * 2.2 + Math.cos(a * 5) * 1.3; const px = ph.x + Math.cos(a) * rr * 1.25, py = ph.y + Math.sin(a) * rr * 0.9; a ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+        ctx.fill();
+        ctx.fillStyle = 'rgba(40,32,28,0.6)'; ctx.beginPath(); ctx.arc(ph.x + 8, ph.y + 1, 5, 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.arc(ph.x - 9, ph.y + 6, 2.4, 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // ¿Qué objetivos hay dentro del visor centrado en (ax, ay)?
+    function inFrame(ax, ay, t) {
+      const out = [];
+      TARGETS.forEach((tg) => {
+        const p = targetScreen(tg, t);
+        if (!p) return;
+        const dx = p.x - ax, dy = p.y - ay, pad = tg.r * 0.35;
+        if (Math.abs(dx) < FW / 2 + pad && Math.abs(dy) < FH / 2 + pad) {
+          const q = 1 - clamp(Math.hypot(dx / (FW / 2), dy / (FH / 2)) / 1.15, 0, 1);
+          out.push({ tg, q, stars: q > 0.62 ? 3 : q > 0.3 ? 2 : 1 });
+        }
+      });
+      return out.sort((a, b) => b.q - a.q);
+    }
+
+    function takeShot(ax, ay) {
+      const k = scale(), t = game.t;
+      const lit = light(camX(t) + ax);
+      const found = inFrame(ax, ay, t);
+      // Recorte del canvas para la galería
+      const dpr = canvas.width / S.w;
+      const th = document.createElement('canvas'); th.width = 160; th.height = 120;
+      const tctx = th.getContext('2d');
+      tctx.drawImage(canvas, (ax - FW / 2) * k * dpr, (ay - FH / 2) * k * dpr, FW * k * dpr, FH * k * dpr, 0, 0, 160, 120);
+      const photo = { th, lit: lit > 0.3, hits: [] };
+      if (photo.lit) {
+        found.forEach((f) => {
+          const prev = game.got[f.tg.id] || 0;
+          if (f.stars > prev) {
+            game.score += (f.stars - prev) * f.tg.pts;
+            game.got[f.tg.id] = f.stars;
+            photo.hits.push({ id: f.tg.id, stars: f.stars, better: prev > 0 });
+          }
+        });
+      }
+      game.photos.push(photo);
+      game.shots--;
+      game.flash = 1;
+      game.msg = !photo.lit ? 'dark' : photo.hits.length ? 'hit' : found.length ? 'same' : 'empty';
+      game.lastHits = photo.hits;
+      addThumb(photo);
+      updateGoals();
+      if (game.shots <= 0) finish('noshots');
+      else setResult();
+    }
+
+    function caption(photo) {
+      if (!photo.lit) return L('🌑 A oscuras: es de noche', '🌑 Too dark: it’s night');
+      if (!photo.hits.length) return L('Nada nuevo en la foto', 'Nothing new in this shot');
+      return photo.hits.map((h) => `${L(...NAMES[h.id])} ${'⭐'.repeat(h.stars)}`).join(' · ');
+    }
+    function addThumb(photo) {
+      const fig = document.createElement('figure');
+      fig.className = 'pg-shot ' + (photo.hits.length ? 'hit' : 'miss');
+      fig.appendChild(photo.th);
+      const cap = document.createElement('figcaption');
+      cap.textContent = caption(photo);
+      fig.appendChild(cap);
+      photo.fig = cap;
+      gallery.appendChild(fig);
+    }
+
+    function updateGoals() {
+      goalEls.forEach((li) => {
+        const s = game.got[li.dataset.t] || 0;
+        li.classList.toggle('got', s > 0);
+        if (s) li.dataset.q = '⭐'.repeat(s); else delete li.dataset.q;
+      });
+    }
+
+    const maxScore = TARGETS.reduce((a, t) => a + t.pts * 3, 0);
+    function setResult() {
+      let html = '', cls = '';
+      const st = game.state;
+      if (st === 'ready') {
+        html = L('Pulsa «Empezar la vuelta». Luego toca o haz clic sobre Marte para hacer cada foto.', 'Press “Start the orbit”. Then tap or click on Mars to take each photo.');
+      } else if (st === 'run') {
+        const m = game.msg;
+        if (m === 'hit') {
+          const h = game.lastHits[0];
+          html = `📸 ${L('¡Foto de', 'Photo of')} ${L(...NAMES[h.id])}! ${'⭐'.repeat(h.stars)}<span class="sub">${L(...FACTS[h.id])}</span>`; cls = 'win';
+        } else if (m === 'dark') {
+          html = L('🌑 Foto negra: en esa zona es de noche y no hay luz del Sol.', '🌑 Black photo: it’s night down there, with no sunlight.') +
+            `<span class="sub">${L('Las cámaras normales necesitan luz. Espera a que vuelva a amanecer.', 'Ordinary cameras need light. Wait for the sunrise.')}</span>`; cls = 'fail';
+        } else if (m === 'same') {
+          html = L('Esa ya la tenías igual de bien. ¡Busca otro objetivo!', 'You already had that one just as good. Find another target!');
+        } else if (m === 'empty') {
+          html = L('Foto sin ningún objetivo de la lista. ¡Apunta mejor!', 'No target from the list in that shot. Aim better!'); cls = 'fail';
+        } else {
+          html = L('El suelo pasa por debajo: apunta y dispara cuando un objetivo entre en el visor (se pone verde).', 'The ground slides below: aim and shoot when a target enters the viewfinder (it turns green).');
+        }
+      } else {
+        const n = Object.keys(game.got).length;
+        const stars = game.score >= maxScore * 0.75 ? '⭐⭐⭐' : game.score >= maxScore * 0.45 ? '⭐⭐' : game.score > 0 ? '⭐' : '';
+        const why = game.endWhy === 'noshots' ? L('Te has quedado sin fotos. ', 'You ran out of photos. ') : L('¡Vuelta completada! ', 'Orbit complete! ');
+        const sent = game.photos.filter((p) => p.hits.length).length;
+        html = `${why}${n}/6 ${L('objetivos', 'targets')} · ${game.score}/${maxScore} ${L('puntos', 'points')} ${stars}` +
+          `<span class="sub">${sent ? L(`Ahora la nave gira la antena hacia la Tierra y envía tus ${sent} fotos buenas por radio: tardan entre 3 y 22 minutos en llegar.`,
+            `Now the spacecraft turns its antenna to Earth and radios your ${sent} good photos home: they take 3 to 22 minutes to arrive.`)
+            : L('Ninguna foto buena esta vez. ¡Prueba otra vuelta!', 'No good photos this time. Try another orbit!')}</span>`;
+        cls = n >= 4 ? 'win' : '';
+      }
+      result.className = 'game-result ' + cls;
+      result.innerHTML = html;
+    }
+
+    let hudKey = '';
+    function updateHud() {
+      const lit = light(camX(game.t) + S.w / scale() / 2) > 0.3;
+      const pct = Math.round(clamp(game.t / T_ORBIT, 0, 1) * 100);
+      const key = `${game.shots}|${pct}|${lit}|${LANG}`;
+      if (key === hudKey) return;
+      hudKey = key;
+      hud.innerHTML = `<span class="pg-chip${game.shots <= 2 ? ' low' : ''}">📷 ${L('Fotos', 'Photos')}: ${game.shots}/${SHOTS}</span>` +
+        `<span class="pg-chip">🛰️ ${L('Vuelta', 'Orbit')}: ${pct} %</span>` +
+        `<span class="pg-chip${lit ? '' : ' night'}">${lit ? L('☀️ Debajo es de día', '☀️ Daytime below') : L('🌙 Debajo es de noche', '🌙 Night-time below')}</span>`;
+    }
+
+    function finish(why) {
+      game.state = 'done'; game.endWhy = why;
+      startBtn.disabled = false;
+      setResult();
+    }
+
+    function reset() {
+      Object.assign(game, { state: 'ready', t: 0, shots: SHOTS, got: {}, photos: [], score: 0, flash: 0, msg: null, endWhy: null });
+      gallery.innerHTML = '';
+      startBtn.disabled = false;
+      updateGoals(); setResult(); hudKey = ''; updateHud(); draw();
+    }
+
+    function draw() {
+      if (!S.ready) return;
+      const ctx = S.ctx, k = scale();
+      ctx.clearRect(0, 0, S.w, S.h);
+      drawScene(ctx, game.t);
+      if (game.pending) { const p = game.pending; game.pending = null; takeShot(p.x, p.y); }
+      const fs = S.w < 420 ? 11 : 12;
+      // Visor
+      const vw = S.w / k;
+      const aim = game.aim || { x: vw / 2, y: VH / 2 };
+      const ax = clamp(aim.x, FW / 2, vw - FW / 2), ay = clamp(aim.y, FH / 2, VH - FH / 2);
+      const hasNew = game.state === 'run' && inFrame(ax, ay, game.t).some((f) => (game.got[f.tg.id] || 0) < f.stars) && light(camX(game.t) + ax) > 0.3;
+      const fx = (ax - FW / 2) * k, fy = (ay - FH / 2) * k, fw = FW * k, fh = FH * k, c = Math.min(fw, fh) * 0.22;
+      ctx.save();
+      ctx.strokeStyle = hasNew ? '#8ff0c8' : 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      [[fx, fy, 1, 1], [fx + fw, fy, -1, 1], [fx, fy + fh, 1, -1], [fx + fw, fy + fh, -1, -1]].forEach(([x, y, sx, sy]) => {
+        ctx.moveTo(x + sx * c, y); ctx.lineTo(x, y); ctx.lineTo(x, y + sy * c);
+      });
+      ctx.stroke();
+      ctx.lineWidth = 1.2; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.moveTo(ax * k - 7, ay * k); ctx.lineTo(ax * k + 7, ay * k); ctx.moveTo(ax * k, ay * k - 7); ctx.lineTo(ax * k, ay * k + 7); ctx.stroke();
+      ctx.restore();
+      if (hasNew) label(ctx, L('¡Dispara!', 'Shoot!'), fx + fw / 2, fy - 12, { align: 'center', size: fs, color: '#8ff0c8', weight: 700 });
+      // Flash de la foto
+      if (game.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${game.flash * 0.6})`; ctx.fillRect(0, 0, S.w, S.h); }
+      // Mensajes sobre el canvas
+      if (game.state !== 'run') {
+        ctx.fillStyle = 'rgba(5,7,15,0.55)'; ctx.fillRect(0, 0, S.w, S.h);
+        const big = S.w < 420 ? 16 : 20;
+        if (game.state === 'ready') {
+          label(ctx, L('Órbita de Marte · 400 km de altura', 'Mars orbit · 400 km up'), S.w / 2, S.h / 2 - 16, { align: 'center', size: big, color: '#fff', weight: 700 });
+          label(ctx, L('Pulsa «Empezar la vuelta»', 'Press “Start the orbit”'), S.w / 2, S.h / 2 + 14, { align: 'center', size: fs + 1, color: '#ffd0b5' });
+        } else {
+          label(ctx, L('Fin de la vuelta', 'End of the orbit'), S.w / 2, S.h / 2 - 16, { align: 'center', size: big, color: '#fff', weight: 700 });
+          label(ctx, `${game.score}/${maxScore} ${L('puntos', 'points')}`, S.w / 2, S.h / 2 + 14, { align: 'center', size: fs + 2, color: '#ffc857', weight: 700 });
+        }
+      } else {
+        label(ctx, L('↓ Marte · la nave va hacia la derecha →', '↓ Mars · the spacecraft flies to the right →'), 10, 14, { size: fs - 1, color: 'rgba(255,255,255,0.75)', weight: 500 });
+      }
+    }
+
+    function toUnits(e) {
+      const r = canvas.getBoundingClientRect(), k = scale();
+      return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k };
+    }
+    function shootAt(p) {
+      if (game.state !== 'run' || game.pending) return;
+      const vw = S.w / scale();
+      game.aim = p;
+      game.pending = { x: clamp(p.x, FW / 2, vw - FW / 2), y: clamp(p.y, FH / 2, VH - FH / 2) };
+    }
+    canvas.addEventListener('pointermove', (e) => { game.aim = toUnits(e); if (game.state !== 'run') draw(); });
+    canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); canvas.focus({ preventScroll: true }); shootAt(toUnits(e)); });
+    canvas.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        if (game.state !== 'run') return start();
+        shootAt(game.aim || { x: S.w / scale() / 2, y: VH / 2 });
+      }
+    });
+    function start() {
+      if (game.state === 'done') reset();
+      game.state = 'run'; game.msg = null;
+      startBtn.disabled = true;
+      setResult();
+    }
+    startBtn.addEventListener('click', start);
+    resetBtn.addEventListener('click', reset);
+
+    runWhenVisible(canvas, (dt) => {
+      if (game.state === 'run') {
+        game.t += dt;
+        if (game.t >= T_ORBIT) { game.t = T_ORBIT; finish('time'); }
+      }
+      game.flash = Math.max(0, game.flash - dt * 3);
+      draw();
+      updateHud();
+    });
+
+    onLang.push(() => {
+      hudKey = ''; updateHud(); setResult();
+      game.photos.forEach((p) => { if (p.fig) p.fig.textContent = caption(p); });
+      draw();
+    });
+    reset();
+  })();
+
   /* ---------- Cambio de idioma (botón con bandera) ---------- */
   (function i18n() {
     const EN = window.I18N_EN || {};
@@ -3937,7 +4568,7 @@
     const SKIP = new Set(['solar-date', 'solar-next', 'solar-play', 'solar-status', 'sling-speed', 'm-day', 'm-date', 'm-photos',
       'm-status', 'm-play', 'fb-days', 'fb-dist', 'fb-moon', 'fb-escape', 'fb-play', 'fb-part-kicker', 'fb-part-title', 'fb-part-text',
       'dist-mars', 'dist-ratio', 'dist-meters', 'dist-light', 'dist-case-note', 'tl-launch', 'tl-arrival', 'lang-btn',
-      'm-around', 'm-photos', 'm-delay', 'tl-aero', 'tl-photos', 'spin-caption', 'gs-mode', 'gs-speedup', 'gs-results', 'mg-result', 'adv-game', 'v3d-date', 'v3d-day', 'v3d-dist', 'v3d-phase', 'v3d-play']);
+      'm-around', 'm-photos', 'm-delay', 'tl-aero', 'tl-photos', 'spin-caption', 'gs-mode', 'gs-speedup', 'gs-results', 'mg-result', 'adv-game', 'v3d-date', 'v3d-day', 'v3d-dist', 'v3d-phase', 'v3d-play', 'pg-hud', 'pg-result', 'pg-gallery']);
     const INLINE = new Set(['STRONG', 'EM', 'B', 'I', 'BR', 'SPAN', 'A', 'SMALL', 'ABBR']);
     const IGNORE = new Set(['SCRIPT', 'STYLE', 'CANVAS', 'INPUT', 'OUTPUT', 'DEFS', 'NOSCRIPT']);
     const norm = (str) => str.replace(/\s+/g, ' ').trim();

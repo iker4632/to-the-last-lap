@@ -779,4 +779,26 @@ window.I18N_EN = {
     "<a href=\"https://www.asc-csa.gc.ca/eng/youth-educators/digital-games-and-activities.asp\" target=\"_blank\" rel=\"noopener\">Canadian Space Agency digital games and activities ↗</a>",
   "Aprender jugando («Mission: Astronaut», «Tomatosphere Adventure»)":
     "Learning by playing (“Mission: Astronaut”, “Tomatosphere Adventure”)",
+  "📸 Fotógrafo de Marte":
+    "📸 Mars photographer",
+  "La nave da una vuelta a Marte a 400 km de altura y el suelo pasa a toda velocidad por debajo. Toca o haz clic donde quieras hacer cada foto. Tienes 8 fotos y una sola vuelta, así que no las gastes en la zona de noche.":
+    "The spacecraft circles Mars <strong>400 km up</strong> and the ground races past below. <strong>Tap or click</strong> wherever you want to take each photo. You have <strong>8 photos</strong> and a single orbit, so don’t waste them on the night side.",
+  "🧊Casquete polar":
+    "<span class=\"goal-stars\">🧊</span>Polar ice cap",
+  "🌋Monte Olimpo":
+    "<span class=\"goal-stars\">🌋</span>Olympus Mons",
+  "🥔Fobos":
+    "<span class=\"goal-stars\">🥔</span>Phobos",
+  "🏞️Valles Marineris":
+    "<span class=\"goal-stars\">🏞️</span>Valles Marineris",
+  "🤖Un rover":
+    "<span class=\"goal-stars\">🤖</span>A rover",
+  "🌪️Tormenta de polvo":
+    "<span class=\"goal-stars\">🌪️</span>Dust storm",
+  "▶ Empezar la vuelta":
+    "▶ Start the orbit",
+  "Cuanto más centrado esté el objetivo en el visor, más estrellas. Simplificado: el mapa no está a escala y en la realidad una vuelta dura casi 2 horas, no 50 segundos.":
+    "The more centred the target is in the viewfinder, the more stars you get. Simplified: the map is not to scale, and a real orbit takes almost 2 hours, not 50 seconds.",
+  "Juego: el suelo de Marte pasa por debajo de la nave; toca para hacer fotos de los lugares de la lista":
+    "Game: the surface of Mars slides beneath the spacecraft; tap to photograph the places on the list",
 };
