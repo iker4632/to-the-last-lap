@@ -3593,6 +3593,14 @@
       return CLIPS.files[id] ? `voces/${id}.${CLIPS.files[id]}` : null;
     };
     const hasClip = (id) => !!clipUrl(id);
+    // Id de la grabación de un texto de resultado o final: se calcula a partir del texto en inglés
+    const resId = (b) => {
+      const t = plain((b && (b.en || b)) || '');
+      if (!t) return null;
+      let x = 5381;
+      for (const ch of t) x = ((x * 33) ^ ch.codePointAt(0)) >>> 0;
+      return 'res-' + x.toString(36);
+    };
     function audioCtx() {
       if (!CLIPS.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { CLIPS.ctx = new C(); } catch (e) { return null; } }
       if (CLIPS.ctx.state === 'suspended') CLIPS.ctx.resume();
@@ -3612,6 +3620,7 @@
           // Con tu voz para todos: cada personaje suena un poco más agudo o más grave
           let pitchOn = true;
           try { pitchOn = localStorage.getItem('voicePitch') !== '0'; } catch (e) { /* sin almacenamiento */ }
+          if (LANG === 'en' && window.VOICE_FX_BAKED) pitchOn = false; // las voces en inglés ya traen el timbre de cada personaje
           if (pitchOn) src.playbackRate.value = { pilot: 1.07, eng: 0.88, med: 1.04, geo: 0.94, com: 1.12, ctl: 0.97 }[who] || 1;
           if (who === 'ctl') {
             const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
@@ -3698,13 +3707,14 @@
           key = `out-${s.ev}-${e.id}`;
           const clip = G.clipId && G.clipId(id, toneOf(o));
           card = talkCard(id, react, clip);
-          lines.push({ who: 'nar', text: T(o.text) }, { who: id, text: T(react), clip });
+          lines.push({ who: 'nar', text: T(o.text), clip: resId(o.text) }, { who: id, text: T(react), clip });
         }
       } else if (s.phase === 'end' && s.end) {
         const win = s.end.win, line = (G.end && G.end[win ? 'win' : 'lose']) || B('', ''), clip = G.clipId && G.clipId('ctl', win ? 'fin-win' : 'fin-lose');
         key = `end-${win}`;
         card = talkCard('ctl', line, clip);
-        lines.push({ who: 'nar', text: `${s.end.title ? T(s.end.title) + '. ' : ''}${T(s.end.text)}` }, { who: 'ctl', text: T(line), clip });
+        const endClip = resId(s.end.text);
+        lines.push(hasClip(endClip) ? { who: 'nar', text: T(s.end.text), clip: endClip } : { who: 'nar', text: `${s.end.title ? T(s.end.title) + '. ' : ''}${T(s.end.text)}` }, { who: 'ctl', text: T(line), clip });
       }
       if (card && panel) {
         const anchor = panel.querySelector('.adv-title');
