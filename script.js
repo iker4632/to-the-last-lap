@@ -2771,7 +2771,8 @@
         ${s.log.length ? `<button type="button" class="adv-diary-btn" data-act="diary" aria-label="${L('Abrir el diario de a bordo', 'Open the logbook')}">📓 <span>${L('Diario', 'Log')}</span> <b>${s.log.length}</b></button>` : ''}
         <button type="button" class="adv-icon-btn" data-act="ach" aria-label="${L('Ver las medallas', 'See the medals')}" title="${L('Medallas', 'Medals')}">🏅<small>${store.get('advAch', []).length}/${ACH.length}</small></button>
         <button type="button" class="adv-icon-btn" data-act="sound" aria-pressed="${SND.on}" aria-label="${SND.on ? L('Silenciar', 'Mute') : L('Activar el sonido', 'Turn sound on')}" title="${L('Sonido', 'Sound')}">${SND.on ? '🔊' : '🔇'}</button>
-        ${VOICE.ok ? `<button type="button" class="adv-icon-btn${VOICE.on ? '' : ' off'}" data-act="voice" aria-pressed="${VOICE.on}" aria-label="${VOICE.on ? L('Quitar las voces', 'Turn voices off') : L('Poner las voces', 'Turn voices on')}" title="${L('Voces', 'Voices')}">🗣️<small>${VOICE.on ? 'ON' : 'OFF'}</small></button>` : ''}
+        ${VOICE.ok || Object.keys(CLIPS.files).length ? `<button type="button" class="adv-icon-btn${VOICE.on ? '' : ' off'}" data-act="voice" aria-pressed="${VOICE.on}" aria-label="${VOICE.on ? L('Quitar las voces', 'Turn voices off') : L('Poner las voces', 'Turn voices on')}" title="${L('Voces', 'Voices')}">🗣️<small>${VOICE.on ? 'ON' : 'OFF'}</small></button>` : ''}
+        <a class="adv-icon-btn" href="estudio.html" aria-label="${L('Grabar vuestras voces para los personajes', 'Record your own voices for the characters')}" title="${L('Estudio de grabación', 'Recording studio')}">🎙️</a>
         ${s.phase !== 'goal' ? `<button type="button" class="adv-icon-btn" data-act="newgame" aria-label="${L('Empezar una partida nueva', 'Start a new game')}" title="${L('Nueva partida', 'New game')}">↺</button>` : ''}</div></div>`;
     }
 
@@ -3517,61 +3518,8 @@
     const CTL = { id: 'ctl', icon: '🎧', name: B('Control de misión', 'Mission Control') };
     const who2c = (id) => (id === 'ctl' ? CTL : byId(CREW, id));
     // Lo que dice el equipo al empezar cada capítulo (el primero que vaya a bordo; si no, Control de misión)
-    const SAYS = {
-      launch: [['pilot', B('He despegado con peor tiempo… aunque no mucho peor.', 'I’ve launched in worse weather… though not much worse.')],
-        ['com', B('Los rayos meten ruido en la radio. Estaré atenta a todo.', 'The lightning is crackling on the radio. I’ll keep an ear on everything.')],
-        ['ctl', B('Aquí Control: la ventana de lanzamiento se cierra en pocos días. Tú decides.', 'Mission Control here: the launch window closes in a few days. Your call.')]],
-      orbit: [['eng', B('Puedo salir y darle un par de golpes a ese panel. Confía en mí.', 'I can go outside and give that panel a couple of taps. Trust me.')],
-        ['ctl', B('Sin ese panel, la nave irá justa de energía todo el viaje.', 'Without that panel, the ship will be short of power the whole way.')]],
-      moon: [['pilot', B('Dame los mandos y clavo el encendido detrás de la Luna.', 'Give me the controls and I’ll nail the burn behind the Moon.')],
-        ['ctl', B('El encendido es detrás de la Luna, justo cuando no podremos hablar por radio.', 'The burn happens behind the Moon, just when we can’t talk by radio.')]],
-      storm: [['com', B('¡La he visto venir! Tenemos unas horas para prepararnos.', 'I saw it coming! We have a few hours to get ready.')],
-        ['med', B('La radiación es lo que más me preocupa de todo el viaje.', 'Radiation is what worries me most on this whole trip.')],
-        ['ctl', B('¡Tormenta solar en camino! Protegeos como podáis.', 'Solar storm incoming! Protect yourselves however you can.')]],
-      meteor: [['eng', B('¡Oigo silbar el aire! Hay que tapar ese agujero ya.', 'I can hear the air hissing! We need to plug that hole now.')],
-        ['ctl', B('La presión baja despacio. Tenéis tiempo, pero no mucho.', 'The pressure is dropping slowly. You have time, but not much.')]],
-      sick: [['med', B('Dejadme examinarla. Mantened la calma, por favor.', 'Let me examine her. Stay calm, please.')],
-        ['ctl', B('Os pasamos con nuestros médicos, pero cada mensaje tarda minutos.', 'We’re putting you through to our doctors, but every message takes minutes.')]],
-      nav: [['pilot', B('Doce segundos de motor y lo dejo perfecto.', 'Twelve seconds of engine and I’ll have it perfect.')],
-        ['ctl', B('Los números no mienten: os estáis desviando de Marte.', 'The numbers don’t lie: you’re drifting away from Mars.')]],
-      arrive: [['pilot', B('Marte, allá vamos. Agarraos fuerte.', 'Mars, here we come. Hold on tight.')],
-        ['geo', B('¡Mirad esos cañones! Qué ganas de estudiarlos.', 'Look at those canyons! I can’t wait to study them.')],
-        ['ctl', B('Es el momento más delicado del viaje. Mucha suerte.', 'This is the trickiest moment of the trip. Good luck.')]],
-      land: [['geo', B('El hielo del polo norte sería un tesoro para la ciencia.', 'The ice at the north pole would be a treasure for science.')],
-        ['pilot', B('Bajar es lo difícil. Tú eliges dónde y yo os llevo.', 'Going down is the hard part. You pick the spot and I’ll take us there.')],
-        ['ctl', B('Siete minutos de terror: la bajada hasta el suelo.', 'Seven minutes of terror: the descent to the ground.')]],
-      cables: [['eng', B('Huele a quemado… ¡Cuidado con esos cables!', 'Something smells burnt… Careful with those cables!')],
-        ['ctl', B('El panel eléctrico ha saltado. Hay que reconectarlo.', 'The electrical panel has tripped. It needs reconnecting.')]],
-      signal: [['com', B('Dadme un momento: recalculo hacia dónde tiene que apuntar la antena.', 'Give me a moment: I’ll work out where the antenna needs to point.')],
-        ['pilot', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
-        ['eng', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
-        ['med', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')],
-        ['geo', B('Sin la Tierra en la radio. Estamos solos un rato.', 'No Earth on the radio. We’re on our own for a while.')]],
-      oxygen: [['eng', B('Lo desmonto y lo limpio pieza a pieza.', 'I’ll take it apart and clean it piece by piece.')],
-        ['med', B('Si sube el CO₂, nos dolerá la cabeza y nos costará pensar.', 'If the CO₂ goes up, we’ll get headaches and struggle to think.')],
-        ['ctl', B('El aire de la nave necesita ese filtro. No hay tiempo que perder.', 'The ship’s air needs that filter. There’s no time to lose.')]],
-      water: [['eng', B('Una tubería rota. Tengo repuestos.', 'A broken pipe. I’ve got spares.')],
-        ['ctl', B('El agua es vida: no la dejéis escapar.', 'Water is life: don’t let it leak away.')]],
-      asteroid: [['geo', B('¡Un asteroide de cerca! Esas fotos valdrían oro.', 'An asteroid up close! Those photos would be worth gold.')],
-        ['ctl', B('Tenéis permiso para mirar… pero nada de riesgos.', 'You have permission to look… but no risks.')]],
-      computer: [['pilot', B('Si el ordenador falla, piloto yo.', 'If the computer fails, I’ll fly it.')],
-        ['eng', B('Apagar y volver a encender… a veces funciona.', 'Turn it off and on again… sometimes it works.')],
-        ['ctl', B('La nave gira sin control. Hay que actuar.', 'The ship is spinning out of control. You need to act.')]],
-      morale: [['med', B('Están tristes. El ánimo también es salud.', 'They’re feeling low. Morale is health too.')],
-        ['com', B('Puedo montar una videollamada con las familias.', 'I can set up a video call with the families.')],
-        ['ctl', B('Siete meses lejos de casa pesan a cualquiera.', 'Seven months away from home weighs on anyone.')]],
-      sponsor: [['com', B('Una empresa quiere grabar un anuncio aquí arriba…', 'A company wants to film an advert up here…')],
-        ['ctl', B('El dinero vendría bien, pero el equipo está cansado.', 'The money would help, but the crew is tired.')]],
-    };
-    // Cómo reacciona cada uno según cómo haya salido
-    const REACT = {
-      pilot: { ok: B('¡Perfecto! Así se vuela.', 'Perfect! That’s how you fly.'), mid: B('No ha sido bonito, pero seguimos en rumbo.', 'Not pretty, but we’re still on course.'), bad: B('Uf… eso ha dolido.', 'Ouch… that hurt.') },
-      eng: { ok: B('Arreglado. ¿Alguien más tiene algo roto?', 'Fixed. Anyone else got something broken?'), mid: B('Aguantará… creo.', 'It’ll hold… I think.'), bad: B('Esto me va a dar trabajo para semanas.', 'This is going to keep me busy for weeks.') },
-      med: { ok: B('Todos bien. Buen trabajo.', 'Everyone’s fine. Good job.'), mid: B('Algún rasguño, nada grave.', 'A few scrapes, nothing serious.'), bad: B('Tengo que revisar a todo el mundo, ya.', 'I need to check everyone over, right now.') },
-      geo: { ok: B('¡Fantástico! Lo apunto en mi cuaderno.', 'Fantastic! I’m writing that down.'), mid: B('Podría haber sido peor.', 'It could have been worse.'), bad: B('Mal asunto. Tenemos que tener más cuidado.', 'Bad business. We need to be more careful.') },
-      com: { ok: B('Se lo cuento a la Tierra: ¡todo en orden!', 'I’ll tell Earth: all good!'), mid: B('Informo a la Tierra: superado, con pérdidas.', 'Reporting to Earth: made it, with losses.'), bad: B('Tierra, tenemos un problema.', 'Earth, we have a problem.') },
-      ctl: { ok: B('Buen trabajo, equipo. Seguimos.', 'Good work, team. Carry on.'), mid: B('Superado, aunque nos ha costado.', 'We got through it, though it cost us.'), bad: B('Esto se complica. Mucho ánimo.', 'This is getting tricky. Hang in there.') },
-    };
+    const G = window.GUION || { says: {}, react: {}, end: {} };
+    const SAYS = G.says, REACT = G.react;
     const NAME2ID = { Valeria: 'pilot', Tomás: 'eng', Nuria: 'med', Kenji: 'geo', Amara: 'com' };
 
     function eventSpeaker(e) {
@@ -3606,39 +3554,128 @@
       return { nar: any, ctl: at(mal.length ? mal : uniq, 0), pilot: at(fem, 0), med: at(fem, 1), com: at(fem, 2), eng: at(mal, 0), geo: at(mal, 1) };
     }
     const plain = (h) => String(h).replace(/<[^>]+>/g, ' ').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
+    // Grabaciones: primero las hechas en este dispositivo con el estudio, luego las publicadas en voces/
+    const CLIPS = { files: window.VOICE_FILES || {}, local: new Map(), ctx: null, src: null };
+    function loadLocalClips() {
+      if (!window.indexedDB) return;
+      let req;
+      try { req = indexedDB.open('lastlap-voces', 1); } catch (e) { return; }
+      req.onupgradeneeded = () => req.result.createObjectStore('clips');
+      req.onsuccess = () => {
+        const db = req.result;
+        try {
+          const st = db.transaction('clips', 'readonly').objectStore('clips');
+          const cur = st.openCursor();
+          const seen = new Set();
+          cur.onsuccess = () => {
+            const c = cur.result;
+            if (c) {
+              seen.add(c.key);
+              const old = CLIPS.local.get(c.key);
+              if (!old || old.t !== c.value.t) { if (old) URL.revokeObjectURL(old.url); CLIPS.local.set(c.key, { url: URL.createObjectURL(c.value.blob), t: c.value.t }); }
+              c.continue();
+            } else {
+              [...CLIPS.local.keys()].forEach((k) => { if (!seen.has(k)) { URL.revokeObjectURL(CLIPS.local.get(k).url); CLIPS.local.delete(k); } });
+              db.close();
+            }
+          };
+        } catch (e) { db.close(); }
+      };
+    }
+    loadLocalClips();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) loadLocalClips(); });
+    const clipUrl = (id) => {
+      if (!id || LANG !== 'es') return null;
+      const l = CLIPS.local.get(id);
+      if (l) return l.url;
+      return CLIPS.files[id] ? `voces/${id}.${CLIPS.files[id]}` : null;
+    };
+    const hasClip = (id) => !!clipUrl(id);
+    function audioCtx() {
+      if (!CLIPS.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { CLIPS.ctx = new C(); } catch (e) { return null; } }
+      if (CLIPS.ctx.state === 'suspended') CLIPS.ctx.resume();
+      return CLIPS.ctx;
+    }
+    // Reproduce una grabación con un efecto según quién hable: Control de misión suena como por radio
+    function playClip(url, who, token, done, fail) {
+      const ctx = audioCtx();
+      if (!ctx) return fail();
+      fetch(url).then((r) => { if (!r.ok) throw new Error('404'); return r.arrayBuffer(); })
+        .then((b) => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej)))
+        .then((buf) => {
+          if (token !== VOICE.token) return;
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const out = ctx.createGain(); out.gain.value = 1.1;
+          let t0 = ctx.currentTime + 0.02;
+          // Con tu voz para todos: cada personaje suena un poco más agudo o más grave
+          let pitchOn = true;
+          try { pitchOn = localStorage.getItem('voicePitch') !== '0'; } catch (e) { /* sin almacenamiento */ }
+          if (pitchOn) src.playbackRate.value = { pilot: 1.07, eng: 0.88, med: 1.04, geo: 0.94, com: 1.12, ctl: 0.97 }[who] || 1;
+          if (who === 'ctl') {
+            const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
+            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+            const ws = ctx.createWaveShaper(); const n = 256, curve = new Float32Array(n);
+            for (let k = 0; k < n; k++) { const x = (k / (n - 1)) * 2 - 1; curve[k] = Math.tanh(x * 2.2); }
+            ws.curve = curve;
+            src.connect(hp); hp.connect(lp); lp.connect(ws); ws.connect(out);
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 1250; g.gain.value = 0.06;
+            o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + 0.09);
+            t0 += 0.12;
+          } else {
+            src.connect(out);
+          }
+          out.connect(ctx.destination);
+          src.onended = () => { setSpeaking(who, false); if (CLIPS.src === src) CLIPS.src = null; done(); };
+          CLIPS.src = src;
+          setSpeaking(who, true);
+          src.start(t0);
+        })
+        .catch(() => { if (token === VOICE.token) fail(); });
+    }
     function hush() {
       VOICE.token++;
       if (VOICE.ok) speechSynthesis.cancel();
+      if (CLIPS.src) { try { CLIPS.src.onended = null; CLIPS.src.stop(); } catch (e) { /* ya parado */ } CLIPS.src = null; }
       root.querySelectorAll('.speaking').forEach((el) => el.classList.remove('speaking'));
     }
     function setSpeaking(who, on) {
       root.querySelectorAll(`[data-who="${who}"]`).forEach((el) => el.classList.toggle('speaking', on));
     }
+    // Dice las frases una detrás de otra: con vuestra grabación si existe y, si no, con la voz del dispositivo
     function speak(lines) {
       hush();
-      if (!VOICE.on || !VOICE.ok || !lines.length) return;
+      if (!VOICE.on || !lines.length) return;
       const token = VOICE.token, V = pickVoices();
-      lines.forEach(({ who, text }) => {
-        const u = new SpeechSynthesisUtterance(plain(text));
+      let i = 0;
+      const tts = (ln) => {
+        if (!VOICE.ok) return next();
+        const u = new SpeechSynthesisUtterance(plain(ln.text));
         u.lang = LANG === 'en' ? 'en-GB' : 'es-ES';
-        if (V[who]) u.voice = V[who];
-        const [pitch, rate] = TONE[who] || TONE.nar;
+        if (V[ln.who]) u.voice = V[ln.who];
+        const [pitch, rate] = TONE[ln.who] || TONE.nar;
         u.pitch = pitch; u.rate = rate;
-        u.onstart = () => { if (token === VOICE.token) setSpeaking(who, true); };
-        u.onend = u.onerror = () => setSpeaking(who, false);
+        u.onstart = () => { if (token === VOICE.token) setSpeaking(ln.who, true); };
+        u.onend = u.onerror = () => { setSpeaking(ln.who, false); next(); };
         speechSynthesis.speak(u);
-      });
+      };
+      function next() {
+        if (token !== VOICE.token || i >= lines.length) return;
+        const ln = lines[i++];
+        const url = clipUrl(ln.clip);
+        if (url) playClip(url, ln.who, token, next, () => tts(ln)); else tts(ln);
+      }
+      next();
     }
 
     // Tarjeta con el personaje que habla (retrato grande y bocadillo)
-    function talkCard(id, line) {
+    function talkCard(id, line, clip) {
       const c = who2c(id);
       const ava = id === 'ctl'
         ? `<svg class="adv-ava" viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#2b6a8c" opacity=".35"/><path d="M6 46 Q24 28 42 46Z" fill="#2b6a8c"/><circle cx="24" cy="21" r="10" fill="#c98f6b"/><path d="M14 19 Q15 10 24 10 Q33 10 34 19 Q30 13 22 14 Q17 15 14 19Z" fill="#3b2416"/><circle cx="20.5" cy="22" r="1.4" fill="#1a1a1a"/><circle cx="27.5" cy="22" r="1.4" fill="#1a1a1a"/><path d="M20.5 26.5 Q24 29 27.5 26.5" stroke="#1a1a1a" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M12 22 Q12 8 24 8 Q36 8 36 22" stroke="#cfd6e6" stroke-width="2.4" fill="none"/><rect x="9.5" y="19" width="5" height="8" rx="2" fill="#4ea3ff"/><rect x="33.5" y="19" width="5" height="8" rx="2" fill="#4ea3ff"/><path d="M36 26 Q36 32 29 31" stroke="#cfd6e6" stroke-width="1.6" fill="none"/><circle cx="28.5" cy="31" r="1.6" fill="#ff7a45"/></svg>`
         : avatar(c, 56);
       return `<div class="adv-talk" data-who="${id}"><span class="talk-ava">${ava}<i class="talk-wave" aria-hidden="true"></i></span>
-        <div class="talk-bubble"><b>${T(c.name)}</b><p>«${T(line)}»</p></div>
-        ${VOICE.ok ? `<button type="button" class="talk-replay" data-act="voice-replay" aria-label="${L('Volver a escuchar', 'Listen again')}" title="${L('Volver a escuchar', 'Listen again')}">🔁</button>` : ''}</div>`;
+        <div class="talk-bubble"><b>${T(c.name)}${clip && hasClip(clip) ? ' · 🎙️' : ''}</b><p>«${T(line)}»</p></div>
+        ${VOICE.ok || clip ? `<button type="button" class="talk-replay" data-act="voice-replay" aria-label="${L('Volver a escuchar', 'Listen again')}" title="${L('Volver a escuchar', 'Listen again')}">🔁</button>` : ''}</div>`;
     }
 
     // Se llama después de cada render: pone la tarjeta y, si la escena es nueva, lo cuenta en voz alta
@@ -3650,19 +3687,22 @@
         if (!s.outcome) {
           const sp = eventSpeaker(e);
           key = `ev-${s.ev}-${e.id}`;
-          lines.push({ who: 'nar', text: `${T(e.title)}. ${T(typeof e.text === 'function' ? e.text(s) : e.text)}` });
-          if (sp) { card = talkCard(sp[0], sp[1]); lines.push({ who: sp[0], text: T(sp[1]) }); }
+          const ntext = typeof e.text === 'function' ? e.text(s) : e.text;
+          const nrec = (G.narration || []).find((n) => plain(`${n.title}. ${n.text}`) === plain(`${e.title.es}. ${ntext.es}`));
+          lines.push({ who: 'nar', text: `${T(e.title)}. ${T(ntext)}`, clip: nrec && G.clipId('nar', nrec.key) });
+          if (sp) { const clip = G.clipId && G.clipId(sp[0], e.id); card = talkCard(sp[0], sp[1], clip); lines.push({ who: sp[0], text: T(sp[1]), clip }); }
         } else {
           const o = s.outcome, id = outcomeSpeaker(e, o), react = REACT[id][toneOf(o)];
           key = `out-${s.ev}-${e.id}`;
-          card = talkCard(id, react);
-          lines.push({ who: 'nar', text: T(o.text) }, { who: id, text: T(react) });
+          const clip = G.clipId && G.clipId(id, toneOf(o));
+          card = talkCard(id, react, clip);
+          lines.push({ who: 'nar', text: T(o.text) }, { who: id, text: T(react), clip });
         }
       } else if (s.phase === 'end' && s.end) {
-        const win = s.end.win, line = win ? B('¡Enhorabuena, equipo! Toda la Tierra os está mirando.', 'Congratulations, team! The whole Earth is watching you.') : B('Lo siento mucho, equipo. Aprenderemos y lo intentaremos otra vez.', 'I’m so sorry, team. We’ll learn from this and try again.');
+        const win = s.end.win, line = (G.end && G.end[win ? 'win' : 'lose']) || B('', ''), clip = G.clipId && G.clipId('ctl', win ? 'fin-win' : 'fin-lose');
         key = `end-${win}`;
-        card = talkCard('ctl', line);
-        lines.push({ who: 'nar', text: `${s.end.title ? T(s.end.title) + '. ' : ''}${T(s.end.text)}` }, { who: 'ctl', text: T(line) });
+        card = talkCard('ctl', line, clip);
+        lines.push({ who: 'nar', text: `${s.end.title ? T(s.end.title) + '. ' : ''}${T(s.end.text)}` }, { who: 'ctl', text: T(line), clip });
       }
       if (card && panel) {
         const anchor = panel.querySelector('.adv-title');
