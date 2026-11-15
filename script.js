@@ -3620,7 +3620,7 @@
           // Con tu voz para todos: cada personaje suena un poco más agudo o más grave
           let pitchOn = true;
           try { pitchOn = localStorage.getItem('voicePitch') !== '0'; } catch (e) { /* sin almacenamiento */ }
-          if (LANG === 'en' && window.VOICE_FX_BAKED) pitchOn = false; // las voces en inglés ya traen el timbre de cada personaje
+          if (window.VOICE_FX_BAKED && !url.startsWith('blob:')) pitchOn = false; // las voces publicadas ya traen el timbre de cada personaje
           if (pitchOn) src.playbackRate.value = { pilot: 1.07, eng: 0.88, med: 1.04, geo: 0.94, com: 1.12, ctl: 0.97 }[who] || 1;
           if (who === 'ctl') {
             const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
