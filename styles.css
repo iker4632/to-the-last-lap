@@ -1269,3 +1269,9 @@ html.dia-open, html.dia-open body { overflow: hidden; }
 #adv-photo-slot .pg-goals li { padding: 5px 9px; font-size: .78rem; }
 #adv-photo-slot .pg-gallery { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
 @media (max-width: 600px) { #adv-photo-slot .game-card { max-width: 100%; padding: 8px; } }
+
+/* Controles táctiles: sin menú del navegador, sin selección ni lupa al mantener pulsado */
+.mini-big, .adv-screen, .adv-scene, .canvas-photo, [data-mini] {
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.mini-big { touch-action: none; }

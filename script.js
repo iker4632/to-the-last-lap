@@ -3383,7 +3383,14 @@
     };
     root.addEventListener('pointerdown', miniDown);
     window.addEventListener('pointermove', (ev) => { if (s.mini && s.mini.aiming) aimAt(ev); });
-    window.addEventListener('pointerup', () => { if (s.mini) { s.mini.hold = false; s.mini.dir = 0; s.mini.aiming = false; } });
+    const miniUp = () => { if (s.mini) { s.mini.hold = false; s.mini.dir = 0; s.mini.aiming = false; } };
+    window.addEventListener('pointerup', miniUp);
+    window.addEventListener('pointercancel', miniUp);
+    window.addEventListener('blur', miniUp);
+    // En pantallas táctiles, mantener pulsado abre el menú del navegador: lo bloqueamos en los controles de los minijuegos
+    root.addEventListener('contextmenu', (ev) => {
+      if (s.mini || s.puzzle || s.photo || (ev.target.closest && ev.target.closest('[data-mini], .adv-screen, .adv-scene'))) ev.preventDefault();
+    });
     document.addEventListener('keydown', (ev) => {
       const m = s.mini; if (!m || ev.repeat && m.type === 'sling') return;
       if (ev.key === ' ' || ev.key === 'ArrowUp') { if (m.type === 'sling') { ev.preventDefault(); miniPress(); } if (m.type === 'aero') { ev.preventDefault(); m.hold = true; } }
@@ -4653,6 +4660,7 @@
     }
     canvas.addEventListener('pointermove', (e) => { game.aim = toUnits(e); if (game.state !== 'run') draw(); });
     canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); canvas.focus({ preventScroll: true }); shootAt(toUnits(e)); });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault()); // sin menú del navegador al mantener el dedo
     canvas.addEventListener('keydown', (e) => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
